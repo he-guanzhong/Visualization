@@ -1,0 +1,7 @@
+# 忽略所有的 /build/ 目录
+/build/.cmake/
+/build/CMakeFiles/
+*.cmake
+*.txt
+*.json
+/build/Makefile

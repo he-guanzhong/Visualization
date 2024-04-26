@@ -7,8 +7,9 @@ extern float time_data[DATA_NUM];
 extern float egoSpd_data[DATA_NUM];
 extern float egoAcc_data[DATA_NUM];
 extern float spdLmt_data[DATA_NUM];
-extern float Alc_path_data[6][DATA_NUM];
-extern int acc_mode_data[DATA_NUM];
+extern float alc_path_data[6][DATA_NUM];
+extern int accMode_data[DATA_NUM];
+extern int alcSts_data[2][DATA_NUM];
 
 extern bool AlcLgtCtrlEnbl_data[DATA_NUM];
 extern int truncated_col_data[DATA_NUM];
@@ -25,6 +26,7 @@ extern float objs_pos_x_data[10][DATA_NUM];
 extern float objs_pos_y_data[10][DATA_NUM];
 extern float objs_speed_x_data[10][DATA_NUM];
 extern float objs_speed_y_data[10][DATA_NUM];
+extern float objs_acc_x_data[10][DATA_NUM];
 extern float objs_pos_yaw_data[10][DATA_NUM];
 
 extern int tsr_spd_data[DATA_NUM];
@@ -180,14 +182,14 @@ void LoadLog() {
   // time, alc path and speed plan input and output results
   int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, LGT_ENBL = 0, TRUC_CL = 0,
       ACC_MODE = 0;
-  int ALC_C[6] = {0};
+  int ALC_SIDE = 0, ALC_STS = 0, ALC_C[6] = {0};
   int P_T[7] = {0}, P_S[7] = {0}, P_V[7] = {0}, P_A[7] = {0};
 
   // Obstacles, In-path VehicleS (IVS)
   // 0 = IV, 1 = RIV, 2 = NIVL, 3 = NIIVL, 4 = RIVL, 5 = RIIVL
   // 6 = NIVR, 7 = NIIVR, 8 = RIVR, 9 = RIIVR
   int IVS_Present[10] = {0}, IVS_Class[10] = {0}, IVS_LaDis[10] = {0},
-      IVS_LgDis[10] = {0}, IVS_V[10] = {0}, IVS_LaV[10] = {0},
+      IVS_LgDis[10] = {0}, IVS_V[10] = {0}, IVS_LaV[10] = {0}, IVS_A[10] = {0},
       IVS_Yaw[10] = {0};
 
   // TSR signs
@@ -217,12 +219,16 @@ void LoadLog() {
              strcmp(columns[i], "VfLGIN_SetSpeedRaw_kph[]") == 0)
       SPD_LMT = i;
 
+    else if (strcmp(columns[i], "VeACCSTM_AccMode_enum[]") == 0)
+      ACC_MODE = i;
+    else if (strcmp(columns[i], "VePASP_AutoLaneChgSide[]") == 0)
+      ALC_SIDE = i;
+    else if (strcmp(columns[i], "VePASP_AutoLaneChgSts[]") == 0)
+      ALC_STS = i;
     else if (strcmp(columns[i], "VbPASP_AlcLgtCtrlEnbl[]") == 0)
       LGT_ENBL = i;
     else if (strcmp(columns[i], "g_truncated_col[]") == 0)
       TRUC_CL = i;
-    else if (strcmp(columns[i], "VeACCSTM_AccMode_enum[]") == 0)
-      ACC_MODE = i;
 
     // alc path c0-c5
     else if (strcmp(columns[i], "VfPASP_ALC_path_C5[]") == 0)
@@ -307,6 +313,10 @@ void LoadLog() {
       IVS_Present[0] = i;
     else if (strncmp(columns[i], "VfINP_IVV_mps[mps]", 14) == 0)
       IVS_V[0] = i;
+    else if (strncmp(columns[i], "VfINP_IVLaSpd_mps[]", 18) == 0)
+      IVS_LaV[0] = i;
+    else if (strncmp(columns[i], "VfINP_IVAcc_mpss[]", 17) == 0)
+      IVS_A[0] = i;
     else if (strncmp(columns[i], "VfINP_IVHeading_rad[]", 19) == 0)
       IVS_Yaw[0] = i;
 
@@ -618,29 +628,31 @@ void LoadLog() {
     time_data[t] = values[Ts][t];
     //  inner spd lmt unit: m/s, record spd lmt unit:kph
     if (EGO_V != 0) {
-      egoSpd_data[t] = readValue(values, EGO_V, t);
-      // egoSpd_data[t] = values[EGO_V][t];
-      egoAcc_data[t] = readValue(values, EGO_A, t);
-      spdLmt_data[t] = readValue(values, SPD_LMT, t) / 3.6f;
-      acc_mode_data[t] = values[ACC_MODE][t];
+      egoSpd_data[t] = values[EGO_V][t];
+      egoAcc_data[t] = values[EGO_A][t];
+      spdLmt_data[t] = values[SPD_LMT][t] / 3.6f;
+      accMode_data[t] = values[ACC_MODE][t];
     }
-    if (TRUC_CL != 0) {
-      AlcLgtCtrlEnbl_data[t] = values[LGT_ENBL][t];
-      truncated_col_data[t] = values[TRUC_CL][t];
-    }
+    AlcLgtCtrlEnbl_data[t] = LGT_ENBL ? values[LGT_ENBL][t] : 0;
+    truncated_col_data[t] = TRUC_CL ? values[TRUC_CL][t] : 0;
+    // alc_sts[0] for alc side: 0-0ff, 1-left, 2-right
+    // alc_sts[1] for alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
+    // 4-in target line, 5-finished,6-Back to Ego, 8-takeover, 9-popMsgReq
+    alcSts_data[0][t] = ALC_SIDE ? values[ALC_SIDE][t] : 0;
+    alcSts_data[1][t] = ALC_STS ? values[ALC_STS][t] : 0;
 
     // alc path and speed plan points
     for (int k = 0; k <= 5; k++) {
       if (ALC_C[k] == 0)
         continue;
-      Alc_path_data[k][t] = values[ALC_C[k]][t];
+      alc_path_data[k][t] = values[ALC_C[k]][t];
       s_points_data[k][t] = values[P_S[k]][t];
       v_points_data[k][t] = values[P_V[k]][t];
       a_points_data[k][t] = values[P_A[k]][t];
       t_points_data[k][t] = values[P_T[k]][t];
     }
-    ctrl_point_data[0][t] = P_A[6] == 0 ? 0 : values[P_T[6]][t];
-    ctrl_point_data[1][t] = P_A[6] == 0 ? 0 : values[P_A[6]][t];
+    ctrl_point_data[0][t] = P_A[6] ? values[P_T[6]][t] : 0;
+    ctrl_point_data[1][t] = P_A[6] ? values[P_A[6]][t] : 0;
 
     // obstacles, BTL original: lateral distance/speed direction opposite.
     // longi distance needs compensation to transfer pos centre to centre
@@ -662,9 +674,9 @@ void LoadLog() {
       objs_pos_x_data[k][t] = values[IVS_LgDis[k]][t] + pos_x_compensation;
       objs_pos_y_data[k][t] = values[IVS_LaDis[k]][t] * -1;
       objs_speed_x_data[k][t] = values[IVS_V[k]][t];
-      objs_speed_y_data[k][t] = values[IVS_LaV[k]][t] * -1;
-      objs_pos_yaw_data[k][t] =
-          IVS_Yaw[k] == 0 ? 0 : values[IVS_Yaw[k]][t] * -1;
+      objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
+      objs_acc_x_data[k][t] = IVS_A[k] ? values[IVS_A[k]][t] : 0;
+      objs_pos_yaw_data[k][t] = IVS_Yaw[k] ? values[IVS_Yaw[k]][t] * -1 : 0;
 
       if (k <= 1)
         objs_lane_index_data[k][t] = 3;
@@ -673,8 +685,6 @@ void LoadLog() {
       else
         objs_lane_index_data[k][t] = 4;
     }
-    // Exception: IV_LatV, no input
-    objs_speed_y_data[0][t] = 0;
 
     // lateral processed lines. c4 and c5 ignored, for no input
     // c2 = crvt * 0.5, c3 = d_crvt * 1/6

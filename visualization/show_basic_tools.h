@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include "header/Rte_Type_Spd.h"
 
-#define SIZE 6
+#define MAT_SIZE 6
 
 typedef struct {
   float x;
@@ -36,6 +36,8 @@ typedef struct {
   float pred_spd;
   float set_spd;
   int acc_mode;
+  int alc_side;
+  int alc_sts;
 } SpdInfo;
 
 typedef struct {
@@ -63,7 +65,7 @@ void bezierSecDerivative(float tau,
                          float* ddx,
                          float* ddy);
 
-void gaussianElimination(float a[SIZE][SIZE + 1]);
+void gaussianElimination(float a[MAT_SIZE][MAT_SIZE + 1]);
 void quinticPolyFit(float T,
                     float s0,
                     float v0,
@@ -71,7 +73,7 @@ void quinticPolyFit(float T,
                     float s1,
                     float v1,
                     float a1,
-                    float coeffi[SIZE]);
+                    float coeffi[MAT_SIZE]);
 
 void coordinateTrans1(Point* point);
 void coordinateTrans2(Point* point);
@@ -81,6 +83,7 @@ void drawCar(Point* car, const char* str, int carType, const float yaw);
 
 void drawPolygon(const Point* center, const int num, const float rotateDegree);
 void drawTsrSign(const TsrInfo* tsr_info);
+void drawMotionInfo(const SpdInfo* spd_info);
 
 void drawTrajectory(const float* coeffs,
                     const int color,

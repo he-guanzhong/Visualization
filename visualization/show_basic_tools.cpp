@@ -65,8 +65,8 @@ void bezierSecDerivative(float tau,
   printf("t = %.2f, ddx = %.6f, ddy = %.6f\n", t, *ddx, *ddy);
 }
 
-void gaussianElimination(float a[SIZE][SIZE + 1]) {
-  int n = SIZE;
+void gaussianElimination(float a[MAT_SIZE][MAT_SIZE + 1]) {
+  int n = MAT_SIZE;
   for (int i = 0; i < n; i++) {
     // find largest absolute value of a[i][i] as main element
     int maxElem = i;
@@ -106,10 +106,12 @@ void quinticPolyFit(float T,
                     float s1,
                     float v1,
                     float a1,
-                    float coeffi[SIZE]) {
+                    float coeffi[MAT_SIZE]) {
+  if (MAT_SIZE != 6)
+    return;
   // fifth degree polynominal fitting, set augmented matrix
   // s = a0 + a1*t + a2*t^2 + a3*t^3 + a4*t^4 + a5*t^5
-  float mat_A[SIZE][SIZE + 1] = {
+  float mat_A[MAT_SIZE][MAT_SIZE + 1] = {
       {1, 0, 0, 0, 0, 0, s0},
       {0, 1, 0, 0, 0, 0, v0},
       {0, 0, 2, 0, 0, 0, a0},
@@ -118,14 +120,14 @@ void quinticPolyFit(float T,
       {0, 0, 2, 6 * T, 12 * T * T, 20 * T * T * T, a1}};
 
   gaussianElimination(mat_A);
-  for (int i = 0; i < SIZE; i++) {
-    fit_coeffi[i] = mat_A[i][SIZE];
+  for (int i = 0; i < MAT_SIZE; i++) {
+    fit_coeffi[i] = mat_A[i][MAT_SIZE];
   }
-  printf("ST coeffi: ");
-  for (int i = 0; i < SIZE; i++) {
-    printf("a[%d] = %.2f\t", i, mat_A[i][SIZE]);
-  }
-  printf("\n");
+  /*   printf("ST coeffi: ");
+    for (int i = 0; i < MAT_SIZE; i++) {
+      printf("a[%d] = %.2f\t", i, mat_A[i][MAT_SIZE]);
+    }
+    printf("\n"); */
   return;
 }
 
@@ -272,6 +274,56 @@ void drawTsrSign(const TsrInfo* tsr_info) {
       circle(tsr_pos.x, tsr_pos.y, r);
     }
   }
+}
+
+void drawMotionInfo(const SpdInfo* spd_info) {
+  // set spd display
+  char spd_title[10] = "Spd: ";
+  char set_title[10] = "SET: ";
+  char str_spd[5];
+  char str_set[5];
+  int vDis = round(spd_info->cur_spd * 3.6f);
+  int vSetDis = round(spd_info->set_spd * 3.6f);
+  itoa(vDis, str_spd, 10);
+  itoa(vSetDis, str_set, 10);
+  strcat(spd_title, str_spd);
+  strcat(set_title, str_set);
+  // ACC mode: 3-stand still, 4-stand active, 5-active, 6-override
+  if (spd_info->acc_mode <= 5 && spd_info->acc_mode >= 3)
+    settextcolor(GREEN);
+  else if (spd_info->acc_mode == 6)
+    settextcolor(RED);
+  else
+    settextcolor(BLACK);
+
+  outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y - textheight(spd_title),
+            spd_title);
+  if (spd_info->acc_mode <= 6 && spd_info->acc_mode >= 3)
+    outtextxy(g_origin2.x + 12 * g_xScale2,
+              g_origin2.y - 2 * textheight(spd_title), set_title);
+
+  char alc_side[8];
+  memset(alc_side, '\0', sizeof(alc_side));
+  if (spd_info->alc_side == 1)
+    strcpy(alc_side, "ALC_L");
+  else if (spd_info->alc_side == 2)
+    strcpy(alc_side, "ALC_R");
+  // alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
+  // 4-in target line, 5-finished,6-Back to Ego, 8-takeover, 9-popMsgReq
+  char alc_sts[12];
+  memset(alc_sts, '\0', sizeof(alc_sts));
+  if (spd_info->alc_sts == 2)
+    strcpy(alc_sts, "Hold");
+  else if (spd_info->alc_sts == 3 || spd_info->alc_sts == 4)
+    strcpy(alc_sts, "Changing");
+  else if (spd_info->alc_sts == 6)
+    strcpy(alc_sts, "Back");
+  else if (spd_info->alc_sts == 8)
+    strcpy(alc_sts, "Takeover");
+
+  outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y - 100, alc_side);
+  outtextxy(g_origin2.x + 12 * g_xScale2,
+            g_origin2.y - 100 + textheight(alc_side), alc_sts);
 }
 
 void drawTrajectory(const float* coeffs,
@@ -511,6 +563,7 @@ void showSTGraph(const int length,
   }
 #endif
 }
+
 void showBEVGraph(const int length,
                   const int width,
                   const int offset,
@@ -615,28 +668,8 @@ void showBEVGraph(const int length,
     drawCar(&ego_pred, str_ego_pred, 1, 0);
     // setfillstyle(BS_SOLID);
   }
-
-  // set spd display
-  char spd_title[10] = "Spd: ";
-  char set_title[10] = "SET: ";
-  char str_spd[5];
-  char str_set[5];
-  int vDis = round(spd_info->cur_spd * 3.6f);
-  int vSetDis = round(spd_info->set_spd * 3.6f);
-  itoa(vDis, str_spd, 10);
-  itoa(vSetDis, str_set, 10);
-  strcat(spd_title, str_spd);
-  strcat(set_title, str_set);
-  if (spd_info->acc_mode <= 5 && spd_info->acc_mode >= 3)
-    settextcolor(GREEN);
-  else
-    settextcolor(BLACK);
-  outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y - textheight(spd_title),
-            spd_title);
-  outtextxy(g_origin2.x + 12 * g_xScale2,
-            g_origin2.y - 2 * textheight(spd_title), set_title);
-
-  // ruler scaley
+  // ego spd info and lane change status
+  drawMotionInfo(spd_info);
   drawBEVRuler();
 }
 

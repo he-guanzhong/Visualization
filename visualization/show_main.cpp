@@ -17,10 +17,10 @@ uint8 g_truncated_col;
 // 120};changeleft
 float egoAcc, egoSpd, spdLmt;
 float ego_coeffs[8] = {0, 0, 0, 0, 0, 0, 0, 120};  // go straight
+int accMode, alcSide, alcSts;
 Point s_points[6], v_points[6], a_points[6];
 Point ctrlPoint;
 bool AlcLgtCtrlEnbl;
-int accMode;
 float left_coeffs[8] = {0, 0, 0, 0, 0, 3.4f / 2.0f, -30, 120};
 float leftleft_coeffs[8] = {0, 0, 0, 0, 0, 3.4f * 1.5f, -30, 120};
 float right_coeffs[8] = {0, 0, 0, 0, 0, -3.4f / 2.0f, -30, 120};
@@ -40,8 +40,9 @@ float time_data[DATA_NUM];
 float egoSpd_data[DATA_NUM];
 float egoAcc_data[DATA_NUM];
 float spdLmt_data[DATA_NUM];
-float Alc_path_data[6][DATA_NUM];
-int acc_mode_data[DATA_NUM];
+float alc_path_data[6][DATA_NUM];
+int accMode_data[DATA_NUM];
+int alcSts_data[2][DATA_NUM];
 
 bool AlcLgtCtrlEnbl_data[DATA_NUM];
 int truncated_col_data[DATA_NUM];
@@ -51,32 +52,33 @@ float v_points_data[6][DATA_NUM];
 float a_points_data[6][DATA_NUM];
 float t_points_data[6][DATA_NUM];
 
-bool objs_valid_flag_data[10][DATA_NUM] = {0};
-int objs_lane_index_data[10][DATA_NUM] = {0};
-int objs_type_data[10][DATA_NUM] = {0};
-float objs_pos_x_data[10][DATA_NUM] = {0};
-float objs_pos_y_data[10][DATA_NUM] = {0};
-float objs_speed_x_data[10][DATA_NUM] = {0};
-float objs_speed_y_data[10][DATA_NUM] = {0};
-float objs_pos_yaw_data[10][DATA_NUM] = {0};
+bool objs_valid_flag_data[10][DATA_NUM];
+int objs_lane_index_data[10][DATA_NUM];
+int objs_type_data[10][DATA_NUM];
+float objs_pos_x_data[10][DATA_NUM];
+float objs_pos_y_data[10][DATA_NUM];
+float objs_speed_x_data[10][DATA_NUM];
+float objs_speed_y_data[10][DATA_NUM];
+float objs_acc_x_data[10][DATA_NUM];
+float objs_pos_yaw_data[10][DATA_NUM];
 
 int tsr_spd_data[DATA_NUM];
 bool tsr_spd_warn_data[DATA_NUM];
 int tsr_tsi_data[2][DATA_NUM];
 
-bool tsr_valid_flag_data[3][DATA_NUM] = {0};
-int tsr_type_data[3][DATA_NUM] = {0};
-float tsr_pos_x_data[3][DATA_NUM] = {0};
-float tsr_pos_y_data[3][DATA_NUM] = {0};
+bool tsr_valid_flag_data[3][DATA_NUM];
+int tsr_type_data[3][DATA_NUM];
+float tsr_pos_x_data[3][DATA_NUM];
+float tsr_pos_y_data[3][DATA_NUM];
 
-float ll_path_data[8][DATA_NUM] = {0};
-float l_path_data[8][DATA_NUM] = {0};
-float r_path_data[8][DATA_NUM] = {0};
-float rr_path_data[8][DATA_NUM] = {0};
-float ll_path_me_data[8][DATA_NUM] = {0};
-float l_path_me_data[8][DATA_NUM] = {0};
-float r_path_me_data[8][DATA_NUM] = {0};
-float rr_path_me_data[8][DATA_NUM] = {0};
+float ll_path_data[8][DATA_NUM];
+float l_path_data[8][DATA_NUM];
+float r_path_data[8][DATA_NUM];
+float rr_path_data[8][DATA_NUM];
+float ll_path_me_data[8][DATA_NUM];
+float l_path_me_data[8][DATA_NUM];
+float r_path_me_data[8][DATA_NUM];
+float rr_path_me_data[8][DATA_NUM];
 
 void ReadOutputData(const int t) {
   // spd plan result
@@ -100,11 +102,13 @@ void ReadInputData(const int t) {
   egoSpd = egoSpd_data[t];
   egoAcc = egoAcc_data[t];
   spdLmt = spdLmt_data[t];
-  accMode = acc_mode_data[t];
+  accMode = accMode_data[t];
+  alcSide = alcSts_data[0][t];
+  alcSts = alcSts_data[1][t];
 
   // c0->c5 orders of ego and alc_path are opposite
   for (int i = 1; i <= 5; i++)
-    ego_coeffs[i] = Alc_path_data[5 - i][t];
+    ego_coeffs[i] = alc_path_data[5 - i][t];
 
   // obstacles
   g_ssmFrameType.Ssm_Objs_Frame_st.obj_num = 10;
@@ -120,6 +124,7 @@ void ReadInputData(const int t) {
         objs_speed_x_data[i][t];
     g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].speed_y =
         objs_speed_y_data[i][t];
+    g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].acc_x = objs_acc_x_data[i][t];
     g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].pos_yaw =
         objs_pos_yaw_data[i][t];
   }
@@ -137,18 +142,17 @@ void ReadInputData(const int t) {
       leftleft_coeffs[i] = ll_path_data[i][t];
       rightright_coeffs[i] = rr_path_data[i][t];
     }
-    if (playMode == PLAYMODE::FUSION) {
-      if (i <= 5) {
-        left_coeffs_me[i] = l_path_me_data[5 - i][t];
-        right_coeffs_me[i] = r_path_me_data[5 - i][t];
-        leftleft_coeffs_me[i] = ll_path_me_data[5 - i][t];
-        rightright_coeffs_me[i] = rr_path_me_data[5 - i][t];
-      } else {
-        left_coeffs_me[i] = l_path_me_data[i][t];
-        right_coeffs_me[i] = r_path_me_data[i][t];
-        leftleft_coeffs_me[i] = ll_path_me_data[i][t];
-        rightright_coeffs_me[i] = rr_path_me_data[i][t];
-      }
+    // show me original lines
+    if (i <= 5) {
+      left_coeffs_me[i] = l_path_me_data[5 - i][t];
+      right_coeffs_me[i] = r_path_me_data[5 - i][t];
+      leftleft_coeffs_me[i] = ll_path_me_data[5 - i][t];
+      rightright_coeffs_me[i] = rr_path_me_data[5 - i][t];
+    } else {
+      left_coeffs_me[i] = l_path_me_data[i][t];
+      right_coeffs_me[i] = r_path_me_data[i][t];
+      leftleft_coeffs_me[i] = ll_path_me_data[i][t];
+      rightright_coeffs_me[i] = rr_path_me_data[i][t];
     }
   }
 
@@ -262,8 +266,9 @@ void DisplayLog(const int length, const int width, const int offset) {
             ego_coeffs,         left_coeffs,       leftleft_coeffs,
             right_coeffs,       rightright_coeffs, left_coeffs_me,
             leftleft_coeffs_me, right_coeffs_me,   rightright_coeffs_me};
-        SpdInfo spd_info = {egoSpd, fmax(v_points[4].y, v_points[5].y), spdLmt,
-                            accMode};
+        SpdInfo spd_info = {egoSpd,  fmax(v_points[4].y, v_points[5].y),
+                            spdLmt,  accMode,
+                            alcSide, alcSts};
 
         if (playMode == PLAYMODE::FUSION) {
           showBEVGraph(length, width, offset, 0, 0, 0.0f, 100.0f, &tsr_info,
@@ -386,8 +391,9 @@ void DisplayOneStep(const int length, const int width, const int offset) {
       ego_coeffs,         left_coeffs,       leftleft_coeffs,
       right_coeffs,       rightright_coeffs, left_coeffs_me,
       leftleft_coeffs_me, right_coeffs_me,   rightright_coeffs_me};
-  SpdInfo spd_info = {v_points[0].y, fmax(v_points[4].y, v_points[5].y), spdLmt,
-                      accMode};
+  SpdInfo spd_info = {v_points[0].y, fmax(v_points[4].y, v_points[5].y),
+                      spdLmt,        accMode,
+                      alcSide,       alcSts};
 
   showBEVGraph(length / 2, width, offset, length / 2, 0, 30.0f, 150.0f,
                &tsr_info, &g_ssmFrameType, &lines_info, &spd_info);
@@ -436,7 +442,7 @@ void GenerateLocalData() {
   memset(&ssmFrame, 0, sizeof(ssmFrame));
   DummySsmData(&ssmFrame);
 
-  egoSpd = 25.0f, egoAcc = 0.0f, spdLmt = 33.3f;
+  egoSpd = 15.0f, egoAcc = 0.0f, spdLmt = 33.3f;
   float cycle_s = 0.1f;
   float obs_pos_x[10] = {0};
   float obs_pos_y[10] = {0};
@@ -454,6 +460,7 @@ void GenerateLocalData() {
     spdLmt_data[t] = spdLmt;
     egoAcc_data[t] = egoAcc;
     egoSpd_data[t] = egoSpd;
+    accMode_data[t] = 5;
 
     for (int k = 0; k < 10; k++) {
       if (t == 0) {  // initial obs pos
@@ -584,6 +591,7 @@ void ReleaseWrapper() {
     if (playMode == PLAYMODE::LOOPBACK)
       LoopbackCalculation();
 #endif
+    playMode = ctrl_point_data[0][0] < 0.01f ? PLAYMODE::FUSION : playMode;
     int length = playMode == PLAYMODE::FUSION ? 400 : 750;
     DisplayLog(length, 750, 100);
   } else {
@@ -596,7 +604,7 @@ void ReleaseWrapper() {
 int main() {
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(1);
+  playMode = PLAYMODE(2);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();
@@ -614,18 +622,18 @@ int main() {
       ReleaseWrapper();
       break;
   };
-  int memoryCost = sizeof(time_data) + sizeof(egoSpd_data) * 3 +
-                   sizeof(Alc_path_data) + sizeof(ctrl_point_data) +
+  int memoryCost = sizeof(time_data) + sizeof(egoSpd_data) * 5 +
+                   sizeof(alc_path_data) + sizeof(ctrl_point_data) +
                    sizeof(truncated_col_data) * 2 + sizeof(s_points_data) * 4 +
                    sizeof(objs_valid_flag_data) + sizeof(objs_lane_index_data) +
-                   sizeof(objs_type_data) + sizeof(objs_pos_x_data) * 5 +
+                   sizeof(objs_type_data) + sizeof(objs_pos_x_data) * 6 +
                    sizeof(tsr_spd_data) * 3 + sizeof(tsr_spd_warn_data) +
                    sizeof(tsr_valid_flag_data) + sizeof(tsr_type_data) +
                    2 * sizeof(tsr_pos_x_data) + sizeof(ll_path_data) * 8;
 // printf("Memory: %d kB\n", memoryCost / 1024);
 #else
-  // for customers, fix play mode to FUSION
-  playMode = PLAYMODE::FUSION;
+  // for customers, play mode depends on whether spd plan data exists
+  playMode = PLAYMODE::LOG;
   ReleaseWrapper();
 #endif
   return 0;
