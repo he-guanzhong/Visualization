@@ -1,7 +1,7 @@
 # Autonomous Driving Visualization Tool
 - [English](#english)
 - [中文](#中文)
-
+- [Français](#français)
 ## English
 ### Discription
 This tool, specifically designed and implemented in autonomous driving domain, enables you to replay logs in the (.csv) format  
@@ -46,3 +46,24 @@ All rights reserved by HGZ
 - 可执行文件路径 
 ` /build/spdplan.exe  `
 - 同路径下还提供了两个样例，供自测
+
+## Français
+### La description
+Cet outil, spécialement conçu et implémenté dans le domaine de la conduite autonome, vous permet de rejouer les logs au format (.csv)  
+S’il est équipé d’un code source de planification de vitesse, il pourrait être utilisé non seulement pour le bouclage de données, mais aussi pour la simulation locale  
+Les informations d’affichage suivantes sont actuellement prises en charge :
+1. Obstacles (position, vitesse, cap, trajectoire de prédiction)
+2. Lignes de voie (gauche, droite, prochaine gauche, prochaine droite)
+3. Résultats du plan de vitesse (graphiques S-T, V-T, A-T)
+4. État du mouvement de l’ego (vitesse réglée/réelle, mode ACC)
+5. Informations TSR (panneau de limitation de vitesse, panneau spécial, affichage de l’ego/état d’alerte)
+### L’installation 
+* Plate-forme : Windows (Linux non pris en charge en raison de l’incompatibilité d’EasyX)
+* Langage : C++
+* MinGW : Pour exécuter un fichier exécutable (.exe), un environnement installé MinGW est strictement requis. [Site de téléchargement officiel de MinGW](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
+* EasyX : Pour compiler le programme avec le code source, l’installation d’EasyX est indispensable. [Site de téléchargement officiel d’EasyX](https://codebus.cn/bestans/easyx-for-mingw)
+### L'utilisation
+- Format de journal reconnaissable : (**.csv**)  
+- Pour télécharger un fichier exécutable conforme, reportez-vous à la section 
+  ` /build/spdplan.exe `
+- Pour plus de commodité, deux exemples de journaux sont fournis dans le même répertoire à des fins d’auto-test
