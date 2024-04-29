@@ -209,14 +209,14 @@ void LoadLog() {
   for (int i = 0; i < numColumns; i++) {
     if (strcmp(columns[i], "t[s]") == 0)
       Ts = i;
-    else if (strcmp(columns[i], "VfPASP_egoSpd_mps[]") == 0 ||
-             strcmp(columns[i], "VfACCSTM_VehicleSpeed_mps[]") == 0)
+    else if (strcmp(columns[i], "VfACCSTM_VehicleSpeed_mps[]") == 0 ||
+             strcmp(columns[i], "VfPASP_egoSpd_mps[]") == 0)
       EGO_V = i;
-    else if (strcmp(columns[i], "VfPASP_egoAcc_mpss[]") == 0 ||
-             strcmp(columns[i], "VfACCSTM_Algt_mpss[]") == 0)
+    else if (strcmp(columns[i], "VfACCSTM_Algt_mpss[]") == 0 ||
+             strcmp(columns[i], "VfPASP_egoAcc_mpss[]") == 0)
       EGO_A = i;
-    else if (strcmp(columns[i], "VfPASP_spdLmt_kph[]") == 0 ||
-             strcmp(columns[i], "VfLGIN_SetSpeedRaw_kph[]") == 0)
+    else if (strcmp(columns[i], "VfLGIN_SetSpeedRaw_kph[]") == 0 ||
+             strcmp(columns[i], "VfPASP_spdLmt_kph[]") == 0)
       SPD_LMT = i;
 
     else if (strcmp(columns[i], "VeACCSTM_AccMode_enum[]") == 0)
@@ -293,13 +293,13 @@ void LoadLog() {
       P_V[5] = i;
     else if (strcmp(columns[i], "VfPASP_StPoint5_a_mpss[]") == 0)
       P_A[5] = i;
-    else if (strcmp(columns[i], "VfPASP_StPointCtrl_t_s[]") == 0)
+    else if (strcmp(columns[i], "VfPASP_StPointCtrl0_t_s[]") == 0)
       P_T[6] = i;
-    else if (strcmp(columns[i], "VfPASP_StPointCtrl_s_m[]") == 0)
+    else if (strcmp(columns[i], "VfPASP_StPointCtrl0_s_m[]") == 0)
       P_S[6] = i;
-    else if (strcmp(columns[i], "VfPASP_StPointCtrl_v_mps[]") == 0)
+    else if (strcmp(columns[i], "VfPASP_StPointCtrl0_v_mps[]") == 0)
       P_V[6] = i;
-    else if (strcmp(columns[i], "VfPASP_StPointCtrl_a_mpss[]") == 0)
+    else if (strcmp(columns[i], "VfPASP_StPointCtrl0_a_mpss[]") == 0)
       P_A[6] = i;
 
     // obstacle, 0 = IV
@@ -663,9 +663,11 @@ void LoadLog() {
       if (IVS_Present[k] == 0)
         continue;
 
+      // rear obs lat spd not stable, unacceptable
       if (0 == k || 2 == k || 3 == k || 6 == k || 7 == k) {
         pos_x_compensation =
             2.5f + (objs_type_data[k][t] == 2 ? 7.6f : 5.0f) / 2.0f;
+        objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
       } else {
         pos_x_compensation = 2.5f;
       }
@@ -674,7 +676,6 @@ void LoadLog() {
       objs_pos_x_data[k][t] = values[IVS_LgDis[k]][t] + pos_x_compensation;
       objs_pos_y_data[k][t] = values[IVS_LaDis[k]][t] * -1;
       objs_speed_x_data[k][t] = values[IVS_V[k]][t];
-      objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
       objs_acc_x_data[k][t] = IVS_A[k] ? values[IVS_A[k]][t] : 0;
       objs_pos_yaw_data[k][t] = IVS_Yaw[k] ? values[IVS_Yaw[k]][t] * -1 : 0;
 

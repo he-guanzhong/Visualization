@@ -7,6 +7,7 @@
 extern SsmFrameType g_ssmFrameType;
 extern uint8 g_truncated_col;
 extern float VfPASP_TimeUsed_ms;
+extern bool show_predict_swt;
 #else
 SsmFrameType g_ssmFrameType;
 uint8 g_truncated_col;
@@ -16,7 +17,7 @@ uint8 g_truncated_col;
 // float ego_coeffs[8] = {6.0113e-10, -1.707e-7, 1.4243e-5, 0, 0, 0, 0,
 // 120};changeleft
 float egoAcc, egoSpd, spdLmt;
-float ego_coeffs[8] = {0, 0, 0, 0, 0, 0, 0, 120};  // go straight
+float ego_coeffs[8] = {0, 0, 0, 0, 0, 0.0001, -0.001, 120};  // go straight
 int accMode, alcSide, alcSts;
 Point s_points[6], v_points[6], a_points[6];
 Point ctrlPoint;
@@ -205,15 +206,17 @@ void DisplayLog(const int length, const int width, const int offset) {
   bool playSwitch = true;
   bool refleshScreen = false;
   int t = 0;
-  int cycle = 50;  // unit: ms
+  int cycle = 100;  // unit: ms
   char playStatus[10] = "Playing";
 
   BeginBatchDraw();
   while (1) {
     // mouse clicks to change play status
     if (peekmessage(&msg, EX_MOUSE)) {
-      if (msg.message == WM_LBUTTONDOWN && (msg.y < 0.95f * width) &&
-          (msg.y > 0.25f * width)) {
+      if (functionButton(msg)) {
+        refleshScreen = true;
+      } else if (msg.message == WM_LBUTTONDOWN && (msg.y < 0.95f * width) &&
+                 (msg.y > 0.25f * width)) {
         playSwitch = !playSwitch;
         memset(playStatus, '\0', sizeof(playStatus));
         strcpy(playStatus, playSwitch ? "Playing" : "Paused");
@@ -323,7 +326,7 @@ void CalcOneStep() {
   SsmFrameType ssmFrame;
   memset(&ssmFrame, 0, sizeof(ssmFrame));
   if (playMode == PLAYMODE::ONESTEP) {
-    egoSpd = 25.0f, egoAcc = 0.0f, spdLmt = 33.3f;
+    egoSpd = 15.0f, egoAcc = 0.0f, spdLmt = 33.3f;
     DummySsmData(&ssmFrame);
   } else {
     ssmFrame = g_ssmFrameType;
@@ -342,26 +345,26 @@ void CalcOneStep() {
                          &ssmFrame.Ssm_Objs_Frame_st.obj_lists[8],
                          &ssmFrame.Ssm_Objs_Frame_st.obj_lists[9]);
 
-  s_points[0] = {output.point0.t, output.point0.s};
-  s_points[1] = {output.point1.t, output.point1.s};
-  s_points[2] = {output.point2.t, output.point2.s};
-  s_points[3] = {output.point3.t, output.point3.s};
-  s_points[4] = {output.point4.t, output.point4.s};
-  s_points[5] = {output.point5.t, output.point5.s};
-  v_points[0] = {output.point0.t, output.point0.v};
-  v_points[1] = {output.point1.t, output.point1.v};
-  v_points[2] = {output.point2.t, output.point2.v};
-  v_points[3] = {output.point3.t, output.point3.v};
-  v_points[4] = {output.point4.t, output.point4.v};
-  v_points[5] = {output.point5.t, output.point5.v};
-  a_points[0] = {output.point0.t, output.point0.a};
-  a_points[1] = {output.point1.t, output.point1.a};
-  a_points[2] = {output.point2.t, output.point2.a};
-  a_points[3] = {output.point3.t, output.point3.a};
-  a_points[4] = {output.point4.t, output.point4.a};
-  a_points[5] = {output.point5.t, output.point5.a};
+  s_points[0] = {output.Point0.t, output.Point0.s};
+  s_points[1] = {output.Point1.t, output.Point1.s};
+  s_points[2] = {output.Point2.t, output.Point2.s};
+  s_points[3] = {output.Point3.t, output.Point3.s};
+  s_points[4] = {output.Point4.t, output.Point4.s};
+  s_points[5] = {output.Point5.t, output.Point5.s};
+  v_points[0] = {output.Point0.t, output.Point0.v};
+  v_points[1] = {output.Point1.t, output.Point1.v};
+  v_points[2] = {output.Point2.t, output.Point2.v};
+  v_points[3] = {output.Point3.t, output.Point3.v};
+  v_points[4] = {output.Point4.t, output.Point4.v};
+  v_points[5] = {output.Point5.t, output.Point5.v};
+  a_points[0] = {output.Point0.t, output.Point0.a};
+  a_points[1] = {output.Point1.t, output.Point1.a};
+  a_points[2] = {output.Point2.t, output.Point2.a};
+  a_points[3] = {output.Point3.t, output.Point3.a};
+  a_points[4] = {output.Point4.t, output.Point4.a};
+  a_points[5] = {output.Point5.t, output.Point5.a};
 
-  ctrlPoint = {output.pointCtrl.t, output.pointCtrl.a};
+  ctrlPoint = {output.pointCtrl0.t, output.pointCtrl0.a};
   AlcLgtCtrlEnbl = output.AlcLgtCtrlEnbl;
   /*   printf("Time: %.2f ms. \t Memory: %ld Byte \n", VfPASP_TimeUsed_ms,
            g_ALC_MEMORY_SIZE);
@@ -375,6 +378,18 @@ void CalcOneStep() {
       printf("Point%d: t = %.1f, s = %.1f, v = %.1f, a = %.1f \n", i,
              s_points[i].x, s_points[i].y, v_points[i].y, a_points[i].y);
     }
+    printf("Ctrl 0: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
+           output.pointCtrl0.t, output.pointCtrl0.s, output.pointCtrl0.v,
+           output.pointCtrl0.a);
+    printf("Ctrl 1: t = %.3f, s = %.2f, v = %.3f, a = %.3f \n",
+           output.pointCtrl1.t, output.pointCtrl1.s, output.pointCtrl1.v,
+           output.pointCtrl1.a);
+    printf("Ctrl 2: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
+           output.pointCtrl2.t, output.pointCtrl2.s, output.pointCtrl2.v,
+           output.pointCtrl2.a);
+    printf("Ctrl 3: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
+           output.pointCtrl3.t, output.pointCtrl3.s, output.pointCtrl3.v,
+           output.pointCtrl3.a);
     float fit_coeffi[6] = {0};
     quinticPolyFit(s_points[1].x, s_points[0].y, v_points[0].y, a_points[0].y,
                    s_points[1].y, v_points[1].y, a_points[1].y, fit_coeffi);
@@ -394,7 +409,7 @@ void DisplayOneStep(const int length, const int width, const int offset) {
   SpdInfo spd_info = {v_points[0].y, fmax(v_points[4].y, v_points[5].y),
                       spdLmt,        accMode,
                       alcSide,       alcSts};
-
+  show_predict_swt = true;
   showBEVGraph(length / 2, width, offset, length / 2, 0, 30.0f, 150.0f,
                &tsr_info, &g_ssmFrameType, &lines_info, &spd_info);
   showSTGraph(length / 2, width / 2, offset, 0, 0, 0.0f, 5.0f, 120.0f,
@@ -442,7 +457,7 @@ void GenerateLocalData() {
   memset(&ssmFrame, 0, sizeof(ssmFrame));
   DummySsmData(&ssmFrame);
 
-  egoSpd = 15.0f, egoAcc = 0.0f, spdLmt = 33.3f;
+  egoSpd = 15.0f, egoAcc = 0.0f, spdLmt = 20.0f;
   float cycle_s = 0.1f;
   float obs_pos_x[10] = {0};
   float obs_pos_y[10] = {0};
@@ -512,26 +527,25 @@ void GenerateLocalData() {
                            &ssmFrame.Ssm_Objs_Frame_st.obj_lists[7],
                            &ssmFrame.Ssm_Objs_Frame_st.obj_lists[8],
                            &ssmFrame.Ssm_Objs_Frame_st.obj_lists[9]);
-    s_points[0] = {output.point0.t, output.point0.s};
-    s_points[1] = {output.point1.t, output.point1.s};
-    s_points[2] = {output.point2.t, output.point2.s};
-    s_points[3] = {output.point3.t, output.point3.s};
-    s_points[4] = {output.point4.t, output.point4.s};
-    s_points[5] = {output.point5.t, output.point5.s};
-    v_points[0] = {output.point0.t, output.point0.v};
-    v_points[1] = {output.point1.t, output.point1.v};
-    v_points[2] = {output.point2.t, output.point2.v};
-    v_points[3] = {output.point3.t, output.point3.v};
-    v_points[4] = {output.point4.t, output.point4.v};
-    v_points[5] = {output.point5.t, output.point5.v};
-    a_points[0] = {output.point0.t, output.point0.a};
-    a_points[1] = {output.point1.t, output.point1.a};
-    a_points[2] = {output.point2.t, output.point2.a};
-    a_points[3] = {output.point3.t, output.point3.a};
-    a_points[4] = {output.point4.t, output.point4.a};
-    a_points[5] = {output.point5.t, output.point5.a};
-    a_points[5] = {output.point5.t, output.point5.a};
-    ctrlPoint = {output.pointCtrl.t, output.pointCtrl.a};
+    s_points[0] = {output.Point0.t, output.Point0.s};
+    s_points[1] = {output.Point1.t, output.Point1.s};
+    s_points[2] = {output.Point2.t, output.Point2.s};
+    s_points[3] = {output.Point3.t, output.Point3.s};
+    s_points[4] = {output.Point4.t, output.Point4.s};
+    s_points[5] = {output.Point5.t, output.Point5.s};
+    v_points[0] = {output.Point0.t, output.Point0.v};
+    v_points[1] = {output.Point1.t, output.Point1.v};
+    v_points[2] = {output.Point2.t, output.Point2.v};
+    v_points[3] = {output.Point3.t, output.Point3.v};
+    v_points[4] = {output.Point4.t, output.Point4.v};
+    v_points[5] = {output.Point5.t, output.Point5.v};
+    a_points[0] = {output.Point0.t, output.Point0.a};
+    a_points[1] = {output.Point1.t, output.Point1.a};
+    a_points[2] = {output.Point2.t, output.Point2.a};
+    a_points[3] = {output.Point3.t, output.Point3.a};
+    a_points[4] = {output.Point4.t, output.Point4.a};
+    a_points[5] = {output.Point5.t, output.Point5.a};
+    ctrlPoint = {output.pointCtrl0.t, output.pointCtrl0.a};
     AlcLgtCtrlEnbl = output.AlcLgtCtrlEnbl;
 
     // assume inertia delay 0.5s
@@ -584,19 +598,19 @@ void ReleaseWrapper() {
   ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
   if (GetOpenFileNameA(&ofn) == TRUE) {
-    printf("Selected file: %s\n", ofn.lpstrFile);
+    //   printf("Selected file: %s\n", ofn.lpstrFile);
     strcpy(csvFileName, ofn.lpstrFile);
     LoadLog();
 #ifdef SPEED_PLANNING_H_
     if (playMode == PLAYMODE::LOOPBACK)
       LoopbackCalculation();
 #endif
-    playMode = ctrl_point_data[0][0] < 0.01f ? PLAYMODE::FUSION : playMode;
+    playMode = ctrl_point_data[0][0] < 1e-6f ? PLAYMODE::FUSION : playMode;
     int length = playMode == PLAYMODE::FUSION ? 400 : 750;
     DisplayLog(length, 750, 100);
   } else {
-    printf("No file selected\n");
-    system("pause");
+    //  printf("No file selected\n");
+    //  system("pause");
   }
   return;
 }
@@ -604,7 +618,7 @@ void ReleaseWrapper() {
 int main() {
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(2);
+  playMode = PLAYMODE(3);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();

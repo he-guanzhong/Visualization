@@ -107,10 +107,9 @@ void quinticPolyFit(float T,
                     float v1,
                     float a1,
                     float coeffi[MAT_SIZE]) {
-  if (MAT_SIZE != 6)
-    return;
-  // fifth degree polynominal fitting, set augmented matrix
-  // s = a0 + a1*t + a2*t^2 + a3*t^3 + a4*t^4 + a5*t^5
+// fifth degree polynominal fitting, set augmented matrix
+// s = a0 + a1*t + a2*t^2 + a3*t^3 + a4*t^4 + a5*t^5
+#if MAT_SIZE == 6
   float mat_A[MAT_SIZE][MAT_SIZE + 1] = {
       {1, 0, 0, 0, 0, 0, s0},
       {0, 1, 0, 0, 0, 0, v0},
@@ -118,16 +117,23 @@ void quinticPolyFit(float T,
       {1, T, T * T, T * T * T, T * T * T * T, T * T * T * T * T, s1},
       {0, 1, 2 * T, 3 * T * T, 4 * T * T * T, 5 * T * T * T * T, v1},
       {0, 0, 2, 6 * T, 12 * T * T, 20 * T * T * T, a1}};
-
+#elif MAT_SIZE == 4
+  float mat_A[MAT_SIZE][MAT_SIZE + 1] = {
+      {1, 0, 0, 0, s0},
+      {0, 1, 0, 0, v0},
+      {1, T, T * T, T * T * T, s1},
+      {0, 1, 2 * T, 3 * T * T, v1},
+  };
+#endif
   gaussianElimination(mat_A);
   for (int i = 0; i < MAT_SIZE; i++) {
     fit_coeffi[i] = mat_A[i][MAT_SIZE];
   }
-  /*   printf("ST coeffi: ");
-    for (int i = 0; i < MAT_SIZE; i++) {
-      printf("a[%d] = %.2f\t", i, mat_A[i][MAT_SIZE]);
-    }
-    printf("\n"); */
+/*   printf("ST coeffi: ");
+  for (int i = 0; i < MAT_SIZE; i++) {
+    printf("a[%d] = %.2f\t", i, mat_A[i][MAT_SIZE]);
+  }
+  printf("\n"); */
   return;
 }
 
@@ -142,26 +148,29 @@ void coordinateTrans2(Point* point) {
   point->y = g_origin2.y - tmp * g_yScale2;
 }
 
-void strCompletion(char* str, const int index, const int spd) {
-  char szIndex[2];
-  itoa(index, szIndex, 10);
-  strcat(str, szIndex);
-  strcat(str, ": ");
+void strCompletion(char str[2][8], const int index, const int spd) {
+  const char* obsName[11] = {"IV ",  "RIV ",  "NIVL", "NIIVL", "RIVL", "RIIVL",
+                             "NIVR", "NIIVR", "RIVR", "RIIVR", "ego "};
+  strcpy(str[0], obsName[index]);
   char szSpd[3];
   itoa(spd, szSpd, 10);
-  strcat(str, szSpd);
-  strcat(str, " m/s");
+  strcpy(str[1], szSpd);
+  strcat(str[1], " m/s");
 }
 
-void drawCar(Point* car, const char* str, int carType, const float yaw) {
+void drawCar(Point* car,
+             const char str[2][8],
+             int carType,
+             const float yaw,
+             const int index) {
   // ObjType of ME: 0=UNFILLED, 1=CAR, 2=TRUCK, 3=MOTORBIKE, 4=BICYCLE,
   // 5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL
   if (carType > 3)
     carType = 0;
-  float carLen_table[4] = {5.0f, 5.0f, 7.6f, 2.5f};
-  float carWid_table[4] = {1.8f, 1.8f, 2.1f, 0.6f};
-  float carLen = carLen_table[carType];
-  float carWid = carWid_table[carType];
+  float car_len_tbl[4] = {2.2f, 5.0f, 6.8f, 2.5f};
+  float car_wid_tbl[4] = {1.2f, 1.8f, 2.0f, 0.6f};
+  float carLen = car_len_tbl[carType];
+  float carWid = car_wid_tbl[carType];
   // display: left-hand system. control: right-hand system
   float halfLenCos = carLen / 2.0f * cos(yaw),
         halfLenSin = carLen / 2.0f * sin(yaw);
@@ -183,7 +192,18 @@ void drawCar(Point* car, const char* str, int carType, const float yaw) {
   /*   fillrectangle(car->x - carWid / 2, car->y - carLen / 2, car->x + carWid /
      2, car->y + carLen / 2); */
   fillpolygon(vertices_show, 4);
-  outtextxy(car->x - textwidth(str) / 2, car->y + textheight(str) / 2, str);
+  if (index == 0 || index == 1 || index == 10) {
+    outtextxy(car->x - textwidth(str[0]), car->y + textheight(str[0]) / 2,
+              str[0]);
+    outtextxy(car->x, car->y + textheight(str[1]) / 2, str[1]);
+  } else if (index <= 5) {
+    outtextxy(car->x - 20 - textwidth(str[0]), car->y - textheight(str[0]),
+              str[0]);
+    outtextxy(car->x - 20 - textwidth(str[1]), car->y, str[1]);
+  } else {
+    outtextxy(car->x + 20, car->y - textheight(str[0]), str[0]);
+    outtextxy(car->x + 20, car->y, str[1]);
+  }
 }
 
 void drawPolygon(const Point* center, const int num, const float rotateDegree) {
@@ -628,19 +648,20 @@ void showBEVGraph(const int length,
 
     SsmObsType obs = g_ssmFrameType->Ssm_Objs_Frame_st.obj_lists[i];
     Point obs_cur = {obs.pos_x, obs.pos_y};
-    char str_obs_cur[20] = "obs";
+    char str_obs_cur[2][8] = {};
     strCompletion(str_obs_cur, i, obs.speed_x);
     setlinecolor(BLACK);
     setfillcolor(DARKGRAY);
-    drawCar(&obs_cur, str_obs_cur, obs.type, obs.pos_yaw);
+    drawCar(&obs_cur, str_obs_cur, obs.type, obs.pos_yaw, i);
 
     Point obs_pred = {obs.pos_x + obs.speed_x * 5.0f,
                       obs.pos_y + obs.speed_y * 5.0f};
     if (show_predict_swt && obs.speed_x > 1.0f) {
-      char str_obs_pred[20] = "obs_pred";
+      char str_obs_pred[2][8] = {};
+      strcpy(str_obs_pred[1], "Pred");
       setfillcolor(LIGHTGRAY);
       strCompletion(str_obs_pred, i, obs.speed_x);
-      drawCar(&obs_pred, str_obs_pred, obs.type, obs.pos_yaw);
+      drawCar(&obs_pred, str_obs_pred, obs.type, obs.pos_yaw, i);
       setlinecolor(LIGHTGRAY);
       setlinestyle(PS_DASH);
       line(obs_cur.x, obs_cur.y, obs_pred.x, obs_pred.y);
@@ -656,16 +677,18 @@ void showBEVGraph(const int length,
   setfillcolor(RED);
   setlinestyle(PS_SOLID);
   Point ego = {0.0f, lines_info->ego_coeffs[5]};
-  char str_ego[20] = "ego";
-  strCompletion(str_ego, 0, spd_info->cur_spd);
-  drawCar(&ego, str_ego, 1, 0.0f);
+  char str_ego[2][8] = {};
+  strcpy(str_ego[0], "ego");
+  strCompletion(str_ego, 10, spd_info->cur_spd);
+  drawCar(&ego, str_ego, 1, 0.0f, 10);
 
   if (show_predict_swt && predictPosn.x > 2.0f) {
     // setfillstyle(BS_HATCHED, HS_DIAGCROSS);
     Point ego_pred = {predictPosn.x, predictPosn.y};
-    char str_ego_pred[20] = "ego_pred";
-    strCompletion(str_ego_pred, 0, spd_info->pred_spd);
-    drawCar(&ego_pred, str_ego_pred, 1, 0);
+    char str_ego_pred[2][8] = {};
+    strcpy(str_ego_pred[0], "ego_pred");
+    strCompletion(str_ego_pred, 10, spd_info->pred_spd);
+    drawCar(&ego_pred, str_ego_pred, 1, 0, 10);
     // setfillstyle(BS_SOLID);
   }
   // ego spd info and lane change status
@@ -694,18 +717,18 @@ bool button(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
             text);
   return ans;
 }
-void functionButton(ExMessage msg) {
+bool functionButton(ExMessage msg) {
   setlinecolor(BLACK);
   // while (1) {
-  button(&msg, g_origin2.x + 11 * g_xScale2, 50, 60, 30, &show_predict_swt);
+  return button(&msg, g_origin2.x + 11 * g_xScale2, 50, 60, 30,
+                &show_predict_swt);
 
   // BeginBatchDraw();
   //  cleardevice();
 
   // EndBatchDraw();
   // msg.message = 0;
-  //}
-  return;
+  // return;
 }
 
 void keyboardTest() {

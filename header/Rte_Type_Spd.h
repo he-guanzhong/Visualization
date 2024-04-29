@@ -167,8 +167,9 @@ typedef struct {
   SInt32 Reserve2;
 } TsObjTyp;
 
-#define Rte_TypeDef_StPoint_Array_9
-typedef StPoint StPoint_Array_9[9];
+// hgz from 9->10
+#define Rte_TypeDef_StPoint_Array_10
+typedef StPoint StPoint_Array_10[10];
 
 #define Rte_TypeDef_DpSpdPoints
 typedef struct {
@@ -180,20 +181,30 @@ typedef struct {
   UInt32 ALCDangerObjFrntId;
   UInt32 ALCDangerObjRearId;
   Float Reserved_f32;
-  StPoint_Array_9 speedPoints;
+  StPoint_Array_10 speedPoints;
 } DpSpdPoints;
+
+#define Rte_TypeDef_DpSpeedPointsTest  // hgz test
+typedef struct {
+  Boolean AlcLatCtrlEnbl;
+  Boolean AlcLgtCtrlEnbl;
+  StPoint_Array_10 Points;
+} DpSpeedPointsTest;
 
 #define Rte_TypeDef_DpSpeedPoints  // hgz
 typedef struct {
   Boolean AlcLatCtrlEnbl;
   Boolean AlcLgtCtrlEnbl;
-  StPoint point0;
-  StPoint point1;
-  StPoint point2;
-  StPoint point3;
-  StPoint point4;
-  StPoint point5;
-  StPoint pointCtrl;
+  StPoint Point0;
+  StPoint Point1;
+  StPoint Point2;
+  StPoint Point3;
+  StPoint Point4;
+  StPoint Point5;
+  StPoint pointCtrl0;
+  StPoint pointCtrl1;
+  StPoint pointCtrl2;
+  StPoint pointCtrl3;
 } DpSpeedPoints;
 
 #define Rte_TypeDef_rt_Array_SsmCurvatureType_20
@@ -281,7 +292,7 @@ typedef struct {
   SsmObjType Ssm_Objs_Frame_st;
 } SsmFrameType;
 
-#endif /* RTE_TYPE_H */
+#endif /* RTE_TYPE_SPD_H */
 
 /**********************************************************************************************************************
  MISRA 2012 violations and justifications

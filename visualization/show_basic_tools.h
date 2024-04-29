@@ -78,8 +78,12 @@ void quinticPolyFit(float T,
 void coordinateTrans1(Point* point);
 void coordinateTrans2(Point* point);
 
-void strCompletion(char* str, const int index, const int spd);
-void drawCar(Point* car, const char* str, int carType, const float yaw);
+void strCompletion(char str[2][8], const int index, const int spd);
+void drawCar(Point* car,
+             const char str[2][8],
+             int carType,
+             const float yaw,
+             const int index);
 
 void drawPolygon(const Point* center, const int num, const float rotateDegree);
 void drawTsrSign(const TsrInfo* tsr_info);
@@ -126,7 +130,7 @@ void showBEVGraph(const int length,
 
 bool inArea(int mx, int my, int x, int y, int w, int h);
 bool button(ExMessage* msg, int x, int y, int w, int h, bool* swt);
-void functionButton(ExMessage msg);
+bool functionButton(ExMessage msg);
 void keyboardTest();
 
 #endif  // SHOW_BASIC_TOOLS_H_
