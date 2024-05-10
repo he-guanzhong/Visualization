@@ -14,10 +14,10 @@ uint8 g_truncated_col;
 #endif
 
 // Key display information
-// float ego_coeffs[8] = {6.0113e-10, -1.707e-7, 1.4243e-5, 0, 0, 0, 0,
-// 120};changeleft
+// float ego_coeffs[8] = {6.0113e-10,-1.707e-7,1.4243e-5,0,0,0,0,120};changeleft
 float egoAcc, egoSpd, spdLmt;
-float ego_coeffs[8] = {0, 0, 0, 0, 0, 0.0001, -0.001, 120};  // go straight
+float ego_coeffs[8] = {0,       0,     1.07e-7f, 1.98e-6f,
+                       -0.0018, 0.072, 0,        120};  // go straight
 int accMode, alcSide, alcSts;
 Point s_points[6], v_points[6], a_points[6];
 Point ctrlPoint;
@@ -207,7 +207,6 @@ void DisplayLog(const int length, const int width, const int offset) {
   bool refleshScreen = false;
   int t = 0;
   int cycle = 100;  // unit: ms
-  char playStatus[10] = "Playing";
 
   BeginBatchDraw();
   while (1) {
@@ -218,9 +217,6 @@ void DisplayLog(const int length, const int width, const int offset) {
       } else if (msg.message == WM_LBUTTONDOWN && (msg.y < 0.95f * width) &&
                  (msg.y > 0.25f * width)) {
         playSwitch = !playSwitch;
-        memset(playStatus, '\0', sizeof(playStatus));
-        strcpy(playStatus, playSwitch ? "Playing" : "Paused");
-        // printf("%s\n", playStatus);
       } else if (msg.message == WM_LBUTTONDOWN && (msg.y > 0.95f * width)) {
         float rate = (float)msg.x / (float)length;
         t = rate * totalTime;
@@ -301,8 +297,8 @@ void DisplayLog(const int length, const int width, const int offset) {
         functionButton(msg);
         setbkmode(OPAQUE);
         outtextxy(length / 3, 0, "Paused ");
-        FlushBatchDraw();
         setbkmode(TRANSPARENT);
+        FlushBatchDraw();
         Sleep(500);
       }
     }
@@ -326,7 +322,7 @@ void CalcOneStep() {
   SsmFrameType ssmFrame;
   memset(&ssmFrame, 0, sizeof(ssmFrame));
   if (playMode == PLAYMODE::ONESTEP) {
-    egoSpd = 15.0f, egoAcc = 0.0f, spdLmt = 33.3f;
+    egoSpd = 13.48f, egoAcc = -0.85f, spdLmt = 60.0 / 3.6f;
     DummySsmData(&ssmFrame);
   } else {
     ssmFrame = g_ssmFrameType;
@@ -366,6 +362,8 @@ void CalcOneStep() {
 
   ctrlPoint = {output.pointCtrl0.t, output.pointCtrl0.a};
   AlcLgtCtrlEnbl = output.AlcLgtCtrlEnbl;
+  ego_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
+
   /*   printf("Time: %.2f ms. \t Memory: %ld Byte \n", VfPASP_TimeUsed_ms,
            g_ALC_MEMORY_SIZE);
     printf("Direct: %d, Default result: \n", g_laneChangeDirection); */
@@ -443,9 +441,10 @@ void LoopbackCalculation() {
 }
 
 void GenerateLocalData() {
+  egoSpd = 15.0f, egoAcc = 0.0f, spdLmt = 20.0f;
+
   AlcPathVcc alcPathVcc;
   memset(&alcPathVcc, 0, sizeof(alcPathVcc));
-
   alcPathVcc.FiveCoeff = ego_coeffs[0];
   alcPathVcc.FourCoeff = ego_coeffs[1];
   alcPathVcc.ThrdCoeff = ego_coeffs[2];
@@ -457,7 +456,6 @@ void GenerateLocalData() {
   memset(&ssmFrame, 0, sizeof(ssmFrame));
   DummySsmData(&ssmFrame);
 
-  egoSpd = 15.0f, egoAcc = 0.0f, spdLmt = 20.0f;
   float cycle_s = 0.1f;
   float obs_pos_x[10] = {0};
   float obs_pos_y[10] = {0};
@@ -618,7 +616,7 @@ void ReleaseWrapper() {
 int main() {
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(3);
+  playMode = PLAYMODE(2);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();

@@ -129,11 +129,11 @@ void quinticPolyFit(float T,
   for (int i = 0; i < MAT_SIZE; i++) {
     fit_coeffi[i] = mat_A[i][MAT_SIZE];
   }
-/*   printf("ST coeffi: ");
-  for (int i = 0; i < MAT_SIZE; i++) {
-    printf("a[%d] = %.2f\t", i, mat_A[i][MAT_SIZE]);
-  }
-  printf("\n"); */
+  /*   printf("ST coeffi: ");
+    for (int i = 0; i < MAT_SIZE; i++) {
+      printf("a[%d] = %.2f\t", i, mat_A[i][MAT_SIZE]);
+    }
+    printf("\n"); */
   return;
 }
 
@@ -172,6 +172,7 @@ void drawCar(Point* car,
   float carLen = car_len_tbl[carType];
   float carWid = car_wid_tbl[carType];
   // display: left-hand system. control: right-hand system
+  // vertice order: upper-right -> lower-right-> lower-left -> upper-left
   float halfLenCos = carLen / 2.0f * cos(yaw),
         halfLenSin = carLen / 2.0f * sin(yaw);
   float halfWidCos = carWid / 2.0f * cos(yaw),
@@ -189,9 +190,24 @@ void drawCar(Point* car,
     vertices_show[i].x = vertices[i].x;
     vertices_show[i].y = vertices[i].y;
   }
-  /*   fillrectangle(car->x - carWid / 2, car->y - carLen / 2, car->x + carWid /
-     2, car->y + carLen / 2); */
+
   fillpolygon(vertices_show, 4);
+
+  if (carType == 3) {  // motorbike outline
+    rectangle(car->x - car_wid_tbl[1] / 2.0f * g_xScale2,
+              car->y - car_len_tbl[1] / 2.0f * g_yScale2,
+              car->x + car_wid_tbl[1] / 2.0f * g_xScale2,
+              car->y + car_len_tbl[1] / 2.0f * g_yScale2);
+    /*     int dir[5] = {1, 1, -1, -1, 1};
+        for (int i = 0; i < 4; i++) {
+          vertices_show[i].x +=
+              car_wid_tbl[1] / car_wid_tbl[3] * g_yScale2 * dir[i];
+          vertices_show[i].y +=
+              car_len_tbl[1] / car_len_tbl[3] * g_xScale2 * dir[i + 1];
+        }
+        polygon(vertices_show, 4); */
+  }
+
   if (index == 0 || index == 1 || index == 10) {
     outtextxy(car->x - textwidth(str[0]), car->y + textheight(str[0]) / 2,
               str[0]);
@@ -209,13 +225,13 @@ void drawCar(Point* car,
 void drawPolygon(const Point* center, const int num, const float rotateDegree) {
   int r = 15;
   int vertex_x = r, vertex_y = 0;
-  POINT vertices[num];
+  POINT vertices_show[num];
   for (int i = 0; i < num; i++) {
     vertex_x = center->x + r * cos(2 * M_PI / num * i + rotateDegree);
     vertex_y = center->y + r * sin(2 * M_PI / num * i + rotateDegree);
-    vertices[i] = {vertex_x, vertex_y};
+    vertices_show[i] = {vertex_x, vertex_y};
   }
-  polygon(vertices, num);
+  polygon(vertices_show, num);
 }
 
 void drawTsrSign(const TsrInfo* tsr_info) {
@@ -300,14 +316,14 @@ void drawMotionInfo(const SpdInfo* spd_info) {
   // set spd display
   char spd_title[10] = "Spd: ";
   char set_title[10] = "SET: ";
-  char str_spd[5];
-  char str_set[5];
-  int vDis = round(spd_info->cur_spd * 3.6f);
-  int vSetDis = round(spd_info->set_spd * 3.6f);
-  itoa(vDis, str_spd, 10);
-  itoa(vSetDis, str_set, 10);
-  strcat(spd_title, str_spd);
-  strcat(set_title, str_set);
+  char str_cur_spd[5];
+  char str_set_spd[5];
+  int cur_spd = round(spd_info->cur_spd * 3.6f);
+  int set_spd = round(spd_info->set_spd * 3.6f);
+  itoa(cur_spd, str_cur_spd, 10);
+  itoa(set_spd, str_set_spd, 10);
+  strcat(spd_title, str_cur_spd);
+  strcat(set_title, str_set_spd);
   // ACC mode: 3-stand still, 4-stand active, 5-active, 6-override
   if (spd_info->acc_mode <= 5 && spd_info->acc_mode >= 3)
     settextcolor(GREEN);
@@ -443,6 +459,19 @@ void drawBasicGraph(const int len,
   }
 }
 
+/// @brief s-t/v-t/a-t graph
+/// @param length       plot area length
+/// @param width        plot area width
+/// @param offset       distance between graph and plot area boundary
+/// @param oriX         plot area origin x in overall canvas (LH coordinate)
+/// @param oriY         plot area origin y in overall canvas (LH coordinate)
+/// @param zeroOffsetY  vertical distance from origin to lower-left corner
+/// @param rangeX       display range of x-axis
+/// @param rangeY       display range of y-axis
+/// @param title        title string
+/// @param pointColor
+/// @param points       point coordinates to be displayed
+/// @param ctrlPoint    a-t graph only, accelerations sent to control
 void showSTGraph(const int length,
                  const int width,
                  const int offset,
@@ -487,13 +516,11 @@ void showSTGraph(const int length,
   outtextxy(g_origin1.x + (len - textwidth(titleX)) / 2,
             g_origin1.y + textheight(titleX), titleX);
 
+  Point curDrawP = {0, 0};
+  Point lastDrawP = points[0];
+  coordinateTrans1(&lastDrawP);
 #if BEZIER_SWITCH == 1
   // bezier curve from result point
-  /*   memset(drawP, 0, sizeof(drawP));
-    for (int i = 0; i <= 5; i++) {
-      drawP[i][0] = points[i].x;
-      drawP[i][1] = points[i].y;
-    } */
   if (title[0] == 'S') {
     memset(drawP, 0, sizeof(drawP));
     for (int i = 0; i <= 5; i++) {
@@ -501,13 +528,10 @@ void showSTGraph(const int length,
       drawP[i][1] = points[i].y;
     }
   }
-  Point curDrawP = {0, 0};
-  Point lastDrawP = points[0];
-  coordinateTrans1(&lastDrawP);
+
   for (float i = 0.0f; i < 5; i += 0.4f) {
     if (title[0] == 'S') {
       bezierPoint(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
-
     } else if (title[0] == 'V') {
       bezierDerivative(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
       curDrawP.y = curDrawP.y / curDrawP.x;
@@ -515,24 +539,14 @@ void showSTGraph(const int length,
       // printf("v, x =%.2f , y =%.2f\n ", curDrawP.x, curDrawP.y);
     } else if (title[0] == 'A') {
       bezierSecDerivative(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
-
       curDrawP.y = curDrawP.y;
       curDrawP.y += zeroOffsetY;
       curDrawP.x = i;
       // printf("a, x =%.2f , y =%.2f\n ", curDrawP.x, curDrawP.y);
     }
-
     // bezierPoint(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
-
-    curDrawP.y += zeroOffsetY;
-    coordinateTrans1(&curDrawP);
-    line(lastDrawP.x, lastDrawP.y, curDrawP.x, curDrawP.y);
-    lastDrawP = curDrawP;
   }
 #endif
-  Point curDrawP = {0, 0};
-  Point lastDrawP = points[0];
-  coordinateTrans1(&lastDrawP);
   for (float i = 0.0f; i < 2; i += 0.1f) {
     if (title[0] == 'S') {
       curDrawP = {i, fit_coeffi[0] + fit_coeffi[1] * i + fit_coeffi[2] * i * i +
@@ -671,6 +685,8 @@ void showBEVGraph(const int length,
   // navigation path, ego c7 as end point
   float naviRange = lines_info->ego_coeffs[7];
   Point predictPosn = {0.0f, 0.0f};
+  drawTrajectory(lines_info->ego_coeffs, LIGHTRED, naviRange,
+                 fmax(50.0f, naviRange), &predictPosn);
   drawTrajectory(lines_info->ego_coeffs, RED, 0.0f, naviRange, &predictPosn);
 
   // ego car
@@ -697,6 +713,7 @@ void showBEVGraph(const int length,
 }
 
 // following functions beckup
+// delay 100ms to eliminate misoperation caused by long press
 bool inArea(int mx, int my, int x, int y, int w, int h) {
   return (mx > x && mx < x + w && my > y && my < y + h);
 }
@@ -705,12 +722,14 @@ bool button(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
       msg->message == WM_LBUTTONDOWN && inArea(msg->x, msg->y, x, y, w, h);
   if (ans) {
     *swt = !(*swt);
+    Sleep(100);
   }
   const char* text = (*swt) ? "Pred On" : "Pred Off";
   if (inArea(msg->x, msg->y, x, y, w, h))
     setfillcolor(CYAN);
   else
     setfillcolor(RGB(255, 255, 255));
+  setlinecolor(BLACK);
   fillroundrect(x, y, x + w, y + h, 5, 5);
   settextcolor(BLACK);
   outtextxy(x + (w - textwidth(text)) / 2, y + (h - textheight(text)) / 2,
@@ -718,7 +737,6 @@ bool button(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
   return ans;
 }
 bool functionButton(ExMessage msg) {
-  setlinecolor(BLACK);
   // while (1) {
   return button(&msg, g_origin2.x + 11 * g_xScale2, 50, 60, 30,
                 &show_predict_swt);
