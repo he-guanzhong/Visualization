@@ -6,7 +6,6 @@
 #ifdef SPEED_PLANNING_H_
 extern SsmFrameType g_ssmFrameType;
 extern uint8 g_truncated_col;
-extern float VfPASP_TimeUsed_ms;
 extern bool show_predict_swt;
 #else
 SsmFrameType g_ssmFrameType;
@@ -364,12 +363,9 @@ void CalcOneStep() {
   AlcLgtCtrlEnbl = output.AlcLgtCtrlEnbl;
   ego_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
 
-  /*   printf("Time: %.2f ms. \t Memory: %ld Byte \n", VfPASP_TimeUsed_ms,
-           g_ALC_MEMORY_SIZE);
+  /*   printf("Memory: %ld Byte \n", g_ALC_MEMORY_SIZE);
     printf("Direct: %d, Default result: \n", g_laneChangeDirection); */
   if (playMode == PLAYMODE::ONESTEP) {
-    printf("Time: %.2f ms, g_truncated_col: %d\n", VfPASP_TimeUsed_ms,
-           g_truncated_col);
     printf("AlcLatEnbl: %d, \t AlcLgtEnble: %d\n", output.AlcLatCtrlEnbl,
            output.AlcLgtCtrlEnbl);
     for (int i = 0; i <= 5; i++) {
