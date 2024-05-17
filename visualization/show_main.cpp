@@ -7,13 +7,16 @@
 extern SsmFrameType g_ssmFrameType;
 extern uint8 g_truncated_col;
 extern bool show_predict_swt;
+extern float VfPASP_InnerSetSpd_kph;
+extern uint8 VePASP_SpecialCaseFlg;
 #else
 SsmFrameType g_ssmFrameType;
 uint8 g_truncated_col;
 #endif
 
 // Key display information
-// float ego_coeffs[8] = {6.0113e-10,-1.707e-7,1.4243e-5,0,0,0,0,120};changeleft
+// float ego_coeffs[8] =
+// {6.0113e-10,-1.707e-7,1.4243e-5,0,0,0,0,120};changeleft
 float egoAcc, egoSpd, spdLmt;
 float ego_coeffs[8] = {0,       0,     1.07e-7f, 1.98e-6f,
                        -0.0018, 0.072, 0,        120};  // go straight
@@ -21,6 +24,8 @@ int accMode, alcSide, alcSts;
 Point s_points[6], v_points[6], a_points[6];
 Point ctrlPoint;
 bool AlcLgtCtrlEnbl;
+float innerSpdLmt;
+int specCaseFlg;
 float left_coeffs[8] = {0, 0, 0, 0, 0, 3.4f / 2.0f, -30, 120};
 float leftleft_coeffs[8] = {0, 0, 0, 0, 0, 3.4f * 1.5f, -30, 120};
 float right_coeffs[8] = {0, 0, 0, 0, 0, -3.4f / 2.0f, -30, 120};
@@ -33,7 +38,7 @@ float rightright_coeffs_me[8];
 
 // temporary storage of log data
 PLAYMODE playMode;
-int totalTime = DATA_NUM;
+int totalFrame = DATA_NUM;
 char csvFileName[150];
 
 float time_data[DATA_NUM];
@@ -46,6 +51,9 @@ int alcSts_data[2][DATA_NUM];
 
 bool AlcLgtCtrlEnbl_data[DATA_NUM];
 int truncated_col_data[DATA_NUM];
+float innerSpdLmt_data[DATA_NUM];
+int specCaseFlg_data[DATA_NUM];
+
 float ctrl_point_data[2][DATA_NUM];
 float s_points_data[6][DATA_NUM];
 float v_points_data[6][DATA_NUM];
@@ -80,6 +88,9 @@ float l_path_me_data[8][DATA_NUM];
 float r_path_me_data[8][DATA_NUM];
 float rr_path_me_data[8][DATA_NUM];
 
+float original_data[DATA_NUM];
+float loopback_data[DATA_NUM];
+
 void ReadOutputData(const int t) {
   // spd plan result
   for (int i = 0; i <= 5; i++) {
@@ -93,6 +104,8 @@ void ReadOutputData(const int t) {
   AlcLgtCtrlEnbl = AlcLgtCtrlEnbl_data[t];
   g_truncated_col = truncated_col_data[t];
   ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[1][t]};
+  innerSpdLmt = innerSpdLmt_data[t];
+  specCaseFlg = specCaseFlg_data[t];
 
   // use alc c7 as line end
   ego_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
@@ -178,15 +191,15 @@ void ReadInputData(const int t) {
 }
 
 void Time2Str(const float time, char* str) {
-  char szTotalTime_s[8];
+  char szTime_s[8];
   int tt_m = (int)time / 60;
   float tt_s = fmod(time, 60);
   if (tt_m) {
     sprintf(str, "%d", tt_m);
     strcat(str, "m ");
-    sprintf(szTotalTime_s, "%.2f", tt_s);
-    strcat(szTotalTime_s, "s");
-    strcat(str, szTotalTime_s);
+    sprintf(szTime_s, "%.2f", tt_s);
+    strcat(szTime_s, "s");
+    strcat(str, szTime_s);
   } else {
     sprintf(str, "%.2f", tt_s);
     strcat(str, "s");
@@ -194,7 +207,7 @@ void Time2Str(const float time, char* str) {
 }
 
 void DisplayLog(const int length, const int width, const int offset) {
-  if (totalTime <= 0)
+  if (totalFrame <= 0)
     return;
   initgraph(length, width);
   setbkcolor(WHITE);
@@ -218,7 +231,7 @@ void DisplayLog(const int length, const int width, const int offset) {
         playSwitch = !playSwitch;
       } else if (msg.message == WM_LBUTTONDOWN && (msg.y > 0.95f * width)) {
         float rate = (float)msg.x / (float)length;
-        t = rate * totalTime;
+        t = rate * totalFrame;
         refleshScreen = true;
       } else if (msg.message == WM_RBUTTONDOWN) {
         break;
@@ -230,7 +243,7 @@ void DisplayLog(const int length, const int width, const int offset) {
         refleshScreen = false;
 
         // time
-        t = (t == totalTime - 1 ? 1 : ++t);
+        t = (t == totalFrame - 1 ? 1 : ++t);
         cycle = (time_data[t] - time_data[t - 1]) * 1000;
         char szCycle[12];
         Time2Str(time_data[t], szCycle);
@@ -249,10 +262,10 @@ void DisplayLog(const int length, const int width, const int offset) {
         outtextxy(0, width - 5 - textheight(csvFileName), csvFileName);
         // progress bar
         setfillcolor(GREEN);
-        solidrectangle(0, width - 5, (float)t / (float)totalTime * length,
+        solidrectangle(0, width - 5, (float)t / (float)totalFrame * length,
                        width);
         char szTotalTime[13];
-        Time2Str(time_data[totalTime - 1], szTotalTime);
+        Time2Str(time_data[totalFrame - 1], szTotalTime);
 
         outtextxy(length - textwidth(szTotalTime),
                   width - 5 - textheight(szTotalTime), szTotalTime);
@@ -264,22 +277,33 @@ void DisplayLog(const int length, const int width, const int offset) {
             ego_coeffs,         left_coeffs,       leftleft_coeffs,
             right_coeffs,       rightright_coeffs, left_coeffs_me,
             leftleft_coeffs_me, right_coeffs_me,   rightright_coeffs_me};
-        SpdInfo spd_info = {egoSpd,  fmax(v_points[4].y, v_points[5].y),
-                            spdLmt,  accMode,
-                            alcSide, alcSts};
+        SpdInfo spd_info = {egoSpd,      fmax(v_points[4].y, v_points[5].y),
+                            spdLmt,      innerSpdLmt,
+                            specCaseFlg, accMode,
+                            alcSide,     alcSts};
 
         if (playMode == PLAYMODE::FUSION) {
-          showBEVGraph(length, width, offset, 0, 0, 0.0f, 100.0f, &tsr_info,
-                       &g_ssmFrameType, &lines_info, &spd_info);
+          GraphConfig BEV_cfg = {length / 2, width,  offset,     0,
+                                 0,          100.0f, 3.4f * 5.0f};
+          showBEVGraph(&BEV_cfg, 0, &tsr_info, &g_ssmFrameType, &lines_info,
+                       &spd_info);
         } else {
-          showBEVGraph(length / 2, width, offset, length / 2, 0, 30.0f, 130.0f,
-                       &tsr_info, &g_ssmFrameType, &lines_info, &spd_info);
-          showSTGraph(length / 2, width / 2, offset, 0, 0, 0.0f, 5.0f, 120.0f,
-                      "S-T Graph", BLUE, s_points, &ctrlPoint);
-          showSTGraph(length / 2, width * 0.4, offset, 0, width * 0.49 - offset,
-                      0.0f, 5.0f, 36.0f, "V-T", BLUE, v_points, &ctrlPoint);
-          showSTGraph(length / 2, width * 0.4, offset, 0, width * 0.75 - offset,
-                      4.0f, 5.0f, 6.0f, "A-T", RED, a_points, &ctrlPoint);
+          GraphConfig BEV_cfg = {length / 2, width,  offset,     length / 2,
+                                 0,          130.0f, 3.4f * 5.0f};
+          GraphConfig ST_cfg = {
+              length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f, 120.0f};
+          GraphConfig VT_cfg = {length / 2, (int)(width * 0.44), offset,
+                                0,          (int)(width * 0.28), 5.0f,
+                                30.0f};
+          GraphConfig AT_cfg = {length / 2, (int)(width * 0.44), offset,
+                                0,          (int)(width * 0.56), 5.0f,
+                                6.0f};
+          showBEVGraph(&BEV_cfg, 30.0f, &tsr_info, &g_ssmFrameType, &lines_info,
+                       &spd_info);
+          showXYGraph(&ST_cfg, 0.0f, "S-T Graph", BLUE, s_points, 0, 6,
+                      &ctrlPoint);
+          showXYGraph(&VT_cfg, 0.0f, "V-T", BLUE, v_points, 0, 6, &ctrlPoint);
+          showXYGraph(&AT_cfg, 4.0f, "A-T", RED, a_points, 0, 6, &ctrlPoint);
 
           char szPlanSts[10];
           itoa(g_truncated_col, szPlanSts, 10);
@@ -321,7 +345,7 @@ void CalcOneStep() {
   SsmFrameType ssmFrame;
   memset(&ssmFrame, 0, sizeof(ssmFrame));
   if (playMode == PLAYMODE::ONESTEP) {
-    egoSpd = 13.48f, egoAcc = -0.85f, spdLmt = 60.0 / 3.6f;
+    egoSpd = 13.48f, egoAcc = -0.85f, spdLmt = 20 * 3.6f;  // kph
     DummySsmData(&ssmFrame);
   } else {
     ssmFrame = g_ssmFrameType;
@@ -401,24 +425,32 @@ void DisplayOneStep(const int length, const int width, const int offset) {
       right_coeffs,       rightright_coeffs, left_coeffs_me,
       leftleft_coeffs_me, right_coeffs_me,   rightright_coeffs_me};
   SpdInfo spd_info = {v_points[0].y, fmax(v_points[4].y, v_points[5].y),
-                      spdLmt,        accMode,
+                      spdLmt,        innerSpdLmt,
+                      specCaseFlg,   accMode,
                       alcSide,       alcSts};
   show_predict_swt = true;
-  showBEVGraph(length / 2, width, offset, length / 2, 0, 30.0f, 150.0f,
-               &tsr_info, &g_ssmFrameType, &lines_info, &spd_info);
-  showSTGraph(length / 2, width / 2, offset, 0, 0, 0.0f, 5.0f, 120.0f,
-              "S-T Graph", BLUE, s_points, &ctrlPoint);
-  showSTGraph(length / 2, width * 0.4, offset, 0, width * 0.49 - offset, 0.0f,
-              5.0f, 36.0f, "V-T", BLUE, v_points, &ctrlPoint);
-  showSTGraph(length / 2, width * 0.4, offset, 0, width * 0.75 - offset, 4.0f,
-              5.0f, 6.0f, "A-T", RED, a_points, &ctrlPoint);
+  GraphConfig BEV_cfg = {length / 2, width,  offset,     length / 2,
+                         0,          130.0f, 3.4f * 5.0f};
+  showBEVGraph(&BEV_cfg, 30.0f, &tsr_info, &g_ssmFrameType, &lines_info,
+               &spd_info);
+  GraphConfig ST_cfg = {length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f,
+                        120.0f};
+  GraphConfig VT_cfg = {length / 2, (int)(width * 0.44), offset,
+                        0,          (int)(width * 0.28), 5.0f,
+                        30.0f};
+  GraphConfig AT_cfg = {length / 2, (int)(width * 0.44), offset,
+                        0,          (int)(width * 0.56), 5.0f,
+                        6.0f};
+  showXYGraph(&ST_cfg, 0.0f, "S-T Graph", BLUE, s_points, 0, 6, &ctrlPoint);
+  showXYGraph(&VT_cfg, 0.0f, "V-T", BLUE, v_points, 0, 6, &ctrlPoint);
+  showXYGraph(&AT_cfg, 4.0f, "A-T", RED, a_points, 0, 6, &ctrlPoint);
 
   system("pause");
   closegraph();
 }
 
 void LoopbackCalculation() {
-  for (int t = 0; t < totalTime; t++) {
+  for (int t = 0; t < totalFrame; t++) {
     ReadInputData(t);
     CalcOneStep();
     for (int k = 0; k <= 5; k++) {
@@ -431,13 +463,15 @@ void LoopbackCalculation() {
     truncated_col_data[t] = g_truncated_col;
     ctrl_point_data[0][t] = ctrlPoint.x;
     ctrl_point_data[1][t] = ctrlPoint.y;
+    innerSpdLmt_data[t] = VfPASP_InnerSetSpd_kph;
+    specCaseFlg_data[t] = VePASP_SpecialCaseFlg;
 
     ego_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
   }
 }
 
 void GenerateLocalData() {
-  egoSpd = 15.0f, egoAcc = 0.0f, spdLmt = 20.0f;
+  egoSpd = 15.0f, egoAcc = 0.0f, spdLmt = 20.0f * 3.6f;
 
   AlcPathVcc alcPathVcc;
   memset(&alcPathVcc, 0, sizeof(alcPathVcc));
@@ -460,8 +494,8 @@ void GenerateLocalData() {
   float accResponseDelay[5] = {0};
   int accDelay_pos = 0;
 
-  totalTime = 300;
-  for (int t = 0; t < totalTime; t++) {
+  totalFrame = 300;
+  for (int t = 0; t < totalFrame; t++) {
     time_data[t] = t * cycle_s;
 
     egoAcc = accResponseDelay[accDelay_pos];
@@ -470,6 +504,8 @@ void GenerateLocalData() {
     egoAcc_data[t] = egoAcc;
     egoSpd_data[t] = egoSpd;
     accMode_data[t] = 5;
+    innerSpdLmt_data[t] = innerSpdLmt;
+    specCaseFlg_data[t] = specCaseFlg;
 
     for (int k = 0; k < 10; k++) {
       if (t == 0) {  // initial obs pos
@@ -558,6 +594,41 @@ void GenerateLocalData() {
     ctrl_point_data[1][t] = ctrlPoint.y;
   }
 }
+
+void DisplayLineChart(const int length, const int width, const int offset) {
+  initgraph(length, width);
+  setbkcolor(WHITE);
+  setbkmode(TRANSPARENT);
+  cleardevice();
+
+  memcpy(original_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
+  LoopbackCalculation();
+  memcpy(loopback_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
+
+  const int startFrame = 500;
+  const int frameNums = 1000;
+  const int endFrame = fmin(startFrame + frameNums - 1, DATA_NUM);
+  Point original_arr[frameNums];
+  Point loopback_arr[frameNums];
+  for (int i = 0; i < frameNums; i++) {
+    original_arr[i].x = time_data[i + startFrame] - time_data[startFrame];
+    original_arr[i].y = original_data[i + startFrame];
+    loopback_arr[i].x = time_data[i + startFrame] - time_data[startFrame];
+    loopback_arr[i].y = loopback_data[i + startFrame];
+  }
+
+  GraphConfig XY_cfg = {
+      length, width, offset,
+      0,      0,     original_arr[frameNums - 1].x - original_arr[0].x,
+      6.0f};
+  showXYGraph(&XY_cfg, 4.0f, "Origin(BLUE), New(RED)", BLUE, original_arr, 0,
+              frameNums, &ctrlPoint);
+  showXYGraph(&XY_cfg, 4.0f, "Origin(BLUE), New(RED)", RED, loopback_arr, 0,
+              frameNums, &ctrlPoint);
+
+  system("pause");
+  closegraph();
+}
 #endif
 
 BOOL GetFileFromUser(char* filePath, int size) {
@@ -596,8 +667,12 @@ void ReleaseWrapper() {
     strcpy(csvFileName, ofn.lpstrFile);
     LoadLog();
 #ifdef SPEED_PLANNING_H_
-    if (playMode == PLAYMODE::LOOPBACK)
+    if (playMode == PLAYMODE::LOOPBACK) {
       LoopbackCalculation();
+    } else if (playMode == PLAYMODE::LINECHART) {
+      DisplayLineChart(1000, 400, 50);
+      return;
+    }
 #endif
     playMode = ctrl_point_data[0][0] < 1e-6f ? PLAYMODE::FUSION : playMode;
     int length = playMode == PLAYMODE::FUSION ? 400 : 750;
@@ -620,6 +695,7 @@ int main() {
       break;
     case LOG:
     case LOOPBACK:
+    case LINECHART:
       ReleaseWrapper();
       break;
     case SIMULATION:
@@ -632,7 +708,7 @@ int main() {
   };
   int memoryCost = sizeof(time_data) + sizeof(egoSpd_data) * 5 +
                    sizeof(alc_path_data) + sizeof(ctrl_point_data) +
-                   sizeof(truncated_col_data) * 2 + sizeof(s_points_data) * 4 +
+                   sizeof(truncated_col_data) * 3 + sizeof(s_points_data) * 5 +
                    sizeof(objs_valid_flag_data) + sizeof(objs_lane_index_data) +
                    sizeof(objs_type_data) + sizeof(objs_pos_x_data) * 6 +
                    sizeof(tsr_spd_data) * 3 + sizeof(tsr_spd_warn_data) +

@@ -1,9 +1,8 @@
 #ifndef SHOW_MAIN_H_
 #define SHOW_MAIN_H_
 
-// for ordinary user or secondary developer, please assign it as 1
-#define ORDINARY_USER 1
-#if ORDINARY_USER == 0
+// ordinary user: only replay function provided
+#ifdef SPDPLAN_LOCAL_TEST
 #include "spdplanning/pa_speed_planning.h"
 #endif
 
@@ -15,7 +14,8 @@ enum PLAYMODE {
   LOG = 2,
   LOOPBACK = 3,
   SIMULATION = 4,
-  FUSION = 5
+  FUSION = 5,
+  LINECHART = 6
 };
 
 void ReadInputData(const int t);
@@ -30,6 +30,8 @@ void DisplayOneStep(const int length, const int width, const int offset);
 
 void LoopbackCalculation();
 void GenerateLocalData();
+
+void DisplayLineChart(const int length, const int width, const int offset);
 #endif
 
 BOOL GetFileFromUser(char* filePath, int size);

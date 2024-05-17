@@ -1,6 +1,6 @@
 #include "visualization/show_load_log.h"
 
-extern int totalTime;
+extern int totalFrame;
 extern char csvFileName[150];
 
 extern float time_data[DATA_NUM];
@@ -13,6 +13,8 @@ extern int alcSts_data[2][DATA_NUM];
 
 extern bool AlcLgtCtrlEnbl_data[DATA_NUM];
 extern int truncated_col_data[DATA_NUM];
+extern float innerSpdLmt_data[DATA_NUM];
+extern int specCaseFlg_data[DATA_NUM];
 extern float ctrl_point_data[2][DATA_NUM];
 extern float s_points_data[6][DATA_NUM];
 extern float v_points_data[6][DATA_NUM];
@@ -56,7 +58,7 @@ inline float readValue(float** values, int col_name, int t) {
 void LoadLog() {
   FILE* file = fopen(csvFileName, "r");
   if (!file) {
-    totalTime = 0;  // ERROR CODE
+    totalFrame = 0;  // ERROR CODE
     perror("Error opening file");
     return;
   }
@@ -181,7 +183,7 @@ void LoadLog() {
 
   // time, alc path and speed plan input and output results
   int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, LGT_ENBL = 0, TRUC_CL = 0,
-      ACC_MODE = 0;
+      ACC_MODE = 0, IN_SPDLMT = 0, SPC_FLG = 0;
   int ALC_SIDE = 0, ALC_STS = 0, ALC_C[6] = {0};
   int P_T[7] = {0}, P_S[7] = {0}, P_V[7] = {0}, P_A[7] = {0};
 
@@ -227,6 +229,10 @@ void LoadLog() {
       ALC_STS = i;
     else if (strcmp(columns[i], "VbPASP_AlcLgtCtrlEnbl[]") == 0)
       LGT_ENBL = i;
+    else if (strcmp(columns[i], "VfPASP_InnerSetSpd_kph[]") == 0)
+      IN_SPDLMT = i;
+    else if (strcmp(columns[i], "VePASP_SpecialCaseFlg[]") == 0)
+      SPC_FLG = i;
     else if (strcmp(columns[i], "g_truncated_col[]") == 0)
       TRUC_CL = i;
 
@@ -621,20 +627,23 @@ void LoadLog() {
   }
 
   // log total time. ATTENTION: NaN strings occupy last 8 rows of csv
-  totalTime = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
+  totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
 
   // load data to local variables
-  for (int t = 0; t < totalTime; t++) {
+  for (int t = 0; t < totalFrame; t++) {
     time_data[t] = values[Ts][t];
     //  inner spd lmt unit: m/s, record spd lmt unit:kph
     if (EGO_V != 0) {
       egoSpd_data[t] = values[EGO_V][t];
       egoAcc_data[t] = values[EGO_A][t];
-      spdLmt_data[t] = values[SPD_LMT][t] / 3.6f;
+      spdLmt_data[t] = values[SPD_LMT][t];
       accMode_data[t] = values[ACC_MODE][t];
     }
     AlcLgtCtrlEnbl_data[t] = LGT_ENBL ? values[LGT_ENBL][t] : 0;
     truncated_col_data[t] = TRUC_CL ? values[TRUC_CL][t] : 0;
+    innerSpdLmt_data[t] = IN_SPDLMT ? values[IN_SPDLMT][t] : 0;
+    specCaseFlg_data[t] = SPC_FLG ? values[SPC_FLG][t] : 0;
+
     // alc_sts[0] for alc side: 0-0ff, 1-left, 2-right
     // alc_sts[1] for alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
     // 4-in target line, 5-finished,6-Back to Ego, 8-takeover, 9-popMsgReq

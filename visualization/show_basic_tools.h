@@ -6,16 +6,24 @@
 #else
 #error EasyX is only for Windows
 #endif
-#include <math.h>
 #include <stdio.h>
 #include "header/Rte_Type_Spd.h"
-
-#define MAT_SIZE 6
+#include "visualization/show_math.h"
 
 typedef struct {
   float x;
   float y;
 } Point;
+
+typedef struct {
+  int length;    // plot area length
+  int width;     // plot area width
+  int offset;    // distance between graph and plot area boundary
+  int oriX;      // plot area origin x in overall canvas (LH coordinate)
+  int oriY;      // plot area origin y in overall canvas (LH coordinate)
+  float rangeX;  // display range of x-axis
+  float rangeY;  // display range of y-axis
+} GraphConfig;
 
 typedef struct {
   bool valid;
@@ -34,7 +42,9 @@ typedef struct {
 typedef struct {
   float cur_spd;
   float pred_spd;
-  float set_spd;
+  float disp_set_spd;
+  float actual_set_spd;
+  int spec_case_flg;
   int acc_mode;
   int alc_side;
   int alc_sts;
@@ -51,29 +61,6 @@ typedef struct {
   float* right_coeffs_me;
   float* rightright_coeffs_me;
 } LinesInfo;
-
-int combination(int n, int k);
-void bezierPoint(float tau, int n, float points[][2], float* x, float* y);
-void bezierDerivative(float tau,
-                      int n,
-                      float points[][2],
-                      float* dx,
-                      float* dy);
-void bezierSecDerivative(float tau,
-                         int n,
-                         float points[][2],
-                         float* ddx,
-                         float* ddy);
-
-void gaussianElimination(float a[MAT_SIZE][MAT_SIZE + 1]);
-void quinticPolyFit(float T,
-                    float s0,
-                    float v0,
-                    float a0,
-                    float s1,
-                    float v1,
-                    float a1,
-                    float coeffi[MAT_SIZE]);
 
 void coordinateTrans1(Point* point);
 void coordinateTrans2(Point* point);
@@ -103,26 +90,17 @@ void drawBasicGraph(const int len,
 
 void drawBEVRuler();
 
-void showSTGraph(const int length,
-                 const int width,
-                 const int offset,
-                 const int oriX,
-                 const int oriY,
+void showXYGraph(const GraphConfig* config,
                  const float zeroOffsetY,
-                 const float rangeX,
-                 const float rangeY,
                  const char* title,
                  const int pointColor,
                  Point* points,
+                 const int pointNums,
+                 const int startIndex,
                  Point* ctrlPoint);
 
-void showBEVGraph(const int length,
-                  const int width,
-                  const int offset,
-                  const int oriX,
-                  const int oriY,
+void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,
-                  const float rangeX,
                   const TsrInfo* tsr_info,
                   const SsmFrameType* g_ssmFrameType,
                   const LinesInfo* lines_info,

@@ -1,141 +1,13 @@
 #include "visualization/show_basic_tools.h"
 
-#define BEZIER_SWITCH 0
+#define CURVE_FITTING_TYPE 0
 bool show_predict_swt = false;
-float drawP[6][2];
-float fit_coeffi[6];
 
 // Draw graph origins
 Point g_origin1 = {0.0f, 0.0f};
 float g_xScale1 = 0, g_yScale1 = 0;
 Point g_origin2 = {0.0f, 0.0f};
 float g_xScale2 = 0, g_yScale2 = 0;
-
-int combination(int n, int k) {
-  float result = 1.0f;
-  for (int i = 1; i <= k; i++)
-    result *= (n - i + 1.0f) / i;
-  return result;
-}
-void bezierPoint(float tau, int n, float points[][2], float* x, float* y) {
-  *x = 0, *y = 0;
-  if (n < 1)
-    return;
-  float t = tau / (float)n;
-  for (int i = 0; i <= n; i++) {
-    *x += combination(n, i) * pow(1 - t, n - i) * pow(t, i) * points[i][0];
-    *y += combination(n, i) * pow(1 - t, n - i) * pow(t, i) * points[i][1];
-  }
-}
-void bezierDerivative(float tau,
-                      int n,
-                      float points[][2],
-                      float* dx,
-                      float* dy) {
-  *dx = 0, *dy = 0;
-  if (n < 2)
-    return;
-  float t = tau / (float)n;
-  for (int i = 0; i < n; i++) {
-    *dx += n * combination(n - 1, i) * pow(1 - t, n - 1 - i) * pow(t, i) *
-           (points[i + 1][0] - points[i][0]);
-    *dy += n * combination(n - 1, i) * pow(1 - t, n - 1 - i) * pow(t, i) *
-           (points[i + 1][1] - points[i][1]);
-  }
-  printf("t = %.2f, dx = %.2f, dy = %.2f\n", t, *dx, *dy);
-}
-void bezierSecDerivative(float tau,
-                         int n,
-                         float points[][2],
-                         float* ddx,
-                         float* ddy) {
-  *ddx = 0, *ddy = 0;
-  if (n < 3)
-    return;
-  float t = tau / (float)n;
-  for (int i = 0; i < n - 1; i++) {
-    float dx = n * (points[i + 2][0] - 2 * points[i + 1][0] + points[i][0]);
-
-    float dy = n * (points[i + 2][1] - 2 * points[i + 1][1] + points[i][1]);
-    *ddx += n * (n - 1) * combination(n - 2, i) * pow(1 - t, n - 2 - i) *
-            pow(t, i) * dx;
-    *ddy += n * (n - 1) * combination(n - 2, i) * pow(1 - t, n - 2 - i) *
-            pow(t, i) * dy;
-  }
-  printf("t = %.2f, ddx = %.6f, ddy = %.6f\n", t, *ddx, *ddy);
-}
-
-void gaussianElimination(float a[MAT_SIZE][MAT_SIZE + 1]) {
-  int n = MAT_SIZE;
-  for (int i = 0; i < n; i++) {
-    // find largest absolute value of a[i][i] as main element
-    int maxElem = i;
-    for (int k = i + 1; k < n; k++) {
-      if (fabs(a[k][i]) > fabs(a[maxElem][i]))
-        maxElem = k;
-    }
-    // swap row of main element to first row
-    if (maxElem != i) {
-      for (int j = i; j <= n; j++) {
-        float tmp = a[i][j];
-        a[i][j] = a[maxElem][j];
-        a[maxElem][j] = tmp;
-      }
-    }
-    // simplify elements of [i+1,n) to 0. Upper triangular matrix converting
-    for (int k = i + 1; k < n; k++) {
-      float factor = a[k][i] / a[i][i];
-      for (int j = i; j <= n; j++) {
-        a[k][j] -= factor * a[i][j];
-      }
-    }
-  }
-  // regression process
-  for (int i = n - 1; i >= 0; i--) {
-    a[i][n] /= a[i][i];
-    for (int k = i - 1; k >= 0; k--) {
-      a[k][n] -= a[k][i] * a[i][n];
-    }
-  }
-}
-
-void quinticPolyFit(float T,
-                    float s0,
-                    float v0,
-                    float a0,
-                    float s1,
-                    float v1,
-                    float a1,
-                    float coeffi[MAT_SIZE]) {
-// fifth degree polynominal fitting, set augmented matrix
-// s = a0 + a1*t + a2*t^2 + a3*t^3 + a4*t^4 + a5*t^5
-#if MAT_SIZE == 6
-  float mat_A[MAT_SIZE][MAT_SIZE + 1] = {
-      {1, 0, 0, 0, 0, 0, s0},
-      {0, 1, 0, 0, 0, 0, v0},
-      {0, 0, 2, 0, 0, 0, a0},
-      {1, T, T * T, T * T * T, T * T * T * T, T * T * T * T * T, s1},
-      {0, 1, 2 * T, 3 * T * T, 4 * T * T * T, 5 * T * T * T * T, v1},
-      {0, 0, 2, 6 * T, 12 * T * T, 20 * T * T * T, a1}};
-#elif MAT_SIZE == 4
-  float mat_A[MAT_SIZE][MAT_SIZE + 1] = {
-      {1, 0, 0, 0, s0},
-      {0, 1, 0, 0, v0},
-      {1, T, T * T, T * T * T, s1},
-      {0, 1, 2 * T, 3 * T * T, v1},
-  };
-#endif
-  gaussianElimination(mat_A);
-  for (int i = 0; i < MAT_SIZE; i++) {
-    fit_coeffi[i] = mat_A[i][MAT_SIZE];
-  }
-  /*   printf("ST coeffi: ");
-    for (int i = 0; i < MAT_SIZE; i++) {
-      printf("a[%d] = %.2f\t", i, mat_A[i][MAT_SIZE]);
-    }
-    printf("\n"); */
-  return;
-}
 
 void coordinateTrans1(Point* point) {
   point->x = g_origin1.x + point->x * g_xScale1;
@@ -168,7 +40,7 @@ void drawCar(Point* car,
   if (carType > 3)
     carType = 0;
   float car_len_tbl[4] = {2.2f, 5.0f, 6.8f, 2.5f};
-  float car_wid_tbl[4] = {1.2f, 1.8f, 2.0f, 0.6f};
+  float car_wid_tbl[4] = {1.2f, 1.7f, 2.0f, 0.6f};
   float carLen = car_len_tbl[carType];
   float carWid = car_wid_tbl[carType];
   // display: left-hand system. control: right-hand system
@@ -316,14 +188,37 @@ void drawMotionInfo(const SpdInfo* spd_info) {
   // set spd display
   char spd_title[10] = "Spd: ";
   char set_title[10] = "SET: ";
+  char actual_set_title[10] = "Inn: ";
+  char spec_case_title[10] = "Spc: ";
+
   char str_cur_spd[5];
-  char str_set_spd[5];
-  int cur_spd = round(spd_info->cur_spd * 3.6f);
-  int set_spd = round(spd_info->set_spd * 3.6f);
+  char str_disp_set_spd[5];
+  char str_actual_set_spd[5];
+
+  int cur_spd = round(spd_info->cur_spd * 1.03f * 3.6f);
+  int disp_set_spd = round(spd_info->disp_set_spd);
+  int actual_set_spd = round(spd_info->actual_set_spd);
+
   itoa(cur_spd, str_cur_spd, 10);
-  itoa(set_spd, str_set_spd, 10);
+  itoa(disp_set_spd, str_disp_set_spd, 10);
+  itoa(actual_set_spd, str_actual_set_spd, 10);
   strcat(spd_title, str_cur_spd);
-  strcat(set_title, str_set_spd);
+  strcat(set_title, str_disp_set_spd);
+  strcat(actual_set_title, str_actual_set_spd);
+
+  // spd plan inner value
+  if (spd_info->spec_case_flg == 1)
+    strcat(spec_case_title, "v-30");
+  else if (spd_info->spec_case_flg == 2)
+    strcat(spec_case_title, "a-1");
+  else if (spd_info->spec_case_flg == 3)
+    strcat(spec_case_title, "curv");
+
+  outtextxy(g_origin2.x + 12 * g_xScale2,
+            g_origin2.y - 4 * textheight(spd_title), spec_case_title);
+  outtextxy(g_origin2.x + 12 * g_xScale2,
+            g_origin2.y - 5 * textheight(spd_title), actual_set_title);
+
   // ACC mode: 3-stand still, 4-stand active, 5-active, 6-override
   if (spd_info->acc_mode <= 5 && spd_info->acc_mode >= 3)
     settextcolor(GREEN);
@@ -334,9 +229,10 @@ void drawMotionInfo(const SpdInfo* spd_info) {
 
   outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y - textheight(spd_title),
             spd_title);
-  if (spd_info->acc_mode <= 6 && spd_info->acc_mode >= 3)
+  if (spd_info->acc_mode <= 6 && spd_info->acc_mode >= 3) {
     outtextxy(g_origin2.x + 12 * g_xScale2,
               g_origin2.y - 2 * textheight(spd_title), set_title);
+  }
 
   char alc_side[8];
   memset(alc_side, '\0', sizeof(alc_side));
@@ -357,9 +253,9 @@ void drawMotionInfo(const SpdInfo* spd_info) {
   else if (spd_info->alc_sts == 8)
     strcpy(alc_sts, "Takeover");
 
-  outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y - 100, alc_side);
+  outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y - 150, alc_side);
   outtextxy(g_origin2.x + 12 * g_xScale2,
-            g_origin2.y - 100 + textheight(alc_side), alc_sts);
+            g_origin2.y - 150 + textheight(alc_side), alc_sts);
 }
 
 void drawTrajectory(const float* coeffs,
@@ -459,45 +355,36 @@ void drawBasicGraph(const int len,
   }
 }
 
-/// @brief s-t/v-t/a-t graph
-/// @param length       plot area length
-/// @param width        plot area width
-/// @param offset       distance between graph and plot area boundary
-/// @param oriX         plot area origin x in overall canvas (LH coordinate)
-/// @param oriY         plot area origin y in overall canvas (LH coordinate)
+/// @brief show bacis x-y graph
+/// @param config       basic graph configuration
 /// @param zeroOffsetY  vertical distance from origin to lower-left corner
-/// @param rangeX       display range of x-axis
-/// @param rangeY       display range of y-axis
 /// @param title        title string
 /// @param pointColor
 /// @param points       point coordinates to be displayed
 /// @param ctrlPoint    a-t graph only, accelerations sent to control
-void showSTGraph(const int length,
-                 const int width,
-                 const int offset,
-                 const int oriX,
-                 const int oriY,
+void showXYGraph(const GraphConfig* config,
                  const float zeroOffsetY,
-                 const float rangeX,
-                 const float rangeY,
                  const char* title,
                  const int pointColor,
                  Point* points,
+                 const int startIndex,
+                 const int pointNums,
                  Point* ctrlPoint) {
   // float zeroOffsetY = 4.0f;  // positive means: 0 moves up
-  float len = length - 2 * offset;
-  float wid = width - 2 * offset;
+  float len = config->length - 2 * config->offset;
+  float wid = config->width - 2 * config->offset;
 
   // x = horizental, y = vertical
-  g_origin1 = {(float)(oriX + offset), (float)(oriY + offset + wid)};
-  g_xScale1 = len / rangeX;
-  g_yScale1 = wid / rangeY;
+  g_origin1 = {(float)(config->oriX + config->offset),
+               (float)(config->oriY + config->offset + wid)};
+  g_xScale1 = len / config->rangeX;
+  g_yScale1 = wid / config->rangeY;
 
-  drawBasicGraph(len, wid, rangeX, rangeY, zeroOffsetY);
+  drawBasicGraph(len, wid, config->rangeX, config->rangeY, zeroOffsetY);
 
   //  titles
   settextcolor(BLACK);
-  settextstyle(30, 0, "Calibri");
+  settextstyle(25, 0, "Calibri");
   outtextxy(g_origin1.x + len / 2 - textwidth(title) / 2,
             g_origin1.y - wid - textheight(title), title);
   settextstyle(20, 0, "Calibri", 900, 900, 0, 0, 0, 0);
@@ -507,8 +394,10 @@ void showSTGraph(const int length,
     strcpy(titleY, "A (m/s2)");
   else if (title[0] == 'V')
     strcpy(titleY, "V (m/s)");
-  else
+  else if (title[0] == 'S')
     strcpy(titleY, "S (m)");
+  else
+    strcpy(titleY, "y");
 
   outtextxy(g_origin1.x - 50, g_origin1.y - wid / 2, titleY);
   settextstyle(20, 0, "Calibri", 0, 0, 0, 0, 0, 0);
@@ -519,7 +408,8 @@ void showSTGraph(const int length,
   Point curDrawP = {0, 0};
   Point lastDrawP = points[0];
   coordinateTrans1(&lastDrawP);
-#if BEZIER_SWITCH == 1
+#if CURVE_FITTING_TYPE == 1
+  float drawP[6][2];
   // bezier curve from result point
   if (title[0] == 'S') {
     memset(drawP, 0, sizeof(drawP));
@@ -546,7 +436,7 @@ void showSTGraph(const int length,
     }
     // bezierPoint(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
   }
-#endif
+#elif CURVE_FITTING_TYPE == 2
   for (float i = 0.0f; i < 2; i += 0.1f) {
     if (title[0] == 'S') {
       curDrawP = {i, fit_coeffi[0] + fit_coeffi[1] * i + fit_coeffi[2] * i * i +
@@ -568,17 +458,22 @@ void showSTGraph(const int length,
     line(lastDrawP.x, lastDrawP.y, curDrawP.x, curDrawP.y);
     lastDrawP = curDrawP;
   }
-
+#endif
   // result points
   setfillcolor(pointColor);
-  for (int i = 0; i < 6; i++) {
+  setlinecolor(pointColor);
+  for (int i = startIndex; i < startIndex + pointNums; i++) {
     float val = points[i].y;
     points[i].y += zeroOffsetY;
     coordinateTrans1(&points[i]);
-    solidcircle(points[i].x, points[i].y, 5);
-    char str[4] = "";
-    sprintf(str, "%.1f", val);
-    outtextxy(points[i].x + 5, points[i].y + 5, str);
+    if (i > 0)
+      line(points[i - 1].x, points[i - 1].y, points[i].x, points[i].y);
+    if (title[0] == 'A' || title[0] == 'S' || title[0] == 'V') {
+      solidcircle(points[i].x, points[i].y, 5);
+      char str[4] = "";
+      sprintf(str, "%.1f", val);
+      outtextxy(points[i].x + 5, points[i].y + 5, str);
+    }
   }
   if (title[0] == 'A') {
     float val = ctrlPoint->y;
@@ -590,39 +485,29 @@ void showSTGraph(const int length,
     outtextxy(ctrlPoint->x - textwidth(str) / 2, ctrlPoint->y - textheight(str),
               str);
   }
-  setlinecolor(pointColor);
-#if BEZIER_SWITCH == 0
-  for (int i = 0; i < 5; i++) {
-    line(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
-  }
-#endif
 }
 
-void showBEVGraph(const int length,
-                  const int width,
-                  const int offset,
-                  const int oriX,
-                  const int oriY,
+void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,
-                  const float rangeX,
                   const TsrInfo* tsr_info,
                   const SsmFrameType* g_ssmFrameType,
                   const LinesInfo* lines_info,
                   const SpdInfo* spd_info) {
-  float len = length - 2.0f * offset;
-  float wid = width - 2.0f * offset;
+  float len = config->length - 2.0f * config->offset;
+  float wid = config->width - 2.0f * config->offset;
   // vehicle frame: front-left-up, FLU. eg. x-longitudinal, y-lateral
-  g_origin2 = {oriX + length * 0.5f, oriY + offset + wid};
-  g_xScale2 = len / (3.4f * 5.0f);
-  g_yScale2 = wid / rangeX;
+  g_origin2 = {config->oriX + config->length * 0.5f,
+               config->oriY + config->offset + wid};
+  g_xScale2 = len / config->rangeY;
+  g_yScale2 = wid / config->rangeX;
   g_origin2.y -= g_yScale2 * zeroOffsetX;
 
   // title
   settextcolor(BLACK);
-  settextstyle(30, 0, "Calibri");
+  settextstyle(25, 0, "Calibri");
   char title[] = " ";
-  outtextxy(g_origin2.x - textwidth(title) / 2, offset - textheight(title),
-            title);
+  outtextxy(g_origin2.x - textwidth(title) / 2,
+            config->offset - textheight(title), title);
   settextstyle(20, 0, "Calibri");
 
   // tsr info
@@ -670,6 +555,15 @@ void showBEVGraph(const int length,
 
     Point obs_pred = {obs.pos_x + obs.speed_x * 5.0f,
                       obs.pos_y + obs.speed_y * 5.0f};
+
+    // cipv, considier 0->1s const acc, 1->5s const spd
+    if (obs.lane_index == 3 && obs.pos_x > 0) {
+      float const_acc_time = 1.0f;
+      obs_pred.x = obs.pos_x +
+                   (obs.speed_x + obs.acc_x * const_acc_time) * 5.0f -
+                   0.5f * obs.acc_x * const_acc_time * const_acc_time;
+    }
+
     if (show_predict_swt && obs.speed_x > 1.0f) {
       char str_obs_pred[2][8] = {};
       strcpy(str_obs_pred[1], "Pred");

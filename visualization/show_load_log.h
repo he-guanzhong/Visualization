@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-// character nums of first row (variable names) should not exceed MAX_LINE_SIZE
-// colomns nums (variable count) could not exceed MAX_COLUMNS
+// character nums of first row (variable names) shall not exceed MAX_LINE_SIZE
+// colomns nums (variable count) shall not exceed MAX_COLUMNS
 // row nums (total steps) which exceed MAX_VALUES_PER_COLUMN will be ignored
 #define MAX_LINE_SIZE 4096
 #define MAX_COLUMNS 168
