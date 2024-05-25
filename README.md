@@ -1,6 +1,7 @@
 # Autonomous Driving Visualization Tool
 - [English](#english)
 - [中文](#中文)
+- [Français](#français)
 <img src="build/example_img.png" width="400">  
 
 ## English
