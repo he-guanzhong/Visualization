@@ -29,6 +29,8 @@ void CalcOneStep();
 void DisplayOneStep(const int length, const int width, const int offset);
 
 void LoopbackCalculation();
+
+void LocalDummySsmData(SsmFrameType* ssmObjs);
 void GenerateLocalData();
 
 void DisplayLineChart(const int length, const int width, const int offset);

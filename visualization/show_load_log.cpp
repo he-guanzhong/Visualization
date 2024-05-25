@@ -8,8 +8,8 @@ extern float egoSpd_data[DATA_NUM];
 extern float egoAcc_data[DATA_NUM];
 extern float spdLmt_data[DATA_NUM];
 extern float alc_path_data[6][DATA_NUM];
+extern int alcBehav_data[4][DATA_NUM];
 extern int accMode_data[DATA_NUM];
-extern int alcSts_data[2][DATA_NUM];
 
 extern bool AlcLgtCtrlEnbl_data[DATA_NUM];
 extern int truncated_col_data[DATA_NUM];
@@ -327,17 +327,17 @@ void LoadLog() {
       IVS_Yaw[0] = i;
 
     // obstacle, 1 = RIV
-    else if (strncmp(columns[i], "VeINP_RIVClass[enum]", 15) == 0)
+    else if (strncmp(columns[i], "VeINP_RIVClass_enum[enum]", 19) == 0)
       IVS_Class[1] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLaDis_m[m]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLaDis_m[m]", 16) == 0)
       IVS_LaDis[1] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLgDis_m[m]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLgDis_m[m]", 16) == 0)
       IVS_LgDis[1] = i;
-    else if (strncmp(columns[i], "VbINP_RIVPresent_flg[flg]", 21) == 0)
+    else if (strncmp(columns[i], "VbINP_RIVPresent_flg[flg]", 20) == 0)
       IVS_Present[1] = i;
-    else if (strncmp(columns[i], "VfINP_RIVV_mps[mps]", 15) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVV_mps[mps]", 14) == 0)
       IVS_V[1] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLaV_mps[mps]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLaV_mps[mps]", 16) == 0)
       IVS_LaV[1] = i;
     else if (strncmp(columns[i], "VfINP_RIVHeading_rad[]", 20) == 0)
       IVS_Yaw[1] = i;
@@ -647,8 +647,8 @@ void LoadLog() {
     // alc_sts[0] for alc side: 0-0ff, 1-left, 2-right
     // alc_sts[1] for alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
     // 4-in target line, 5-finished,6-Back to Ego, 8-takeover, 9-popMsgReq
-    alcSts_data[0][t] = ALC_SIDE ? values[ALC_SIDE][t] : 0;
-    alcSts_data[1][t] = ALC_STS ? values[ALC_STS][t] : 0;
+    alcBehav_data[0][t] = ALC_SIDE ? values[ALC_SIDE][t] : 0;
+    alcBehav_data[1][t] = ALC_STS ? values[ALC_STS][t] : 0;
 
     // alc path and speed plan points
     for (int k = 0; k <= 5; k++) {
@@ -679,14 +679,16 @@ void LoadLog() {
         objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
       } else {
         pos_x_compensation = 2.5f;
+        // objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 :
+        // 0;
       }
       objs_valid_flag_data[k][t] = values[IVS_Present[k]][t];
       objs_type_data[k][t] = values[IVS_Class[k]][t];
       objs_pos_x_data[k][t] = values[IVS_LgDis[k]][t] + pos_x_compensation;
       objs_pos_y_data[k][t] = values[IVS_LaDis[k]][t] * -1;
       objs_speed_x_data[k][t] = values[IVS_V[k]][t];
-      objs_acc_x_data[k][t] = IVS_A[k] ? values[IVS_A[k]][t] : 0;
-      objs_pos_yaw_data[k][t] = IVS_Yaw[k] ? values[IVS_Yaw[k]][t] * -1 : 0;
+      objs_acc_x_data[k][t] = values[IVS_A[k]][t];
+      objs_pos_yaw_data[k][t] = values[IVS_Yaw[k]][t] * -1;
 
       if (k <= 1)
         objs_lane_index_data[k][t] = 3;
@@ -730,7 +732,7 @@ void LoadLog() {
     // TSR status
     if (TSR_Spd != 0) {
       tsr_spd_data[t] = values[TSR_Spd][t];
-      tsr_spd_warn_data[t] = TSR_Warn == 0 ? 0 : values[TSR_Warn][t];
+      tsr_spd_warn_data[t] = values[TSR_Warn][t];
       tsr_tsi_data[0][t] = values[TSR_TSI[0]][t];
       tsr_tsi_data[1][t] = values[TSR_TSI[1]][t];
     }

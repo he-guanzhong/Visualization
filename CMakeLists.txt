@@ -11,11 +11,11 @@ include_directories(${PROJECT_SOURCE_DIR})
 aux_source_directory(${PROJECT_SOURCE_DIR}/spdplanning coreFiles)
 aux_source_directory(${PROJECT_SOURCE_DIR}/visualization coreFiles)
 
-# 库文件路径
+# set library files path;
 # LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/reference)
 
 # 编译过程中需要链接的文件
 add_executable(SpdPlan ${coreFiles})
-#target_compile_definitions(SpdPlan PRIVATE SPDPLAN_LOCAL_TEST)
 
+# target_compile_definitions(SpdPlan PRIVATE SPDPLAN_LOCAL_TEST)
 target_link_libraries(SpdPlan libeasyx.a)

@@ -39,8 +39,8 @@ void drawCar(Point* car,
   // 5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL
   if (carType > 3)
     carType = 0;
-  float car_len_tbl[4] = {2.2f, 5.0f, 6.8f, 2.5f};
-  float car_wid_tbl[4] = {1.2f, 1.7f, 2.0f, 0.6f};
+  float car_len_tbl[4] = {2.2f + 0.4f, 5.0f + 0.4f, 6.8f + 0.4f, 2.5f};
+  float car_wid_tbl[4] = {1.0f + 0.4f, 1.5f + 0.4f, 1.6f + 0.4f, 0.6f};
   float carLen = car_len_tbl[carType];
   float carWid = car_wid_tbl[carType];
   // display: left-hand system. control: right-hand system
@@ -207,12 +207,37 @@ void drawMotionInfo(const SpdInfo* spd_info) {
   strcat(actual_set_title, str_actual_set_spd);
 
   // spd plan inner value
-  if (spd_info->spec_case_flg == 1)
-    strcat(spec_case_title, "v-30");
-  else if (spd_info->spec_case_flg == 2)
-    strcat(spec_case_title, "a-1");
-  else if (spd_info->spec_case_flg == 3)
-    strcat(spec_case_title, "curv");
+  switch (spd_info->spec_case_flg) {
+    case 1:
+    case 11:
+      strcat(spec_case_title, "v-30");
+      break;
+    case 2:
+    case 12:
+      strcat(spec_case_title, "a-1");
+      break;
+    case 3:
+    case 13:
+      strcat(spec_case_title, "curv");
+      break;
+    case 4:
+      strcat(spec_case_title, "ndg");
+      break;
+    case 5:
+    case 15:
+      strcat(spec_case_title, "dec");
+      break;
+    case 6:
+    case 16:
+      strcat(spec_case_title, "hold");
+      break;
+    case 7:
+    case 17:
+      strcat(spec_case_title, "acc");
+      break;
+    default:
+      break;
+  }
 
   outtextxy(g_origin2.x + 12 * g_xScale2,
             g_origin2.y - 4 * textheight(spd_title), spec_case_title);
@@ -359,7 +384,7 @@ void drawBasicGraph(const int len,
 /// @param config       basic graph configuration
 /// @param zeroOffsetY  vertical distance from origin to lower-left corner
 /// @param title        title string
-/// @param pointColor
+/// @param pointColor   macro name of color
 /// @param points       point coordinates to be displayed
 /// @param ctrlPoint    a-t graph only, accelerations sent to control
 void showXYGraph(const GraphConfig* config,
@@ -487,6 +512,13 @@ void showXYGraph(const GraphConfig* config,
   }
 }
 
+/// @brief BEV graph, x-axis_forward_vertical, y-axis_lateral_horizontal
+/// @param config         basic configuration
+/// @param zeroOffsetX    distance behind ego vehicle to be displayed
+/// @param tsr_info       environment TSR info and ego TSR status
+/// @param g_ssmFrameType obstacles info
+/// @param lines_info     lane lines info
+/// @param spd_info       ego vehicle motion status
 void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,
                   const TsrInfo* tsr_info,

@@ -62,6 +62,14 @@ typedef uint8 UInt8;
 #define Rte_TypeDef_rt_Array_Float_4
 typedef Float rt_Array_Float_4[4];
 
+#define Rte_TypeDef_AlcBehavior
+typedef struct {
+  UInt8 AutoLaneChgSide;
+  UInt8 AutoLaneChgSts;
+  UInt8 LeftBoundaryType;
+  UInt8 RightBoundaryType;
+} AlcBehavior;
+
 #define Rte_TypeDef_AlcPathVcc
 typedef struct {
   Float ConCoeff;

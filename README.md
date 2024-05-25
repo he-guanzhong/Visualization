@@ -1,7 +1,8 @@
 # Autonomous Driving Visualization Tool
 - [English](#english)
 - [中文](#中文)
-- [Français](#français)
+<img src="build/example_img.png" width="400">  
+
 ## English
 ### Discription
 This tool, specifically designed and implemented in autonomous driving domain, enables you to replay logs in the (.csv) format  
