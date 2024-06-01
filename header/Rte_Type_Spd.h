@@ -175,7 +175,7 @@ typedef struct {
   SInt32 Reserve2;
 } TsObjTyp;
 
-// hgz from 9->10
+// hgz 9->10
 #define Rte_TypeDef_StPoint_Array_10
 typedef StPoint StPoint_Array_10[10];
 
@@ -218,8 +218,8 @@ typedef struct {
 #define Rte_TypeDef_rt_Array_SsmCurvatureType_20
 typedef SsmCurvatureType rt_Array_SsmCurvatureType_20[20];
 
-#define Rte_TypeDef_rt_Array_SsmObsType_32
-typedef SsmObsType rt_Array_SsmObsType_32[32];
+#define Rte_TypeDef_rt_Array_SsmObsType_12  // hgz 32->12
+typedef SsmObsType rt_Array_SsmObsType_12[12];
 
 #define Rte_TypeDef_rt_Array_SsmRefPtType_100
 typedef SsmRefPtType rt_Array_SsmRefPtType_100[100];
@@ -254,7 +254,7 @@ typedef struct {
   UInt8 source;
   UInt8 is_normal;
   UInt8 is_fusion;
-  rt_Array_SsmObsType_32 obj_lists;
+  rt_Array_SsmObsType_12 obj_lists;
 } SsmObjType;
 
 #define Rte_TypeDef_SsmParamType

@@ -43,11 +43,13 @@ typedef struct {
   float cur_spd;
   float pred_spd;
   float disp_set_spd;
-  float actual_set_spd;
+  float inner_spd_lmt;
   int spec_case_flg;
   int acc_mode;
   int alc_side;
   int alc_sts;
+  int alc_lft_bd_typ;
+  int alc_rgt_bd_typ;
 } SpdInfo;
 
 typedef struct {
@@ -102,7 +104,7 @@ void showXYGraph(const GraphConfig* config,
 void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,
                   const TsrInfo* tsr_info,
-                  const SsmFrameType* g_ssmFrameType,
+                  const SsmObjType* g_ssmObjType,
                   const LinesInfo* lines_info,
                   const SpdInfo* spd_info);
 

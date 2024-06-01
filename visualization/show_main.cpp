@@ -4,14 +4,16 @@
 #include "visualization/show_main.h"
 
 #ifdef SPEED_PLANNING_H_
-extern SsmFrameType g_ssmFrameType;
-extern uint8 g_truncated_col;
 extern bool show_predict_swt;
+extern SsmObjType g_ssmObjType;
+extern uint8 g_truncated_col;
 extern float gInnerSpdLmt_kph;
 extern uint8 gSpecialCaseFlg;
 #else
-SsmFrameType g_ssmFrameType;
+SsmObjType g_ssmObjType;
 uint8 g_truncated_col;
+float gInnerSpdLmt_kph;
+uint8 gSpecialCaseFlg;
 #endif
 
 // Key display information
@@ -25,8 +27,6 @@ AlcBehavior alcBehav;
 Point s_points[6], v_points[6], a_points[6];
 Point ctrlPoint;
 bool AlcLgtCtrlEnbl;
-float innerSpdLmt;
-int specCaseFlg;
 float left_coeffs[8] = {0, 0, 0, 0, 0, 3.4f / 2.0f, -30, 100};
 float leftleft_coeffs[8] = {0, 0, 0, 0, 0, 3.4f * 1.5f, -30, 100};
 float right_coeffs[8] = {0, 0, 0, 0, 0, -3.4f / 2.0f, -30, 100};
@@ -53,7 +53,7 @@ int accMode_data[DATA_NUM];
 bool AlcLgtCtrlEnbl_data[DATA_NUM];
 int truncated_col_data[DATA_NUM];
 float innerSpdLmt_data[DATA_NUM];
-int specCaseFlg_data[DATA_NUM];
+int specialCaseFlg_data[DATA_NUM];
 
 float ctrl_point_data[2][DATA_NUM];
 float s_points_data[6][DATA_NUM];
@@ -102,11 +102,11 @@ void ReadOutputData(const int t) {
     v_points[i].x = t_points_data[i][t];
     a_points[i].x = t_points_data[i][t];
   }
+  ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[1][t]};
   AlcLgtCtrlEnbl = AlcLgtCtrlEnbl_data[t];
   g_truncated_col = truncated_col_data[t];
-  ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[1][t]};
-  innerSpdLmt = innerSpdLmt_data[t];
-  specCaseFlg = specCaseFlg_data[t];
+  gInnerSpdLmt_kph = innerSpdLmt_data[t];
+  gSpecialCaseFlg = specialCaseFlg_data[t];
 
   // use alc c7 as line end
   ego_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
@@ -119,30 +119,25 @@ void ReadInputData(const int t) {
   accMode = accMode_data[t];
   alcBehav.AutoLaneChgSide = alcBehav_data[0][t];
   alcBehav.AutoLaneChgSts = alcBehav_data[1][t];
-  alcBehav.LeftBoundaryType = 2;  // always dash
-  alcBehav.RightBoundaryType = 2;
+  alcBehav.LeftBoundaryType = alcBehav_data[2][t];
+  alcBehav.RightBoundaryType = alcBehav_data[3][t];
 
   // c0->c5 orders of ego and alc_path are opposite
   for (int i = 1; i <= 5; i++)
     ego_coeffs[i] = alc_path_data[5 - i][t];
 
   // obstacles
-  g_ssmFrameType.Ssm_Objs_Frame_st.obj_num = 10;
-  for (int i = 0; i < g_ssmFrameType.Ssm_Objs_Frame_st.obj_num; i++) {
-    g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].valid_flag =
-        objs_valid_flag_data[i][t];
-    g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].type = objs_type_data[i][t];
-    g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].pos_x = objs_pos_x_data[i][t];
-    g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].pos_y = objs_pos_y_data[i][t];
-    g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].lane_index =
-        objs_lane_index_data[i][t];
-    g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].speed_x =
-        objs_speed_x_data[i][t];
-    g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].speed_y =
-        objs_speed_y_data[i][t];
-    g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].acc_x = objs_acc_x_data[i][t];
-    g_ssmFrameType.Ssm_Objs_Frame_st.obj_lists[i].pos_yaw =
-        objs_pos_yaw_data[i][t];
+  g_ssmObjType.obj_num = 10;
+  for (int i = 0; i < g_ssmObjType.obj_num; i++) {
+    g_ssmObjType.obj_lists[i].valid_flag = objs_valid_flag_data[i][t];
+    g_ssmObjType.obj_lists[i].type = objs_type_data[i][t];
+    g_ssmObjType.obj_lists[i].pos_x = objs_pos_x_data[i][t];
+    g_ssmObjType.obj_lists[i].pos_y = objs_pos_y_data[i][t];
+    g_ssmObjType.obj_lists[i].lane_index = objs_lane_index_data[i][t];
+    g_ssmObjType.obj_lists[i].speed_x = objs_speed_x_data[i][t];
+    g_ssmObjType.obj_lists[i].speed_y = objs_speed_y_data[i][t];
+    g_ssmObjType.obj_lists[i].acc_x = objs_acc_x_data[i][t];
+    g_ssmObjType.obj_lists[i].pos_yaw = objs_pos_yaw_data[i][t];
   }
 
   // c0->c5 orders of ego and alc_path are opposite
@@ -283,16 +278,18 @@ void DisplayLog(const int length, const int width, const int offset) {
         SpdInfo spd_info = {egoSpd,
                             fmax(v_points[4].y, v_points[5].y),
                             spdLmt,
-                            innerSpdLmt,
-                            specCaseFlg,
+                            gInnerSpdLmt_kph,
+                            gSpecialCaseFlg,
                             accMode,
                             alcBehav.AutoLaneChgSide,
-                            alcBehav.AutoLaneChgSts};
+                            alcBehav.AutoLaneChgSts,
+                            alcBehav.LeftBoundaryType,
+                            alcBehav.RightBoundaryType};
 
         if (playMode == PLAYMODE::FUSION) {
           GraphConfig BEV_cfg = {length / 2, width,  offset,     0,
                                  0,          100.0f, 3.4f * 5.0f};
-          showBEVGraph(&BEV_cfg, 0, &tsr_info, &g_ssmFrameType, &lines_info,
+          showBEVGraph(&BEV_cfg, 0, &tsr_info, &g_ssmObjType, &lines_info,
                        &spd_info);
         } else {
           GraphConfig BEV_cfg = {length / 2, width,  offset,     length / 2,
@@ -305,7 +302,7 @@ void DisplayLog(const int length, const int width, const int offset) {
           GraphConfig AT_cfg = {length / 2, (int)(width * 0.44), offset,
                                 0,          (int)(width * 0.56), 5.0f,
                                 6.0f};
-          showBEVGraph(&BEV_cfg, 30.0f, &tsr_info, &g_ssmFrameType, &lines_info,
+          showBEVGraph(&BEV_cfg, 30.0f, &tsr_info, &g_ssmObjType, &lines_info,
                        &spd_info);
           showXYGraph(&ST_cfg, 0.0f, "S-T Graph", BLUE, s_points, 0, 6,
                       &ctrlPoint);
@@ -348,32 +345,25 @@ void CalcOneStep() {
   alcPathVcc.FirstCoeff = ego_coeffs[4];
   alcPathVcc.ConCoeff = ego_coeffs[5];
 
-  SsmFrameType ssmFrame;
-  memset(&ssmFrame, 0, sizeof(ssmFrame));
+  SsmObjType ssmObjs;
+  memset(&ssmObjs, 0, sizeof(ssmObjs));
   if (playMode == PLAYMODE::ONESTEP) {
-    egoSpd = 25.0f, egoAcc = 0, spdLmt = 33.3 * 3.6f;  // kph
+    egoSpd = 15.0f, egoAcc = 0, spdLmt = 33.3 * 3.6f;  // kph
     accMode = 5;
     alcBehav.AutoLaneChgSide = 0;
     alcBehav.AutoLaneChgSts = 1;
     alcBehav.LeftBoundaryType = 2;
     alcBehav.RightBoundaryType = 2;
-    DummySsmData(&ssmFrame);
+    LocalDummySsmData(&ssmObjs);
   } else {
-    ssmFrame = g_ssmFrameType;
+    ssmObjs = g_ssmObjType;
   }
 
-  DpSpeedPoints output =
-      SpeedPlanProcessor(egoSpd, egoAcc, spdLmt, &alcBehav, &alcPathVcc,
-                         &ssmFrame.Ssm_Objs_Frame_st.obj_lists[0],
-                         &ssmFrame.Ssm_Objs_Frame_st.obj_lists[1],
-                         &ssmFrame.Ssm_Objs_Frame_st.obj_lists[2],
-                         &ssmFrame.Ssm_Objs_Frame_st.obj_lists[3],
-                         &ssmFrame.Ssm_Objs_Frame_st.obj_lists[4],
-                         &ssmFrame.Ssm_Objs_Frame_st.obj_lists[5],
-                         &ssmFrame.Ssm_Objs_Frame_st.obj_lists[6],
-                         &ssmFrame.Ssm_Objs_Frame_st.obj_lists[7],
-                         &ssmFrame.Ssm_Objs_Frame_st.obj_lists[8],
-                         &ssmFrame.Ssm_Objs_Frame_st.obj_lists[9]);
+  DpSpeedPoints output = SpeedPlanProcessor(
+      egoSpd, egoAcc, spdLmt, &alcBehav, &alcPathVcc, &ssmObjs.obj_lists[0],
+      &ssmObjs.obj_lists[1], &ssmObjs.obj_lists[2], &ssmObjs.obj_lists[3],
+      &ssmObjs.obj_lists[4], &ssmObjs.obj_lists[5], &ssmObjs.obj_lists[6],
+      &ssmObjs.obj_lists[7], &ssmObjs.obj_lists[8], &ssmObjs.obj_lists[9]);
 
   s_points[0] = {output.Point0.t, output.Point0.s};
   s_points[1] = {output.Point1.t, output.Point1.s};
@@ -398,15 +388,15 @@ void CalcOneStep() {
   AlcLgtCtrlEnbl = output.AlcLgtCtrlEnbl;
   ego_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
 
-  /*   printf("Memory: %ld Byte \n", g_ALC_MEMORY_SIZE);
+  /*
     printf("Direct: %d, Default result: \n", g_laneChangeDirection); */
   if (playMode == PLAYMODE::ONESTEP) {
     printf("AlcLatEnbl: %d, \t AlcLgtEnble: %d\n", output.AlcLatCtrlEnbl,
            output.AlcLgtCtrlEnbl);
-    for (int i = 0; i <= 5; i++) {
-      printf("Point%d: t = %.1f, s = %.1f, v = %.1f, a = %.1f \n", i,
-             s_points[i].x, s_points[i].y, v_points[i].y, a_points[i].y);
-    }
+    /*     for (int i = 0; i <= 5; i++) {
+          printf("Point%d: t = %.1f, s = %.1f, v = %.1f, a = %.1f \n", i,
+                 s_points[i].x, s_points[i].y, v_points[i].y, a_points[i].y);
+        } */
     printf("Ctrl 0: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
            output.pointCtrl0.t, output.pointCtrl0.s, output.pointCtrl0.v,
            output.pointCtrl0.a);
@@ -438,15 +428,17 @@ void DisplayOneStep(const int length, const int width, const int offset) {
   SpdInfo spd_info = {v_points[0].y,
                       fmax(v_points[4].y, v_points[5].y),
                       spdLmt,
-                      innerSpdLmt,
-                      specCaseFlg,
+                      gInnerSpdLmt_kph,
+                      gSpecialCaseFlg,
                       accMode,
                       alcBehav.AutoLaneChgSide,
-                      alcBehav.AutoLaneChgSts};
+                      alcBehav.AutoLaneChgSts,
+                      alcBehav.LeftBoundaryType,
+                      alcBehav.RightBoundaryType};
   show_predict_swt = true;
   GraphConfig BEV_cfg = {length / 2, width,  offset,     length / 2,
                          0,          130.0f, 3.4f * 5.0f};
-  showBEVGraph(&BEV_cfg, 30.0f, &tsr_info, &g_ssmFrameType, &lines_info,
+  showBEVGraph(&BEV_cfg, 30.0f, &tsr_info, &g_ssmObjType, &lines_info,
                &spd_info);
   GraphConfig ST_cfg = {length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f,
                         120.0f};
@@ -480,48 +472,48 @@ void LoopbackCalculation() {
     ctrl_point_data[1][t] = ctrlPoint.y;
 
     innerSpdLmt_data[t] = gInnerSpdLmt_kph;
-    specCaseFlg_data[t] = gSpecialCaseFlg;
+    specialCaseFlg_data[t] = gSpecialCaseFlg;
 
     ego_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
   }
 }
 
-void LocalDummySsmData(SsmFrameType* ssmObjs) {
+void LocalDummySsmData(SsmObjType* ssmObjs) {
   // 0 = IV, 1 = RIV, 2 = NIVL, 3 = NIIVL, 4 = RIVL, 5 = RIIVL
   // 6 = NIVR, 7 = NIIVR, 8 = RIVR, 9 = RIIVR
-  ssmObjs->Ssm_Objs_Frame_st.obj_num = 3;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[0].pos_x = 80;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[0].pos_y = 0;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[0].acc_x = 0.0f;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[0].speed_x = 50.0f / 3.6f;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[0].speed_y = 0.0f;  // hgz
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[0].type = 1;        // hgz
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[0].lane_index = 3;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[0].valid_flag = TRUE;
+  ssmObjs->obj_num = 3;
+  ssmObjs->obj_lists[0].pos_x = 40;
+  ssmObjs->obj_lists[0].pos_y = 0;
+  ssmObjs->obj_lists[0].acc_x = 0.0f;
+  ssmObjs->obj_lists[0].speed_x = 0.5f;
+  ssmObjs->obj_lists[0].speed_y = 0.0f;  // hgz
+  ssmObjs->obj_lists[0].type = 1;        // hgz
+  ssmObjs->obj_lists[0].lane_index = 3;
+  ssmObjs->obj_lists[0].valid_flag = TRUE;
 
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[2].pos_x = 10;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[2].pos_y = 3.15f;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[2].acc_x = 0.0f;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[2].speed_x = 40.0f / 3.6f;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[2].speed_y = 0.0f;  // hgz
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[2].type = 1;        // hgz
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[2].lane_index = 2;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[2].valid_flag = FALSE;
+  ssmObjs->obj_lists[2].pos_x = 20;
+  ssmObjs->obj_lists[2].pos_y = 3.4f;
+  ssmObjs->obj_lists[2].acc_x = 0.0f;
+  ssmObjs->obj_lists[2].speed_x = 15.0f;
+  ssmObjs->obj_lists[2].speed_y = -6.8f / 5.0f;  // hgz
+  ssmObjs->obj_lists[2].type = 1;                // hgz
+  ssmObjs->obj_lists[2].lane_index = 2;
+  ssmObjs->obj_lists[2].valid_flag = FALSE;
 
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[4].pos_x = 1;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[4].pos_y = 3.15f;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[4].acc_x = 0.0f;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[4].speed_x = 50.0f / 3.6f;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[4].speed_y = 0.0f;  // hgz
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[4].type = 1;        // hgz
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[4].lane_index = 2;
-  ssmObjs->Ssm_Objs_Frame_st.obj_lists[4].valid_flag = TRUE;
+  ssmObjs->obj_lists[4].pos_x = 1;
+  ssmObjs->obj_lists[4].pos_y = 3.15f;
+  ssmObjs->obj_lists[4].acc_x = 0.0f;
+  ssmObjs->obj_lists[4].speed_x = 50.0f / 3.6f;
+  ssmObjs->obj_lists[4].speed_y = 0.0f;  // hgz
+  ssmObjs->obj_lists[4].type = 6;        // hgz
+  ssmObjs->obj_lists[4].lane_index = 2;
+  ssmObjs->obj_lists[4].valid_flag = FALSE;
 }
 
 void GenerateLocalData() {
-  egoSpd = 40.0f / 3.6f, egoAcc = 0.0f, spdLmt = 40.0f;
+  egoSpd = 70.0f / 3.6f, egoAcc = 0.0f, spdLmt = 30.0f;
 
-  alcBehav.AutoLaneChgSide = 1;
+  alcBehav.AutoLaneChgSide = 0;
   alcBehav.AutoLaneChgSts = 2;
   alcBehav.LeftBoundaryType = 2;
   alcBehav.RightBoundaryType = 2;
@@ -536,10 +528,10 @@ void GenerateLocalData() {
   alcPathVcc.FirstCoeff = ego_coeffs[4];
   alcPathVcc.ConCoeff = ego_coeffs[5];
 
-  SsmFrameType ssmFrame;
-  memset(&ssmFrame, 0, sizeof(ssmFrame));
-  // DummySsmData(&ssmFrame);
-  LocalDummySsmData(&ssmFrame);
+  SsmObjType ssmObjs;
+  memset(&ssmObjs, 0, sizeof(ssmObjs));
+  // DummySsmData(&ssmObjs);
+  LocalDummySsmData(&ssmObjs);
 
   float cycle_s = 0.1f;
   float obs_pos_x[10] = {0};
@@ -560,33 +552,31 @@ void GenerateLocalData() {
     egoSpd_data[t] = egoSpd;
     alcBehav_data[0][t] = alcBehav.AutoLaneChgSide;
     alcBehav_data[1][t] = alcBehav.AutoLaneChgSts;
-    alcBehav_data[3][t] = alcBehav.LeftBoundaryType;
-    alcBehav_data[4][t] = alcBehav.RightBoundaryType;
+    alcBehav_data[2][t] = alcBehav.LeftBoundaryType;
+    alcBehav_data[3][t] = alcBehav.RightBoundaryType;
     accMode_data[t] = accMode;
 
     for (int k = 0; k < 10; k++) {
       if (t == 0) {  // initial obs pos
-        obs_pos_x[k] = ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].pos_x;
-        obs_pos_y[k] = ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].pos_y;
-        obs_speed_x[k] = ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].speed_x;
-        obs_speed_y[k] = ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].speed_y;
+        obs_pos_x[k] = ssmObjs.obj_lists[k].pos_x;
+        obs_pos_y[k] = ssmObjs.obj_lists[k].pos_y;
+        obs_speed_x[k] = ssmObjs.obj_lists[k].speed_x;
+        obs_speed_y[k] = ssmObjs.obj_lists[k].speed_y;
       }
       obs_pos_x[k] += (obs_speed_x[k] - egoSpd) * cycle_s;
       obs_pos_y[k] += obs_speed_y[k] * cycle_s;
-      ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].pos_x = obs_pos_x[k];
-      ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].pos_y = obs_pos_y[k];
+      ssmObjs.obj_lists[k].pos_x = obs_pos_x[k];
+      ssmObjs.obj_lists[k].pos_y = obs_pos_y[k];
 
-      objs_valid_flag_data[k][t] =
-          ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].valid_flag;
-      objs_type_data[k][t] = ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].type;
+      objs_valid_flag_data[k][t] = ssmObjs.obj_lists[k].valid_flag;
+      objs_type_data[k][t] = ssmObjs.obj_lists[k].type;
       objs_pos_x_data[k][t] = obs_pos_x[k];
       objs_pos_y_data[k][t] = obs_pos_y[k];
-      objs_lane_index_data[k][t] =
-          ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].lane_index;
+      objs_lane_index_data[k][t] = ssmObjs.obj_lists[k].lane_index;
       objs_speed_x_data[k][t] = obs_speed_x[k];
       objs_speed_y_data[k][t] = obs_speed_y[k];
-      objs_acc_x_data[k][t] = ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].acc_x;
-      objs_pos_yaw_data[k][t] = ssmFrame.Ssm_Objs_Frame_st.obj_lists[k].pos_yaw;
+      objs_acc_x_data[k][t] = ssmObjs.obj_lists[k].acc_x;
+      objs_pos_yaw_data[k][t] = ssmObjs.obj_lists[k].pos_yaw;
 
       // simulate auto lane change
       /*       if (objs_pos_x_data[2][t] > 20 && alcBehav_data[0][t] == 1 &&
@@ -620,18 +610,11 @@ void GenerateLocalData() {
       }
     }
 
-    DpSpeedPoints output =
-        SpeedPlanProcessor(egoSpd, egoAcc, spdLmt, &alcBehav, &alcPathVcc,
-                           &ssmFrame.Ssm_Objs_Frame_st.obj_lists[0],
-                           &ssmFrame.Ssm_Objs_Frame_st.obj_lists[1],
-                           &ssmFrame.Ssm_Objs_Frame_st.obj_lists[2],
-                           &ssmFrame.Ssm_Objs_Frame_st.obj_lists[3],
-                           &ssmFrame.Ssm_Objs_Frame_st.obj_lists[4],
-                           &ssmFrame.Ssm_Objs_Frame_st.obj_lists[5],
-                           &ssmFrame.Ssm_Objs_Frame_st.obj_lists[6],
-                           &ssmFrame.Ssm_Objs_Frame_st.obj_lists[7],
-                           &ssmFrame.Ssm_Objs_Frame_st.obj_lists[8],
-                           &ssmFrame.Ssm_Objs_Frame_st.obj_lists[9]);
+    DpSpeedPoints output = SpeedPlanProcessor(
+        egoSpd, egoAcc, spdLmt, &alcBehav, &alcPathVcc, &ssmObjs.obj_lists[0],
+        &ssmObjs.obj_lists[1], &ssmObjs.obj_lists[2], &ssmObjs.obj_lists[3],
+        &ssmObjs.obj_lists[4], &ssmObjs.obj_lists[5], &ssmObjs.obj_lists[6],
+        &ssmObjs.obj_lists[7], &ssmObjs.obj_lists[8], &ssmObjs.obj_lists[9]);
     s_points[0] = {output.Point0.t, output.Point0.s};
     s_points[1] = {output.Point1.t, output.Point1.s};
     s_points[2] = {output.Point2.t, output.Point2.s};
@@ -669,7 +652,7 @@ void GenerateLocalData() {
     ctrl_point_data[1][t] = ctrlPoint.y;
 
     innerSpdLmt_data[t] = gInnerSpdLmt_kph;
-    specCaseFlg_data[t] = gSpecialCaseFlg;
+    specialCaseFlg_data[t] = gSpecialCaseFlg;
   }
 }
 
@@ -765,7 +748,7 @@ void ReleaseWrapper() {
 int main() {
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(2);
+  playMode = PLAYMODE(3);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();

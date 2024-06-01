@@ -37,10 +37,12 @@ void drawCar(Point* car,
              const int index) {
   // ObjType of ME: 0=UNFILLED, 1=CAR, 2=TRUCK, 3=MOTORBIKE, 4=BICYCLE,
   // 5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL
-  if (carType > 3)
+  if (carType >= 7)
     carType = 0;
-  float car_len_tbl[4] = {2.2f + 0.4f, 5.0f + 0.4f, 6.8f + 0.4f, 2.5f};
-  float car_wid_tbl[4] = {1.0f + 0.4f, 1.5f + 0.4f, 1.6f + 0.4f, 0.6f};
+  float car_len_tbl[7] = {2.2f + 0.4f, 5.0f + 0.4f, 6.8f + 0.4f, 2.5f,
+                          2.5f,        1.0f,        2.0f};
+  float car_wid_tbl[7] = {1.0f + 0.4f, 1.5f + 0.4f, 1.6f + 0.4f, 0.6f,
+                          0.6f,        1.0f,        2.0f};
   float carLen = car_len_tbl[carType];
   float carWid = car_wid_tbl[carType];
   // display: left-hand system. control: right-hand system
@@ -65,19 +67,14 @@ void drawCar(Point* car,
 
   fillpolygon(vertices_show, 4);
 
-  if (carType == 3) {  // motorbike outline
+  if (carType >= 3 && carType <= 6) {  // motorbike/pedestrian outline
     rectangle(car->x - car_wid_tbl[1] / 2.0f * g_xScale2,
               car->y - car_len_tbl[1] / 2.0f * g_yScale2,
               car->x + car_wid_tbl[1] / 2.0f * g_xScale2,
               car->y + car_len_tbl[1] / 2.0f * g_yScale2);
-    /*     int dir[5] = {1, 1, -1, -1, 1};
-        for (int i = 0; i < 4; i++) {
-          vertices_show[i].x +=
-              car_wid_tbl[1] / car_wid_tbl[3] * g_yScale2 * dir[i];
-          vertices_show[i].y +=
-              car_len_tbl[1] / car_len_tbl[3] * g_xScale2 * dir[i + 1];
-        }
-        polygon(vertices_show, 4); */
+  }
+  if (carType == 5) {
+    solidcircle(car->x, car->y, 5);
   }
 
   if (index == 0 || index == 1 || index == 10) {
@@ -188,23 +185,23 @@ void drawMotionInfo(const SpdInfo* spd_info) {
   // set spd display
   char spd_title[10] = "Spd: ";
   char set_title[10] = "SET: ";
-  char actual_set_title[10] = "Inn: ";
+  char inner_set_title[10] = "Inn: ";
   char spec_case_title[10] = "Spc: ";
 
   char str_cur_spd[5];
   char str_disp_set_spd[5];
-  char str_actual_set_spd[5];
+  char str_inner_spd_lmt[5];
 
   int cur_spd = round(spd_info->cur_spd * 1.03f * 3.6f);
   int disp_set_spd = round(spd_info->disp_set_spd);
-  int actual_set_spd = round(spd_info->actual_set_spd);
+  int inner_spd_lmt = round(spd_info->inner_spd_lmt);
 
   itoa(cur_spd, str_cur_spd, 10);
   itoa(disp_set_spd, str_disp_set_spd, 10);
-  itoa(actual_set_spd, str_actual_set_spd, 10);
+  itoa(inner_spd_lmt, str_inner_spd_lmt, 10);
   strcat(spd_title, str_cur_spd);
   strcat(set_title, str_disp_set_spd);
-  strcat(actual_set_title, str_actual_set_spd);
+  strcat(inner_set_title, str_inner_spd_lmt);
 
   // spd plan inner value
   switch (spd_info->spec_case_flg) {
@@ -220,20 +217,26 @@ void drawMotionInfo(const SpdInfo* spd_info) {
     case 13:
       strcat(spec_case_title, "curv");
       break;
-    case 4:
-      strcat(spec_case_title, "ndg");
+    case 10:
+      strcat(spec_case_title, "Ndg");
       break;
     case 5:
-    case 15:
       strcat(spec_case_title, "dec");
       break;
+    case 15:
+      strcat(spec_case_title, "decN");
+      break;
     case 6:
-    case 16:
       strcat(spec_case_title, "hold");
       break;
+    case 16:
+      strcat(spec_case_title, "hldN");
+      break;
     case 7:
-    case 17:
       strcat(spec_case_title, "acc");
+      break;
+    case 17:
+      strcat(spec_case_title, "accN");
       break;
     default:
       break;
@@ -242,7 +245,7 @@ void drawMotionInfo(const SpdInfo* spd_info) {
   outtextxy(g_origin2.x + 12 * g_xScale2,
             g_origin2.y - 4 * textheight(spd_title), spec_case_title);
   outtextxy(g_origin2.x + 12 * g_xScale2,
-            g_origin2.y - 5 * textheight(spd_title), actual_set_title);
+            g_origin2.y - 5 * textheight(spd_title), inner_set_title);
 
   // ACC mode: 3-stand still, 4-stand active, 5-active, 6-override
   if (spd_info->acc_mode <= 5 && spd_info->acc_mode >= 3)
@@ -277,10 +280,11 @@ void drawMotionInfo(const SpdInfo* spd_info) {
     strcpy(alc_sts, "Back");
   else if (spd_info->alc_sts == 8)
     strcpy(alc_sts, "Takeover");
-
-  outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y - 150, alc_side);
-  outtextxy(g_origin2.x + 12 * g_xScale2,
-            g_origin2.y - 150 + textheight(alc_side), alc_sts);
+  if (spd_info->alc_side == 1 || spd_info->alc_side == 2) {
+    outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y - 150, alc_side);
+    outtextxy(g_origin2.x + 12 * g_xScale2,
+              g_origin2.y - 150 + textheight(alc_side), alc_sts);
+  }
 }
 
 void drawTrajectory(const float* coeffs,
@@ -516,13 +520,13 @@ void showXYGraph(const GraphConfig* config,
 /// @param config         basic configuration
 /// @param zeroOffsetX    distance behind ego vehicle to be displayed
 /// @param tsr_info       environment TSR info and ego TSR status
-/// @param g_ssmFrameType obstacles info
+/// @param g_ssmObjType   obstacles info
 /// @param lines_info     lane lines info
 /// @param spd_info       ego vehicle motion status
 void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,
                   const TsrInfo* tsr_info,
-                  const SsmFrameType* g_ssmFrameType,
+                  const SsmObjType* g_ssmObjType,
                   const LinesInfo* lines_info,
                   const SpdInfo* spd_info) {
   float len = config->length - 2.0f * config->offset;
@@ -548,6 +552,10 @@ void showBEVGraph(const GraphConfig* config,
   // road lines
   setlinestyle(PS_DASHDOT);
   Point lineEnd;
+  int leftBoundaryColor =
+      spd_info->alc_lft_bd_typ == 2 ? GREEN : RGB(0, 87, 55);
+  int rightBoundaryColor =
+      spd_info->alc_rgt_bd_typ == 2 ? GREEN : RGB(0, 87, 55);
   drawTrajectory(lines_info->left_coeffs, BLACK, lines_info->left_coeffs[6],
                  lines_info->left_coeffs[7], &lineEnd);
   drawTrajectory(lines_info->leftleft_coeffs, BLACK,
@@ -559,25 +567,25 @@ void showBEVGraph(const GraphConfig* config,
                  lines_info->rightright_coeffs[6],
                  lines_info->rightright_coeffs[7], &lineEnd);
 
-  drawTrajectory(lines_info->left_coeffs_me, GREEN,
+  drawTrajectory(lines_info->left_coeffs_me, leftBoundaryColor,
                  lines_info->left_coeffs_me[6], lines_info->left_coeffs_me[7],
                  &lineEnd);
-  drawTrajectory(lines_info->leftleft_coeffs_me, GREEN,
+  drawTrajectory(lines_info->leftleft_coeffs_me, DARKGRAY,
                  lines_info->leftleft_coeffs_me[6],
                  lines_info->leftleft_coeffs_me[7], &lineEnd);
-  drawTrajectory(lines_info->right_coeffs_me, GREEN,
+  drawTrajectory(lines_info->right_coeffs_me, rightBoundaryColor,
                  lines_info->right_coeffs_me[6], lines_info->right_coeffs_me[7],
                  &lineEnd);
-  drawTrajectory(lines_info->rightright_coeffs_me, GREEN,
+  drawTrajectory(lines_info->rightright_coeffs_me, DARKGRAY,
                  lines_info->rightright_coeffs_me[6],
                  lines_info->rightright_coeffs_me[7], &lineEnd);
 
   // obstacles
-  for (int i = 0; i < g_ssmFrameType->Ssm_Objs_Frame_st.obj_num; i++) {
-    if (!g_ssmFrameType->Ssm_Objs_Frame_st.obj_lists[i].valid_flag)
+  for (int i = 0; i < g_ssmObjType->obj_num; i++) {
+    if (!g_ssmObjType->obj_lists[i].valid_flag)
       continue;
 
-    SsmObsType obs = g_ssmFrameType->Ssm_Objs_Frame_st.obj_lists[i];
+    SsmObsType obs = g_ssmObjType->obj_lists[i];
     Point obs_cur = {obs.pos_x, obs.pos_y};
     char str_obs_cur[2][8] = {};
     strCompletion(str_obs_cur, i, obs.speed_x);

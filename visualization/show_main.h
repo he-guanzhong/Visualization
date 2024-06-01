@@ -30,7 +30,7 @@ void DisplayOneStep(const int length, const int width, const int offset);
 
 void LoopbackCalculation();
 
-void LocalDummySsmData(SsmFrameType* ssmObjs);
+void LocalDummySsmData(SsmObjType* ssmObjs);
 void GenerateLocalData();
 
 void DisplayLineChart(const int length, const int width, const int offset);
