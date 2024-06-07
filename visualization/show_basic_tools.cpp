@@ -318,6 +318,69 @@ void drawTrajectory(const float* coeffs,
   predictPosn->y = last.y;
 }
 
+void drawObstacles(const SsmObjType* g_ssmObjType,
+                   const float* ego_coeffs,
+                   const float cur_spd) {
+  for (int i = 0; i < g_ssmObjType->obj_num; i++) {
+    if (!g_ssmObjType->obj_lists[i].valid_flag)
+      continue;
+
+    SsmObsType obs = g_ssmObjType->obj_lists[i];
+    Point obs_cur = {obs.pos_x, obs.pos_y};
+    char str_obs_cur[2][8] = {};
+    strCompletion(str_obs_cur, i, obs.speed_x);
+    setlinecolor(BLACK);
+    setfillcolor(DARKGRAY);
+    drawCar(&obs_cur, str_obs_cur, obs.type, obs.pos_yaw, i);
+
+    // obs latspd not stable, use ego centre line offset
+    Point obs_pred, obs_pred_path[6];
+    float objPosnLgt[6], objPosnLat[6];
+
+    for (int i = 0; i < 6; i++) {
+      float predLatOffset = obs.speed_y * i;
+      if (cur_spd > 40.0f / 3.6f && obs.speed_x > 1.0f) {
+        objPosnLgt[i] = obs.pos_x + obs.speed_x * i;
+        objPosnLat[i] =
+            ego_coeffs[4] * objPosnLgt[i] +
+            ego_coeffs[3] * objPosnLgt[i] * objPosnLgt[i] +
+            ego_coeffs[2] * objPosnLgt[i] * objPosnLgt[i] * objPosnLgt[i];
+        float roadCurveOffset = objPosnLat[i] - objPosnLat[0];
+        if (fabsf(roadCurveOffset) > fabsf(predLatOffset))
+          predLatOffset = roadCurveOffset;
+      }
+      obs_pred_path[i] = {obs.pos_x + obs.speed_x * i,
+                          obs.pos_y + predLatOffset};
+    }
+
+    obs_pred = obs_pred_path[5];
+    // cipv, considier 0->1s const acc, 1->5s const spd
+    if (obs.lane_index == 3 && obs.pos_x > 0) {
+      float const_acc_time = 1.0f;
+      obs_pred.x = obs.pos_x +
+                   (obs.speed_x + obs.acc_x * const_acc_time) * 5.0f -
+                   0.5f * obs.acc_x * const_acc_time * const_acc_time;
+    }
+
+    if (show_predict_swt && obs.speed_x > 1.0f) {
+      char str_obs_pred[2][8] = {};
+      strcpy(str_obs_pred[1], "Pred");
+      setfillcolor(LIGHTGRAY);
+      strCompletion(str_obs_pred, i, obs.speed_x);
+      drawCar(&obs_pred, str_obs_pred, obs.type, obs.pos_yaw, i);
+      setlinecolor(LIGHTGRAY);
+      setlinestyle(PS_DASH);
+
+      coordinateTrans2(&obs_pred_path[0]);
+      for (int i = 0; i < 5; i++) {
+        coordinateTrans2(&obs_pred_path[i + 1]);
+        line(obs_pred_path[i].x, obs_pred_path[i].y, obs_pred_path[i + 1].x,
+             obs_pred_path[i + 1].y);
+      }
+    }
+  }
+}
+
 void drawBEVRuler() {
   settextcolor(BLACK);
   Point ruler_x[4] = {
@@ -550,20 +613,25 @@ void showBEVGraph(const GraphConfig* config,
   drawTsrSign(tsr_info);
 
   // road lines
+  // lineType: 0-unknown, 1-solid, 2-dash, 51-DblleftDash, 52-DblRightDash
   setlinestyle(PS_DASHDOT);
   Point lineEnd;
   int leftBoundaryColor =
-      spd_info->alc_lft_bd_typ == 2 ? GREEN : RGB(0, 87, 55);
+      (spd_info->alc_lft_bd_typ == 2 || spd_info->alc_lft_bd_typ == 51)
+          ? GREEN
+          : RGB(0, 87, 55);
   int rightBoundaryColor =
-      spd_info->alc_rgt_bd_typ == 2 ? GREEN : RGB(0, 87, 55);
-  drawTrajectory(lines_info->left_coeffs, BLACK, lines_info->left_coeffs[6],
+      (spd_info->alc_rgt_bd_typ == 2 || spd_info->alc_lft_bd_typ == 52)
+          ? GREEN
+          : RGB(0, 87, 55);
+  drawTrajectory(lines_info->left_coeffs, BLUE, lines_info->left_coeffs[6],
                  lines_info->left_coeffs[7], &lineEnd);
-  drawTrajectory(lines_info->leftleft_coeffs, BLACK,
+  drawTrajectory(lines_info->leftleft_coeffs, BLUE,
                  lines_info->leftleft_coeffs[6], lines_info->leftleft_coeffs[7],
                  &lineEnd);
-  drawTrajectory(lines_info->right_coeffs, BLACK, lines_info->right_coeffs[6],
+  drawTrajectory(lines_info->right_coeffs, BLUE, lines_info->right_coeffs[6],
                  lines_info->right_coeffs[7], &lineEnd);
-  drawTrajectory(lines_info->rightright_coeffs, BLACK,
+  drawTrajectory(lines_info->rightright_coeffs, BLUE,
                  lines_info->rightright_coeffs[6],
                  lines_info->rightright_coeffs[7], &lineEnd);
 
@@ -581,52 +649,21 @@ void showBEVGraph(const GraphConfig* config,
                  lines_info->rightright_coeffs_me[7], &lineEnd);
 
   // obstacles
-  for (int i = 0; i < g_ssmObjType->obj_num; i++) {
-    if (!g_ssmObjType->obj_lists[i].valid_flag)
-      continue;
-
-    SsmObsType obs = g_ssmObjType->obj_lists[i];
-    Point obs_cur = {obs.pos_x, obs.pos_y};
-    char str_obs_cur[2][8] = {};
-    strCompletion(str_obs_cur, i, obs.speed_x);
-    setlinecolor(BLACK);
-    setfillcolor(DARKGRAY);
-    drawCar(&obs_cur, str_obs_cur, obs.type, obs.pos_yaw, i);
-
-    Point obs_pred = {obs.pos_x + obs.speed_x * 5.0f,
-                      obs.pos_y + obs.speed_y * 5.0f};
-
-    // cipv, considier 0->1s const acc, 1->5s const spd
-    if (obs.lane_index == 3 && obs.pos_x > 0) {
-      float const_acc_time = 1.0f;
-      obs_pred.x = obs.pos_x +
-                   (obs.speed_x + obs.acc_x * const_acc_time) * 5.0f -
-                   0.5f * obs.acc_x * const_acc_time * const_acc_time;
-    }
-
-    if (show_predict_swt && obs.speed_x > 1.0f) {
-      char str_obs_pred[2][8] = {};
-      strcpy(str_obs_pred[1], "Pred");
-      setfillcolor(LIGHTGRAY);
-      strCompletion(str_obs_pred, i, obs.speed_x);
-      drawCar(&obs_pred, str_obs_pred, obs.type, obs.pos_yaw, i);
-      setlinecolor(LIGHTGRAY);
-      setlinestyle(PS_DASH);
-      line(obs_cur.x, obs_cur.y, obs_pred.x, obs_pred.y);
-    }
-  }
+  drawObstacles(g_ssmObjType, lines_info->ego_coeffs, spd_info->cur_spd);
 
   // navigation path, ego c7 as end point
-  float naviRange = lines_info->ego_coeffs[7];
+  float naviRange = lines_info->alc_coeffs[7];
   Point predictPosn = {0.0f, 0.0f};
-  drawTrajectory(lines_info->ego_coeffs, LIGHTRED, naviRange,
+  // ego lane path, c0 ~ c3
+  drawTrajectory(lines_info->ego_coeffs, MAGENTA, 0.0f, 100, &predictPosn);
+  drawTrajectory(lines_info->alc_coeffs, LIGHTRED, naviRange,
                  fmax(50.0f, naviRange), &predictPosn);
-  drawTrajectory(lines_info->ego_coeffs, RED, 0.0f, naviRange, &predictPosn);
+  drawTrajectory(lines_info->alc_coeffs, RED, 0.0f, naviRange, &predictPosn);
 
   // ego car
   setfillcolor(RED);
   setlinestyle(PS_SOLID);
-  Point ego = {0.0f, lines_info->ego_coeffs[5]};
+  Point ego = {0.0f, lines_info->alc_coeffs[5]};
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
   strCompletion(str_ego, 10, spd_info->cur_spd);
@@ -643,6 +680,50 @@ void showBEVGraph(const GraphConfig* config,
   }
   // ego spd info and lane change status
   drawMotionInfo(spd_info);
+  drawBEVRuler();
+}
+
+void drawRadarObj(const RadarObjInfo* radar_info) {
+  for (int j = 0; j < 32; j++) {
+    if (radar_info->iObjectId[j] == 0)
+      continue;
+
+    Point obj_posn = {radar_info->fDistX[j], radar_info->fDistY[j]};
+    char obj_id[10] = "";
+    snprintf(obj_id + strlen(obj_id), sizeof(obj_id) - strlen(obj_id), "%d", j);
+    coordinateTrans2(&obj_posn);
+
+    setlinecolor(BLACK);
+    setfillcolor(DARKGRAY);
+    solidcircle(obj_posn.x, obj_posn.y, 5);
+    outtextxy(obj_posn.x - textwidth(obj_id) / 2,
+              obj_posn.y + textheight(obj_id) / 2, obj_id);
+  }
+}
+
+void showRadarGraph(const GraphConfig* config,
+                    const float zeroOffsetX,
+                    const RadarObjInfo* radar_info) {
+  float len = config->length - 2.0f * config->offset;
+  float wid = config->width - 2.0f * config->offset;
+  // vehicle frame: front-left-up, FLU. eg. x-longitudinal, y-lateral
+  g_origin2 = {config->oriX + config->length * 0.5f,
+               config->oriY + config->offset + wid};
+  g_xScale2 = len / config->rangeY;
+  g_yScale2 = wid / config->rangeX;
+  g_origin2.y -= g_yScale2 * zeroOffsetX;
+
+  // obstacles
+  drawRadarObj(radar_info);
+
+  // ego car
+  setfillcolor(RED);
+  setlinestyle(PS_SOLID);
+  Point ego = {0.0f, 0.0f};
+  char str_ego[2][8] = {};
+  strcpy(str_ego[0], "ego");
+  drawCar(&ego, str_ego, 1, 0.0f, 10);
+
   drawBEVRuler();
 }
 

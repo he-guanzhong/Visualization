@@ -3,52 +3,6 @@
 extern int totalFrame;
 extern char csvFileName[150];
 
-extern float time_data[DATA_NUM];
-extern float egoSpd_data[DATA_NUM];
-extern float egoAcc_data[DATA_NUM];
-extern float spdLmt_data[DATA_NUM];
-extern float alc_path_data[6][DATA_NUM];
-extern int alcBehav_data[4][DATA_NUM];
-extern int accMode_data[DATA_NUM];
-
-extern bool AlcLgtCtrlEnbl_data[DATA_NUM];
-extern int truncated_col_data[DATA_NUM];
-extern float innerSpdLmt_data[DATA_NUM];
-extern int specialCaseFlg_data[DATA_NUM];
-extern float ctrl_point_data[2][DATA_NUM];
-extern float s_points_data[6][DATA_NUM];
-extern float v_points_data[6][DATA_NUM];
-extern float a_points_data[6][DATA_NUM];
-extern float t_points_data[6][DATA_NUM];
-
-extern bool objs_valid_flag_data[10][DATA_NUM];
-extern int objs_lane_index_data[10][DATA_NUM];
-extern int objs_type_data[10][DATA_NUM];
-extern float objs_pos_x_data[10][DATA_NUM];
-extern float objs_pos_y_data[10][DATA_NUM];
-extern float objs_speed_x_data[10][DATA_NUM];
-extern float objs_speed_y_data[10][DATA_NUM];
-extern float objs_acc_x_data[10][DATA_NUM];
-extern float objs_pos_yaw_data[10][DATA_NUM];
-
-extern int tsr_spd_data[DATA_NUM];
-extern bool tsr_spd_warn_data[DATA_NUM];
-extern int tsr_tsi_data[2][DATA_NUM];
-
-extern bool tsr_valid_flag_data[3][DATA_NUM];
-extern int tsr_type_data[3][DATA_NUM];
-extern float tsr_pos_x_data[3][DATA_NUM];
-extern float tsr_pos_y_data[3][DATA_NUM];
-
-extern float ll_path_data[8][DATA_NUM];
-extern float l_path_data[8][DATA_NUM];
-extern float r_path_data[8][DATA_NUM];
-extern float rr_path_data[8][DATA_NUM];
-extern float ll_path_me_data[8][DATA_NUM];
-extern float l_path_me_data[8][DATA_NUM];
-extern float r_path_me_data[8][DATA_NUM];
-extern float rr_path_me_data[8][DATA_NUM];
-
 inline float readValue(float** values, int col_name, int t) {
   if (values[col_name][t] == 0 && t > 0)
     values[col_name][t] = values[col_name][t - 1];
@@ -180,10 +134,33 @@ void LoadLog() {
       }
       printf("\n");
     } */
+  DataParsing(values, numColumns, columns, valuesCount);
+  // RadarDataParsing(values, numColumns, columns, valuesCount);
 
+  // 释放已分配的内存
+  for (int i = 0; i < numColumns; ++i) {
+    free(values[i]);
+  }
+  free(values);
+  for (int i = 0; i < numColumns; ++i) {
+    free(columns[i]);
+  }
+  free(columns);
+  free(line);
+  free(valuesCount);
+
+  fclose(file);
+
+  return;
+}
+
+void DataParsing(float** values,
+                 int numColumns,
+                 char** columns,
+                 int* valuesCount) {
   // time, alc path and speed plan input and output results
   int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, LGT_ENBL = 0, TRUC_CL = 0,
-      ACC_MODE = 0, IN_SPDLMT = 0, SPC_FLG = 0;
+      ACC_MODE = 0, IN_SPDLMT = 0, SPC_FLG = 0, EGO_PATH[4] = {0};
   int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, ALC_C[6] = {0};
   int P_T[7] = {0}, P_S[7] = {0}, P_V[7] = {0}, P_A[7] = {0};
 
@@ -253,6 +230,15 @@ void LoadLog() {
       ALC_C[1] = i;
     else if (strcmp(columns[i], "VfPASP_ALC_path_C0[]") == 0)
       ALC_C[0] = i;
+
+    else if (strcmp(columns[i], "VfPASP_ego_path_C0[]") == 0)
+      EGO_PATH[0] = i;
+    else if (strcmp(columns[i], "VfPASP_ego_path_C1[]") == 0)
+      EGO_PATH[1] = i;
+    else if (strcmp(columns[i], "VfPASP_ego_path_C2[]") == 0)
+      EGO_PATH[2] = i;
+    else if (strcmp(columns[i], "VfPASP_ego_path_C3[]") == 0)
+      EGO_PATH[3] = i;
 
     // speed plan output points
     else if (strcmp(columns[i], "VfPASP_StPoint0_t_s[]") == 0)
@@ -668,6 +654,8 @@ void LoadLog() {
     }
     ctrl_point_data[0][t] = P_A[6] ? values[P_T[6]][t] : 0;
     ctrl_point_data[1][t] = P_A[6] ? values[P_A[6]][t] : 0;
+    for (int k = 0; k < 4; k++)
+      ego_path_data[k][t] = EGO_PATH[k] ? values[EGO_PATH[k]][t] : 0;
 
     // obstacles, BTL original: lateral distance/speed direction opposite.
     // longi distance needs compensation to transfer pos centre to centre
@@ -753,20 +741,46 @@ void LoadLog() {
       tsr_pos_y_data[k][t] = values[TSR_LaDis[k]][t] * -1;
     }
   }
+  return;
+}
 
-  // 释放已分配的内存
-  for (int i = 0; i < numColumns; ++i) {
-    free(values[i]);
+void RadarDataParsing(float** values,
+                      int numColumns,
+                      char** columns,
+                      int* valuesCount) {
+  int Ts = 0;
+  int ID[32] = {0}, DIS_X[32] = {0}, DIS_Y[32] = {0};
+  for (int i = 0; i < numColumns; i++) {
+    if (strcmp(columns[i], "t[s]") == 0)
+      Ts = i;
+
+    for (int j = 0; j < 32; j++) {
+      char obs_title[20] = "iObjectId_";
+      char disX_title[20] = "fDistX_";
+      char disY_title[20] = "fDistY_";
+      snprintf(obs_title + strlen(obs_title),
+               sizeof(obs_title) - strlen(obs_title), "%02d[]", j);
+      snprintf(disX_title + strlen(disX_title),
+               sizeof(disX_title) - strlen(disX_title), "%02d[m]", j);
+      snprintf(disY_title + strlen(disY_title),
+               sizeof(disY_title) - strlen(disY_title), "%02d[m]", j);
+      if (strcmp(columns[i], obs_title) == 0)
+        ID[j] = i;
+      else if (strcmp(columns[i], disX_title) == 0)
+        DIS_X[j] = i;
+      else if (strcmp(columns[i], disY_title) == 0)
+        DIS_Y[j] = i;
+    }
   }
-  free(values);
-  for (int i = 0; i < numColumns; ++i) {
-    free(columns[i]);
+
+  totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
+  for (int t = 0; t < totalFrame; t++) {
+    time_data[t] = values[Ts][t];
+    for (int j = 0; j < 32; j++) {
+      iObjectId_data[j][t] = values[ID[j]][t];
+      fDistX_data[j][t] = values[DIS_X[j]][t];
+      fDistY_data[j][t] = values[DIS_Y[j]][t];
+    }
   }
-  free(columns);
-  free(line);
-  free(valuesCount);
-
-  fclose(file);
-
   return;
 }

@@ -68,6 +68,7 @@ typedef struct {
   UInt8 AutoLaneChgSts;
   UInt8 LeftBoundaryType;
   UInt8 RightBoundaryType;
+  UInt8 NaviPilotIsRamp;
 } AlcBehavior;
 
 #define Rte_TypeDef_AlcPathVcc

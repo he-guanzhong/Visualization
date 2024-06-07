@@ -53,6 +53,7 @@ typedef struct {
 } SpdInfo;
 
 typedef struct {
+  float* alc_coeffs;
   float* ego_coeffs;
   float* left_coeffs;
   float* leftleft_coeffs;
@@ -63,6 +64,12 @@ typedef struct {
   float* right_coeffs_me;
   float* rightright_coeffs_me;
 } LinesInfo;
+
+typedef struct {
+  int iObjectId[32];
+  float fDistX[32];
+  float fDistY[32];
+} RadarObjInfo;
 
 void coordinateTrans1(Point* point);
 void coordinateTrans2(Point* point);
@@ -90,6 +97,9 @@ void drawBasicGraph(const int len,
                     const float rangeY,
                     const float offsetY);
 
+void drawObstacles(const SsmObjType* g_ssmObjType,
+                   const float* ego_coeffs,
+                   const float cur_spd);
 void drawBEVRuler();
 
 void showXYGraph(const GraphConfig* config,
@@ -107,6 +117,12 @@ void showBEVGraph(const GraphConfig* config,
                   const SsmObjType* g_ssmObjType,
                   const LinesInfo* lines_info,
                   const SpdInfo* spd_info);
+
+void drawRadarObj(const RadarObjInfo* radar_info);
+
+void showRadarGraph(const GraphConfig* config,
+                    const float zeroOffsetX,
+                    const RadarObjInfo* radar_info);
 
 bool inArea(int mx, int my, int x, int y, int w, int h);
 bool button(ExMessage* msg, int x, int y, int w, int h, bool* swt);

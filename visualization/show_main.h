@@ -14,8 +14,9 @@ enum PLAYMODE {
   LOG = 2,
   LOOPBACK = 3,
   SIMULATION = 4,
-  FUSION = 5,
-  LINECHART = 6
+  LINECHART = 5,
+  FUSION = 6,
+  RADAR = 7
 };
 
 void ReadInputData(const int t);
