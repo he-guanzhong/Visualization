@@ -14,19 +14,15 @@ The following display information is currently supported:
 3. Speed plan results (S-T, V-T, A-T graphs)
 4. Ego motion status (set/actual speed, ACC mode)
 5. TSR info (speed limit sign, special sign, ego display/alert status)
-### Installation 
+### Usage Instructions
+- Download all files from the ` /build/ ` directory (` spdplan.exe `、 ` libgcc_s_seh-1.dll ` and ` libstdc++-6.dll ` are compulsory)
+- Open the executable file ` spdplan.exe `. In the pop-up window, select the **.csv** formatted log you want to play
+- For your convenience, two example logs, ` example1.csv ` and ` example2.csv `, are provided for self-testing purposes
+### Compilation Requirements
 * Platform: Windows (Linux not supported due to incompatiblity of EasyX)
 * Language: C++
-* MinGW: To run executable file (.exe), an environment installed MinGW is strictly required. [MinGW official download site](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
+* MinGW: To compile executable file (.exe), an environment installed MinGW is strictly required. [MinGW official download site](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
 * EasyX: For compiling the program with source code, the installlation of EasyX is essential. [EasyX official download site](https://codebus.cn/bestans/easyx-for-mingw)
-### Usage
-- Log format recognizable: (**.csv**)  
-- To download complied executable file, see 
-` /build/spdplan.exe  `
-- For your convenience, two example logs are provided in the same directory for self-testing purposes
-### License 
-GNU General Public License v3.0  
-All rights reserved by HGZ
 
 ## 中文
 ### 概要
@@ -38,16 +34,15 @@ All rights reserved by HGZ
 3. 速度规划结果 （S-T, V-T, A-T 图）
 4. 自车运动状态 （设置/当前 速度, 自适应巡航模式）
 5. 交通标志识别信息 （限速标识、特殊标识、自车显示、报警状态）
-### 安装
+### 使用方式
+- 下载 ` /build/ ` 路径下的所有文件（必须包括` spdplan.exe `、 ` libgcc_s_seh-1.dll ` 和 ` libstdc++-6.dll `）
+- 双击打开可执行文件 ` spdplan.exe `。在弹框中，选择要播放 **.csv** 格式的日志
+- 默认提供 ` example1.csv ` 和 ` example2.csv ` 两个样例，供自测
+### 编译要求
 * 平台: Windows (Linux不兼容EasyX)
 * 语言: C++
-* MinGW: 运行可执行文件 (.exe)，必须先安装MinGW编译器. [MinGW官方下载](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
+* MinGW: 运行可执行文件 (.exe)，推荐安装MinGW编译器. [MinGW官方下载](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
 * EasyX: 编译源码，还需额外安装EasyX库. [EasyX官方下载](https://codebus.cn/bestans/easyx-for-mingw)
-### 使用方式
-- 日志格式: （**.csv**）  
-- 可执行文件路径 
-` /build/spdplan.exe  `
-- 同路径下还提供了两个样例，供自测
 
 ## Français
 ### Description
@@ -59,13 +54,12 @@ Les informations d’affichage suivantes sont actuellement prises en charge :
 3. Résultats du plan de vitesse (graphiques S-T, V-T, A-T)
 4. État du mouvement de l’ego (vitesse réglée/réelle, mode ACC)
 5. Infos TSR (panneau de limitation de vitesse, panneau spécial, affichage de l’ego/état d’alerte)
-### Installation 
+### Instructions d'utilisation
+- Télécharger tous les fichiers du Répertoire ` /Build/ ` ( ` spdplan.exe `, ` libgcc_s_seh-1.dll ` et ` libstdc++-6.dll ` sont requis)
+- Ouvrez le fichier exécutable ` spdplan.exe `. Dans la fenêtre contextuelle, sélectionnez le Journal au format **.csv** que vous souhaitez lire
+- Pour votre commodité, deux exemples de logs ` example1.csv ` et ` example2.csv ` sont fournis à des fins d’auto-test
+### Exigences de compilation
 * Plate-forme : Windows (Linux non pris en charge en raison de l’incompatibilité d’EasyX)
 * Langage : C++
 * MinGW : Pour exécuter un fichier exécutable (.exe), un environnement installé MinGW est strictement requis. [Site de téléchargement officiel de MinGW](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
 * EasyX : Pour compiler le programme avec le code source, l’installation d’EasyX est indispensable. [Site de téléchargement officiel d’EasyX](https://codebus.cn/bestans/easyx-for-mingw)
-### Utilisation
-- Format de journal reconnaissable : (**.csv**)  
-- Pour télécharger un fichier exécutable compilé, voir 
-  ` /build/spdplan.exe `
-- Pour votre commodité, deux exemples de journaux sont fournis dans le même répertoire à des fins d’auto-test
