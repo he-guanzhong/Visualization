@@ -184,6 +184,7 @@ typedef StPoint StPoint_Array_10[10];
 typedef struct {
   Boolean AlcLatCtrlEnbl;
   Boolean AlcLgtCtrlEnbl;
+  UInt8 AlcTextInfo;
   Boolean Reserved_b;
   UInt8 Reserved_u8;
   UInt16 Reserved_u16;
@@ -204,6 +205,7 @@ typedef struct {
 typedef struct {
   Boolean AlcLatCtrlEnbl;
   Boolean AlcLgtCtrlEnbl;
+  UInt8 AlcTextInfo;  // 0x9 迫近前车 0xB即将超车
   StPoint Point0;
   StPoint Point1;
   StPoint Point2;

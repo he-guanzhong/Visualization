@@ -655,7 +655,7 @@ void showBEVGraph(const GraphConfig* config,
   float naviRange = lines_info->alc_coeffs[7];
   Point predictPosn = {0.0f, 0.0f};
   // ego lane path, c0 ~ c3
-  drawTrajectory(lines_info->ego_coeffs, MAGENTA, 0.0f, 100, &predictPosn);
+  drawTrajectory(lines_info->ego_coeffs, MAGENTA, 0.0f, 80, &predictPosn);
   drawTrajectory(lines_info->alc_coeffs, LIGHTRED, naviRange,
                  fmax(50.0f, naviRange), &predictPosn);
   drawTrajectory(lines_info->alc_coeffs, RED, 0.0f, naviRange, &predictPosn);
@@ -663,11 +663,11 @@ void showBEVGraph(const GraphConfig* config,
   // ego car
   setfillcolor(RED);
   setlinestyle(PS_SOLID);
-  Point ego = {0.0f, lines_info->alc_coeffs[5]};
+  Point ego = {0.0f, 0};
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
   strCompletion(str_ego, 10, spd_info->cur_spd);
-  drawCar(&ego, str_ego, 1, 0.0f, 10);
+  drawCar(&ego, str_ego, 1, 0, 10);
 
   if (show_predict_swt && predictPosn.x > 2.0f) {
     // setfillstyle(BS_HATCHED, HS_DIAGCROSS);
@@ -712,6 +712,7 @@ void showRadarGraph(const GraphConfig* config,
   g_xScale2 = len / config->rangeY;
   g_yScale2 = wid / config->rangeX;
   g_origin2.y -= g_yScale2 * zeroOffsetX;
+  settextstyle(20, 0, "Calibri");
 
   // obstacles
   drawRadarObj(radar_info);

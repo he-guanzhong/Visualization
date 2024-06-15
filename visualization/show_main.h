@@ -23,6 +23,20 @@ void ReadInputData(const int t);
 void ReadOutputData(const int t);
 
 void Time2Str(const float time, char* str);
+void DisplaySpdPlanInterface(const int length,
+                             const int width,
+                             const int offset,
+                             const LinesInfo* lines_info,
+                             const SpdInfo* spd_info);
+
+void DisplayLineChart(const int length,
+                      const int width,
+                      const int offset,
+                      const int oriX,
+                      const int oriY,
+                      const int curFrame,
+                      const int frameNums);
+
 void DisplayLog(const int length, const int width, const int offset);
 
 #ifdef SPEED_PLANNING_H_
@@ -34,7 +48,8 @@ void LoopbackCalculation();
 void LocalDummySsmData(SsmObjType* ssmObjs);
 void GenerateLocalData();
 
-void DisplayLineChart(const int length, const int width, const int offset);
+void DisplayLoopbackCurve(const int length, const int width, const int offset);
+
 #endif
 
 BOOL GetFileFromUser(char* filePath, int size);

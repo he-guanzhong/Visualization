@@ -166,6 +166,28 @@ void Time2Str(const float time, char* str) {
   }
 }
 
+void DisplaySpdPlanInterface(const int length,
+                             const int width,
+                             const int offset,
+                             const LinesInfo* lines_info,
+                             const SpdInfo* spd_info) {
+  GraphConfig BEV_cfg = {length / 2, width,  offset,     length / 2,
+                         0,          130.0f, 3.4f * 5.0f};
+  GraphConfig ST_cfg = {length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f,
+                        120.0f};
+  GraphConfig VT_cfg = {length / 2, (int)(width * 0.44), offset,
+                        0,          (int)(width * 0.28), 5.0f,
+                        30.0f};
+  GraphConfig AT_cfg = {length / 2, (int)(width * 0.44), offset,
+                        0,          (int)(width * 0.56), 5.0f,
+                        6.0f};
+  showBEVGraph(&BEV_cfg, 30.0f, &tsr_info, &g_ssmObjType, lines_info, spd_info);
+  showXYGraph(&ST_cfg, 0.0f, "S-T Graph", BLUE, s_points, 0, 6, &ctrlPoint);
+  showXYGraph(&VT_cfg, 0.0f, "V-T", BLUE, v_points, 0, 6, &ctrlPoint);
+  showXYGraph(&AT_cfg, 4.0f, "A-T", RED, a_points, 0, 6, &ctrlPoint);
+  return;
+}
+
 void DisplayLog(const int length, const int width, const int offset) {
   if (totalFrame <= 0)
     return;
@@ -257,24 +279,10 @@ void DisplayLog(const int length, const int width, const int offset) {
           GraphConfig BEV_cfg = {length, width,  offset,     0,
                                  0,      100.0f, 3.4f * 5.0f};
           showRadarGraph(&BEV_cfg, 30.0f, &radar_info);
-        } else {
-          GraphConfig BEV_cfg = {length / 2, width,  offset,     length / 2,
-                                 0,          130.0f, 3.4f * 5.0f};
-          GraphConfig ST_cfg = {
-              length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f, 120.0f};
-          GraphConfig VT_cfg = {length / 2, (int)(width * 0.44), offset,
-                                0,          (int)(width * 0.28), 5.0f,
-                                30.0f};
-          GraphConfig AT_cfg = {length / 2, (int)(width * 0.44), offset,
-                                0,          (int)(width * 0.56), 5.0f,
-                                6.0f};
-          showBEVGraph(&BEV_cfg, 30.0f, &tsr_info, &g_ssmObjType, &lines_info,
-                       &spd_info);
-          showXYGraph(&ST_cfg, 0.0f, "S-T Graph", BLUE, s_points, 0, 6,
-                      &ctrlPoint);
-          showXYGraph(&VT_cfg, 0.0f, "V-T", BLUE, v_points, 0, 6, &ctrlPoint);
-          showXYGraph(&AT_cfg, 4.0f, "A-T", RED, a_points, 0, 6, &ctrlPoint);
-
+        } else if (playMode == PLAYMODE::LOOPBACK) {
+          DisplaySpdPlanInterface(length, width - 150, offset, &lines_info,
+                                  &spd_info);
+          DisplayLineChart(length, 200, 50, 0, width - 200, t, 120);
           char szPlanSts[10], szTmpMeas[10];
           itoa(g_truncated_col, szPlanSts, 10);
           const char* str2 = AlcLgtCtrlEnbl ? " Enable" : " Fail  ";
@@ -282,6 +290,9 @@ void DisplayLog(const int length, const int width, const int offset) {
           sprintf(szTmpMeas, "%.5f", gTempMeasureVal);
           outtextxy(0, width * 0.75 + 50, szPlanSts);
           outtextxy(0, width * 0.75 + 80, szTmpMeas);
+        } else {
+          DisplaySpdPlanInterface(length, width, offset, &lines_info,
+                                  &spd_info);
         }
 
         outtextxy(length / 3, 0, "Playing");
@@ -368,7 +379,6 @@ void CalcOneStep() {
   if (playMode == PLAYMODE::ONESTEP) {
     printf("AlcLatEnbl: %d, \t AlcLgtEnble: %d\n", output.AlcLatCtrlEnbl,
            output.AlcLgtCtrlEnbl);
-
     printf("Ctrl 0: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
            output.pointCtrl0.t, output.pointCtrl0.s, output.pointCtrl0.v,
            output.pointCtrl0.a);
@@ -408,21 +418,7 @@ void DisplayOneStep(const int length, const int width, const int offset) {
                       alcBehav.LeftBoundaryType,
                       alcBehav.RightBoundaryType};
   show_predict_swt = true;
-  GraphConfig BEV_cfg = {length / 2, width,  offset,     length / 2,
-                         0,          130.0f, 3.4f * 5.0f};
-  showBEVGraph(&BEV_cfg, 30.0f, &tsr_info, &g_ssmObjType, &lines_info,
-               &spd_info);
-  GraphConfig ST_cfg = {length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f,
-                        120.0f};
-  GraphConfig VT_cfg = {length / 2, (int)(width * 0.44), offset,
-                        0,          (int)(width * 0.28), 5.0f,
-                        30.0f};
-  GraphConfig AT_cfg = {length / 2, (int)(width * 0.44), offset,
-                        0,          (int)(width * 0.56), 5.0f,
-                        6.0f};
-  showXYGraph(&ST_cfg, 0.0f, "S-T Graph", BLUE, s_points, 0, 6, &ctrlPoint);
-  showXYGraph(&VT_cfg, 0.0f, "V-T", BLUE, v_points, 0, 6, &ctrlPoint);
-  showXYGraph(&AT_cfg, 4.0f, "A-T", RED, a_points, 0, 6, &ctrlPoint);
+  DisplaySpdPlanInterface(length, width, offset, &lines_info, &spd_info);
 
   system("pause");
   closegraph();
@@ -636,7 +632,7 @@ void GenerateLocalData() {
   }
 }
 
-void DisplayLineChart(const int length, const int width, const int offset) {
+void DisplayLoopbackCurve(const int length, const int width, const int offset) {
   initgraph(length, width);
   setbkcolor(WHITE);
   setbkmode(TRANSPARENT);
@@ -646,49 +642,39 @@ void DisplayLineChart(const int length, const int width, const int offset) {
   LoopbackCalculation();
   memcpy(loopback_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
 
-  const int startFrame = 500;
-  const int frameNums = 1000;
-  const int endFrame = fmin(startFrame + frameNums - 1, DATA_NUM);
-  Point original_arr[frameNums];
-  Point loopback_arr[frameNums];
-  for (int i = 0; i < frameNums; i++) {
-    original_arr[i].x = time_data[i + startFrame] - time_data[startFrame];
-    original_arr[i].y = original_data[i + startFrame];
-    loopback_arr[i].x = time_data[i + startFrame] - time_data[startFrame];
-    loopback_arr[i].y = loopback_data[i + startFrame];
-  }
-
-  GraphConfig XY_cfg = {
-      length, width, offset,
-      0,      0,     original_arr[frameNums - 1].x - original_arr[0].x,
-      6.0f};
-  showXYGraph(&XY_cfg, 4.0f, "Origin(BLUE), New(RED)", BLUE, original_arr, 0,
-              frameNums, &ctrlPoint);
-  showXYGraph(&XY_cfg, 4.0f, "Origin(BLUE), New(RED)", RED, loopback_arr, 0,
-              frameNums, &ctrlPoint);
+  DisplayLineChart(length, width, offset, 0, 0, totalFrame / 2, totalFrame);
 
   system("pause");
   closegraph();
 }
 #endif
 
-BOOL GetFileFromUser(char* filePath, int size) {
-  OPENFILENAME ofn;  // common dialog box structure
-  ZeroMemory(&ofn, sizeof(ofn));
-  ofn.lStructSize = sizeof(ofn);
-  ofn.hwndOwner = NULL;  // no owner window
-  ofn.lpstrFilter = "CSV Files (*.csv)\0*.csv\0All Files (*.*)\0*.*\0";
-  ofn.lpstrCustomFilter = NULL;
-  ofn.nFilterIndex = 1;
-  ofn.lpstrFile = filePath;
-  ofn.nMaxFile = size;
-  ofn.lpstrFileTitle = NULL;
-  ofn.nMaxFileTitle = 0;
-  ofn.lpstrInitialDir = NULL;  // default directory
-  ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+void DisplayLineChart(const int length,
+                      const int width,
+                      const int offset,
+                      const int oriX,
+                      const int oriY,
+                      const int curFrame,
+                      const int frameNums) {
+  const int startFrame = fmax(0, curFrame - frameNums / 2);
+  const int endFrame = fmin(totalFrame - 1, curFrame + frameNums / 2);
 
-  // Display the Open dialog box.
-  return GetOpenFileName(&ofn) == TRUE;
+  Point original_arr[frameNums];
+  Point loopback_arr[frameNums];
+  for (int i = 0; i < frameNums; i++) {
+    original_arr[i].x = time_data[i + startFrame] - time_data[startFrame];
+    original_arr[i].y = original_data[i + startFrame];
+    loopback_arr[i].x = original_arr[i].x;
+    loopback_arr[i].y = loopback_data[i + startFrame];
+  }
+  GraphConfig XY_cfg = {
+      length, width, offset,
+      oriX,   oriY,  original_arr[frameNums - 1].x - original_arr[0].x,
+      6.0f};
+  showXYGraph(&XY_cfg, 4.0f, "Origin(BLUE), New(RED)", BLUE, original_arr, 0,
+              frameNums, &ctrlPoint);
+  showXYGraph(&XY_cfg, 4.0f, "", RED, loopback_arr, 0, frameNums, &ctrlPoint);
+  return;
 }
 
 void ReleaseWrapper() {
@@ -709,18 +695,21 @@ void ReleaseWrapper() {
     LoadLog();
 #ifdef SPEED_PLANNING_H_
     if (playMode == PLAYMODE::LOOPBACK) {
+      memcpy(original_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
       LoopbackCalculation();
+      memcpy(loopback_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
     } else if (playMode == PLAYMODE::LINECHART) {
-      DisplayLineChart(1000, 400, 50);
+      DisplayLoopbackCurve(1000, 400, 50);
       return;
     }
 #endif
-    playMode = t_points_data[1][0] < 1e-6f ? PLAYMODE::FUSION : playMode;
-    playMode = iObjectId_data[0][0] ? PLAYMODE::RADAR : playMode;
+    playMode = s_points_data[1][0] == 0 ? PLAYMODE::FUSION : playMode;
+    playMode = fDistX_data[0][0] ? PLAYMODE::RADAR : playMode;
     int length = (playMode == PLAYMODE::FUSION || playMode == PLAYMODE::RADAR)
                      ? 400
                      : 750;
-    DisplayLog(length, 750, 100);
+    int width = playMode == PLAYMODE::LOOPBACK ? 900 : 750;
+    DisplayLog(length, width, 100);
   }
   return;
 }

@@ -17,10 +17,6 @@ void LoadLog() {
     return;
   }
 
-  // char line[MAX_LINE_SIZE];
-  // char** columns = NULL;
-  // float values[MAX_COLUMNS][MAX_VALUES_PER_COLUMN] = {0};
-  // int valuesCount[MAX_COLUMNS] = {0};
   int numColumns = 0;
 
   char* line = (char*)malloc(MAX_LINE_SIZE * sizeof(char));
@@ -755,28 +751,35 @@ void RadarDataParsing(float** values,
       Ts = i;
 
     for (int j = 0; j < 32; j++) {
-      char obs_title[20] = "iObjectId_";
-      char disX_title[20] = "fDistX_";
-      char disY_title[20] = "fDistY_";
+      char obs_title[25] = "iObjectId_";
+      char disX_title[25] = "fDistX_";
+      char disY_title[25] = "fDistY_";
       snprintf(obs_title + strlen(obs_title),
                sizeof(obs_title) - strlen(obs_title), "%02d[]", j);
       snprintf(disX_title + strlen(disX_title),
                sizeof(disX_title) - strlen(disX_title), "%02d[m]", j);
       snprintf(disY_title + strlen(disY_title),
                sizeof(disY_title) - strlen(disY_title), "%02d[m]", j);
-      if (strcmp(columns[i], obs_title) == 0)
+
+      if (strncmp(columns[i], obs_title, 12) == 0) {
         ID[j] = i;
-      else if (strcmp(columns[i], disX_title) == 0)
+      } else if (strncmp(columns[i], disX_title, 9) == 0) {
         DIS_X[j] = i;
-      else if (strcmp(columns[i], disY_title) == 0)
+      } else if (strncmp(columns[i], disY_title, 9) == 0) {
         DIS_Y[j] = i;
+      }
     }
   }
 
   totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
+  /*   for (int j = 0; j < 32; j++) {
+      printf("ID[%d] = %d\n", j, ID[j]);
+    } */
   for (int t = 0; t < totalFrame; t++) {
     time_data[t] = values[Ts][t];
     for (int j = 0; j < 32; j++) {
+      if (ID[j] == 0)
+        continue;
       iObjectId_data[j][t] = values[ID[j]][t];
       fDistX_data[j][t] = values[DIS_X[j]][t];
       fDistY_data[j][t] = values[DIS_Y[j]][t];
