@@ -69,6 +69,7 @@ typedef struct {
   UInt8 LeftBoundaryType;
   UInt8 RightBoundaryType;
   UInt8 NaviPilotIsRamp;
+  UInt16 NaviPilot1stRampOnDis;
 } AlcBehavior;
 
 #define Rte_TypeDef_AlcPathVcc

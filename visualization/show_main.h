@@ -9,7 +9,7 @@
 #include "visualization/show_basic_tools.h"
 #include "visualization/show_load_log.h"
 
-enum PLAYMODE {
+typedef enum {
   ONESTEP = 1,
   LOG = 2,
   LOOPBACK = 3,
@@ -17,7 +17,7 @@ enum PLAYMODE {
   LINECHART = 5,
   FUSION = 6,
   RADAR = 7
-};
+} PLAYMODE;
 
 void ReadInputData(const int t);
 void ReadOutputData(const int t);
@@ -49,10 +49,8 @@ void LocalDummySsmData(SsmObjType* ssmObjs);
 void GenerateLocalData();
 
 void DisplayLoopbackCurve(const int length, const int width, const int offset);
-
 #endif
 
-BOOL GetFileFromUser(char* filePath, int size);
 void ReleaseWrapper();
 
 #endif  // SHOW_MAIN_H_

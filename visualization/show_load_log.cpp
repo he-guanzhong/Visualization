@@ -706,16 +706,12 @@ void DataParsing(float** values,
     for (int k = 0; k < 8; k++) {
       if (LH_C_0[k] == 0)
         continue;
-      if (k <= 3) {
-        l_path_me_data[k][t] = values[LH_C_0[k]][t] * -1;
-        r_path_me_data[k][t] = values[LH_C_1[k]][t] * -1;
-        ll_path_me_data[k][t] = values[LA_C_0[k]][t] * -1;
-        rr_path_me_data[k][t] = values[LA_C_1[k]][t] * -1;
-      } else if (k >= 6) {
-        l_path_me_data[k][t] = values[LH_C_0[k]][t];
-        r_path_me_data[k][t] = values[LH_C_1[k]][t];
-        ll_path_me_data[k][t] = values[LA_C_0[k]][t];
-        rr_path_me_data[k][t] = values[LA_C_1[k]][t];
+      float correct_fac = (k <= 3 ? -1 : 1);
+      if (k <= 3 || k >= 6) {
+        l_path_me_data[k][t] = values[LH_C_0[k]][t] * correct_fac;
+        r_path_me_data[k][t] = values[LH_C_1[k]][t] * correct_fac;
+        ll_path_me_data[k][t] = values[LA_C_0[k]][t] * correct_fac;
+        rr_path_me_data[k][t] = values[LA_C_1[k]][t] * correct_fac;
       }
     }
 

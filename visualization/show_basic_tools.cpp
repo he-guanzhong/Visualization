@@ -220,6 +220,10 @@ void drawMotionInfo(const SpdInfo* spd_info) {
     case 10:
       strcat(spec_case_title, "Ndg");
       break;
+    case 4:
+    case 14:
+      strcat(spec_case_title, "ramp");
+      break;
     case 5:
       strcat(spec_case_title, "dec");
       break;
@@ -297,9 +301,9 @@ void drawTrajectory(const float* coeffs,
   Point last = {0.0f, 0.0f};
   float restLen = lengthS;
   for (int i = startX; i <= lengthS; i++) {
-    float j = coeffs[5] + coeffs[4] * i + coeffs[3] * i * i +
-              coeffs[2] * i * i * i + coeffs[1] * i * i * i * i +
-              coeffs[0] * i * i * i * i * i;
+    float j = coeffs[0] + coeffs[1] * i + coeffs[2] * i * i +
+              coeffs[3] * i * i * i + coeffs[4] * i * i * i * i +
+              coeffs[5] * i * i * i * i * i;
     if (restLen > 0) {
       if (last.x != 0.0f) {
         float delta_s = hypotf((float)i - last.x, (float)j - last.y);
@@ -342,9 +346,9 @@ void drawObstacles(const SsmObjType* g_ssmObjType,
       if (cur_spd > 40.0f / 3.6f && obs.speed_x > 1.0f) {
         objPosnLgt[i] = obs.pos_x + obs.speed_x * i;
         objPosnLat[i] =
-            ego_coeffs[4] * objPosnLgt[i] +
-            ego_coeffs[3] * objPosnLgt[i] * objPosnLgt[i] +
-            ego_coeffs[2] * objPosnLgt[i] * objPosnLgt[i] * objPosnLgt[i];
+            ego_coeffs[1] * objPosnLgt[i] +
+            ego_coeffs[2] * objPosnLgt[i] * objPosnLgt[i] +
+            ego_coeffs[3] * objPosnLgt[i] * objPosnLgt[i] * objPosnLgt[i];
         float roadCurveOffset = objPosnLat[i] - objPosnLat[0];
         if (fabsf(roadCurveOffset) > fabsf(predLatOffset))
           predLatOffset = roadCurveOffset;
@@ -613,15 +617,15 @@ void showBEVGraph(const GraphConfig* config,
   drawTsrSign(tsr_info);
 
   // road lines
-  // lineType: 0-unknown, 1-solid, 2-dash, 51-DblleftDash, 52-DblRightDash
+  // lineType: 0-unknown, 1-solid, 2-dash, 32-Dash(inner)_Solid(outer),
   setlinestyle(PS_DASHDOT);
   Point lineEnd;
   int leftBoundaryColor =
-      (spd_info->alc_lft_bd_typ == 2 || spd_info->alc_lft_bd_typ == 51)
+      (spd_info->alc_lft_bd_typ == 2 || spd_info->alc_lft_bd_typ == 32)
           ? GREEN
           : RGB(0, 87, 55);
   int rightBoundaryColor =
-      (spd_info->alc_rgt_bd_typ == 2 || spd_info->alc_lft_bd_typ == 52)
+      (spd_info->alc_rgt_bd_typ == 2 || spd_info->alc_rgt_bd_typ == 32)
           ? GREEN
           : RGB(0, 87, 55);
   drawTrajectory(lines_info->left_coeffs, BLUE, lines_info->left_coeffs[6],

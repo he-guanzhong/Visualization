@@ -19,20 +19,22 @@ float gTempMeasureVal;
 
 // Key display information
 // float alc_coeffs[8] =
-// {6.0113e-10,-1.707e-7,1.4243e-5,0,0,0,0,120};changeleft
+// {0,0,0,1.4243e-5,-1.707e-7,6.0113e-10,0,120};changeleft
+
 float egoAcc, egoSpd, spdLmt;
-float alc_coeffs[8] = {0,       0,     1.07e-7f, 1.98e-6f,
-                       -0.0018, 0.072, 0,        120};  // go straight
+float alc_coeffs[8] = {0.072, -0.0018, 1.98e-6f, 1.07e-7f,
+                       0,     0,       0,        120};  // go straight
+
 float ego_coeffs[8] = {0, 0, 0, 0, 0, 0, 0, 100};
 int accMode;
 AlcBehavior alcBehav;
 Point s_points[6], v_points[6], a_points[6];
 Point ctrlPoint;
 bool AlcLgtCtrlEnbl;
-float left_coeffs[8] = {0, 0, 0, 0, 0, 3.4f / 2.0f, -30, 100};
-float leftleft_coeffs[8] = {0, 0, 0, 0, 0, 3.4f * 1.5f, -30, 100};
-float right_coeffs[8] = {0, 0, 0, 0, 0, -3.4f / 2.0f, -30, 100};
-float rightright_coeffs[8] = {0, 0, 0, 0, 0, -3.4f * 1.5f, -30, 100};
+float left_coeffs[8] = {3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100};
+float leftleft_coeffs[8] = {3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100};
+float right_coeffs[8] = {-3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100};
+float rightright_coeffs[8] = {-3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100};
 TsrInfo tsr_info;
 float left_coeffs_me[8];
 float leftleft_coeffs_me[8];
@@ -77,11 +79,11 @@ void ReadInputData(const int t) {
   alcBehav.RightBoundaryType = alcBehav_data[3][t];
 
   // c0->c5 orders of ego and alc_path are opposite
-  for (int i = 1; i <= 5; i++)
-    alc_coeffs[i] = alc_path_data[5 - i][t];
+  for (int i = 0; i <= 5; i++)
+    alc_coeffs[i] = alc_path_data[i][t];
 
-  for (int i = 2; i <= 5; i++)
-    ego_coeffs[i] = ego_path_data[5 - i][t];
+  for (int i = 0; i <= 3; i++)
+    ego_coeffs[i] = ego_path_data[i][t];
 
   // obstacles
   g_ssmObjType.obj_num = 10;
@@ -99,29 +101,16 @@ void ReadInputData(const int t) {
 
   // c0->c5 orders of ego and alc_path are opposite
   for (int i = 0; i < 8; i++) {
-    if (i <= 5) {
-      left_coeffs[i] = l_path_data[5 - i][t];
-      right_coeffs[i] = r_path_data[5 - i][t];
-      leftleft_coeffs[i] = ll_path_data[5 - i][t];
-      rightright_coeffs[i] = rr_path_data[5 - i][t];
-    } else {
-      left_coeffs[i] = l_path_data[i][t];
-      right_coeffs[i] = r_path_data[i][t];
-      leftleft_coeffs[i] = ll_path_data[i][t];
-      rightright_coeffs[i] = rr_path_data[i][t];
-    }
+    left_coeffs[i] = l_path_data[i][t];
+    right_coeffs[i] = r_path_data[i][t];
+    leftleft_coeffs[i] = ll_path_data[i][t];
+    rightright_coeffs[i] = rr_path_data[i][t];
+
     // show me original lines
-    if (i <= 5) {
-      left_coeffs_me[i] = l_path_me_data[5 - i][t];
-      right_coeffs_me[i] = r_path_me_data[5 - i][t];
-      leftleft_coeffs_me[i] = ll_path_me_data[5 - i][t];
-      rightright_coeffs_me[i] = rr_path_me_data[5 - i][t];
-    } else {
-      left_coeffs_me[i] = l_path_me_data[i][t];
-      right_coeffs_me[i] = r_path_me_data[i][t];
-      leftleft_coeffs_me[i] = ll_path_me_data[i][t];
-      rightright_coeffs_me[i] = rr_path_me_data[i][t];
-    }
+    left_coeffs_me[i] = l_path_me_data[i][t];
+    right_coeffs_me[i] = r_path_me_data[i][t];
+    leftleft_coeffs_me[i] = ll_path_me_data[i][t];
+    rightright_coeffs_me[i] = rr_path_me_data[i][t];
   }
 
   // TSR info
@@ -271,15 +260,15 @@ void DisplayLog(const int length, const int width, const int offset) {
                             alcBehav.LeftBoundaryType,
                             alcBehav.RightBoundaryType};
 
-        if (playMode == PLAYMODE::FUSION) {
+        if (playMode == FUSION) {
           GraphConfig BEV_cfg = {length, width, offset, 0, 0, 100.0f, 30.0f};
           showBEVGraph(&BEV_cfg, 0, &tsr_info, &g_ssmObjType, &lines_info,
                        &spd_info);
-        } else if (playMode == PLAYMODE::RADAR) {
+        } else if (playMode == RADAR) {
           GraphConfig BEV_cfg = {length, width,  offset,     0,
                                  0,      100.0f, 3.4f * 5.0f};
           showRadarGraph(&BEV_cfg, 30.0f, &radar_info);
-        } else if (playMode == PLAYMODE::LOOPBACK) {
+        } else if (playMode == LOOPBACK) {
           DisplaySpdPlanInterface(length, width - 150, offset, &lines_info,
                                   &spd_info);
           DisplayLineChart(length, 200, 50, 0, width - 200, t, 120);
@@ -315,25 +304,16 @@ void DisplayLog(const int length, const int width, const int offset) {
 
 #ifdef SPEED_PLANNING_H_
 void CalcOneStep() {
-  AlcPathVcc alcPathVcc;
-  memset(&alcPathVcc, 0, sizeof(alcPathVcc));
-  alcPathVcc.FiveCoeff = alc_coeffs[0];
-  alcPathVcc.FourCoeff = alc_coeffs[1];
-  alcPathVcc.ThrdCoeff = alc_coeffs[2];
-  alcPathVcc.SecCoeff = alc_coeffs[3];
-  alcPathVcc.FirstCoeff = alc_coeffs[4];
-  alcPathVcc.ConCoeff = alc_coeffs[5];
-
-  AlcPathVcc egoPathVcc;
-  memset(&egoPathVcc, 0, sizeof(egoPathVcc));
-  egoPathVcc.ThrdCoeff = ego_coeffs[2];
-  egoPathVcc.SecCoeff = ego_coeffs[3];
-  egoPathVcc.FirstCoeff = ego_coeffs[4];
-  egoPathVcc.ConCoeff = ego_coeffs[5];
+  AlcPathVcc alcPathVcc = {alc_coeffs[0], alc_coeffs[1], alc_coeffs[2],
+                           alc_coeffs[3], alc_coeffs[4], alc_coeffs[5],
+                           alc_coeffs[7]};
+  AlcPathVcc egoPathVcc = {
+      ego_coeffs[0], ego_coeffs[1], ego_coeffs[2], ego_coeffs[3], 0, 0,
+      ego_coeffs[7]};
 
   SsmObjType ssmObjs;
   memset(&ssmObjs, 0, sizeof(ssmObjs));
-  if (playMode == PLAYMODE::ONESTEP) {
+  if (playMode == ONESTEP) {
     egoSpd = 15.0f, egoAcc = 0, spdLmt = 33.3 * 3.6f;  // kph
     accMode = 5;
     alcBehav.AutoLaneChgSide = 0;
@@ -376,7 +356,7 @@ void CalcOneStep() {
   alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
 
   /* printf("Direct: %d, Default result: \n", g_laneChangeDirection); */
-  if (playMode == PLAYMODE::ONESTEP) {
+  if (playMode == ONESTEP) {
     printf("AlcLatEnbl: %d, \t AlcLgtEnble: %d\n", output.AlcLatCtrlEnbl,
            output.AlcLgtCtrlEnbl);
     printf("Ctrl 0: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
@@ -487,21 +467,12 @@ void GenerateLocalData() {
   alcBehav.LeftBoundaryType = 2;
   alcBehav.RightBoundaryType = 2;
 
-  AlcPathVcc alcPathVcc;
-  memset(&alcPathVcc, 0, sizeof(alcPathVcc));
-  alcPathVcc.FiveCoeff = alc_coeffs[0];
-  alcPathVcc.FourCoeff = alc_coeffs[1];
-  alcPathVcc.ThrdCoeff = alc_coeffs[2];
-  alcPathVcc.SecCoeff = alc_coeffs[3];
-  alcPathVcc.FirstCoeff = alc_coeffs[4];
-  alcPathVcc.ConCoeff = alc_coeffs[5];
-
-  AlcPathVcc egoPathVcc;
-  memset(&egoPathVcc, 0, sizeof(egoPathVcc));
-  egoPathVcc.ThrdCoeff = ego_coeffs[2];
-  egoPathVcc.SecCoeff = ego_coeffs[3];
-  egoPathVcc.FirstCoeff = ego_coeffs[4];
-  egoPathVcc.ConCoeff = ego_coeffs[5];
+  AlcPathVcc alcPathVcc = {alc_coeffs[0], alc_coeffs[1], alc_coeffs[2],
+                           alc_coeffs[3], alc_coeffs[4], alc_coeffs[5],
+                           alc_coeffs[7]};
+  AlcPathVcc egoPathVcc = {
+      ego_coeffs[0], ego_coeffs[1], ego_coeffs[2], ego_coeffs[3], 0, 0,
+      ego_coeffs[7]};
 
   SsmObjType ssmObjs;
   memset(&ssmObjs, 0, sizeof(ssmObjs));
@@ -557,32 +528,25 @@ void GenerateLocalData() {
       /*       if (objs_pos_x_data[2][t] > 20 && alcBehav_data[0][t] == 1 &&
                 alcBehav_data[1][t] == 2) {
               alcBehav_data[1][t] = 3;
-              float source_coeffs[] = {6.0113e-10, -1.707e-7, 1.4243e-5, 0,
-                                       0,          0,         0,         120};
+              float source_coeffs[] = {0,         0,          0, 1.4243e-5,
+                                       -1.707e-7, 6.0113e-10, 0, 120};
               memcpy(alc_coeffs, source_coeffs, 8 * sizeof(float));
               for (int i = 0; i < 6; i++)
                 alc_path_data[i][t] = alc_coeffs[i];
-              alcPathVcc.FiveCoeff = alc_coeffs[0];
-              alcPathVcc.FourCoeff = alc_coeffs[1];
-              alcPathVcc.ThrdCoeff = alc_coeffs[2];
-              alcPathVcc.SecCoeff = alc_coeffs[3];
-              alcPathVcc.FirstCoeff = alc_coeffs[4];
-              alcPathVcc.ConCoeff = alc_coeffs[5];
+              alcPathVcc.FiveCoeff = alc_coeffs[5];
+              alcPathVcc.FourCoeff = alc_coeffs[4];
+              alcPathVcc.ThrdCoeff = alc_coeffs[3];
+              alcPathVcc.SecCoeff = alc_coeffs[2];
+              alcPathVcc.FirstCoeff = alc_coeffs[1];
+              alcPathVcc.ConCoeff = alc_coeffs[0];
             } */
     }
 
     for (int k = 0; k < 8; k++) {
-      if (k <= 5) {
-        l_path_data[k][t] = left_coeffs[5 - k];
-        r_path_data[k][t] = right_coeffs[5 - k];
-        ll_path_data[k][t] = leftleft_coeffs[5 - k];
-        rr_path_data[k][t] = rightright_coeffs[5 - k];
-      } else {
-        l_path_data[k][t] = left_coeffs[k];
-        r_path_data[k][t] = right_coeffs[k];
-        ll_path_data[k][t] = leftleft_coeffs[k];
-        rr_path_data[k][t] = rightright_coeffs[k];
-      }
+      l_path_data[k][t] = left_coeffs[k];
+      r_path_data[k][t] = right_coeffs[k];
+      ll_path_data[k][t] = leftleft_coeffs[k];
+      rr_path_data[k][t] = rightright_coeffs[k];
     }
 
     DpSpeedPoints output = SpeedPlanProcessor(
@@ -694,21 +658,19 @@ void ReleaseWrapper() {
     strcpy(csvFileName, ofn.lpstrFile);
     LoadLog();
 #ifdef SPEED_PLANNING_H_
-    if (playMode == PLAYMODE::LOOPBACK) {
+    if (playMode == LOOPBACK) {
       memcpy(original_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
       LoopbackCalculation();
       memcpy(loopback_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
-    } else if (playMode == PLAYMODE::LINECHART) {
+    } else if (playMode == LINECHART) {
       DisplayLoopbackCurve(1000, 400, 50);
       return;
     }
 #endif
-    playMode = s_points_data[1][0] == 0 ? PLAYMODE::FUSION : playMode;
-    playMode = fDistX_data[0][0] ? PLAYMODE::RADAR : playMode;
-    int length = (playMode == PLAYMODE::FUSION || playMode == PLAYMODE::RADAR)
-                     ? 400
-                     : 750;
-    int width = playMode == PLAYMODE::LOOPBACK ? 900 : 750;
+    playMode = s_points_data[1][0] == 0 ? FUSION : playMode;
+    playMode = fDistX_data[0][0] ? RADAR : playMode;
+    int length = (playMode == FUSION || playMode == RADAR) ? 400 : 750;
+    int width = playMode == LOOPBACK ? 900 : 750;
     DisplayLog(length, width, 100);
   }
   return;
@@ -746,7 +708,7 @@ int main() {
                    2 * sizeof(tsr_pos_x_data) + sizeof(ll_path_data) * 8;
 #else
   // for customers, play mode depends on whether spd plan data exists
-  playMode = PLAYMODE::LOG;
+  playMode = LOG;
   ReleaseWrapper();
 #endif
   return 0;
