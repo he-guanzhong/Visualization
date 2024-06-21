@@ -6,7 +6,7 @@ float egoAcc_data[DATA_NUM];
 float spdLmt_data[DATA_NUM];
 float alc_path_data[6][DATA_NUM];
 float ego_path_data[4][DATA_NUM];
-int alcBehav_data[4][DATA_NUM];
+int alcBehav_data[5][DATA_NUM];
 int accMode_data[DATA_NUM];
 
 bool AlcLgtCtrlEnbl_data[DATA_NUM];
@@ -50,6 +50,7 @@ float rr_path_me_data[8][DATA_NUM];
 
 float original_data[DATA_NUM];
 float loopback_data[DATA_NUM];
+float tempMeasureVal_data[DATA_NUM];
 
 int iObjectId_data[32][DATA_NUM];
 float fDistX_data[32][DATA_NUM];

@@ -9,7 +9,7 @@ extern float egoAcc_data[DATA_NUM];
 extern float spdLmt_data[DATA_NUM];
 extern float alc_path_data[6][DATA_NUM];
 extern float ego_path_data[4][DATA_NUM];
-extern int alcBehav_data[4][DATA_NUM];
+extern int alcBehav_data[5][DATA_NUM];
 extern int accMode_data[DATA_NUM];
 
 extern bool AlcLgtCtrlEnbl_data[DATA_NUM];
@@ -52,6 +52,7 @@ extern float rr_path_me_data[8][DATA_NUM];
 
 extern float original_data[DATA_NUM];
 extern float loopback_data[DATA_NUM];
+extern float tempMeasureVal_data[DATA_NUM];
 
 extern int iObjectId_data[32][DATA_NUM];
 extern float fDistX_data[32][DATA_NUM];

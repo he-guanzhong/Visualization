@@ -157,7 +157,8 @@ void DataParsing(float** values,
   // time, alc path and speed plan input and output results
   int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, LGT_ENBL = 0, TRUC_CL = 0,
       ACC_MODE = 0, IN_SPDLMT = 0, SPC_FLG = 0, EGO_PATH[4] = {0};
-  int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, ALC_C[6] = {0};
+  int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, ALC_RMP_D = 0,
+      ALC_C[6] = {0};
   int P_T[7] = {0}, P_S[7] = {0}, P_V[7] = {0}, P_A[7] = {0};
 
   // Obstacles, In-path VehicleS (IVS)
@@ -204,6 +205,8 @@ void DataParsing(float** values,
       ALC_LBT = i;
     else if (strcmp(columns[i], "VePASP_RightBoundaryType[]") == 0)
       ALC_RBT = i;
+    else if (strcmp(columns[i], "VuPASP_NaviPilot1stRampOnDis_m[]") == 0)
+      ALC_RMP_D = i;
     else if (strcmp(columns[i], "VbPASP_AlcLgtCtrlEnbl[]") == 0)
       LGT_ENBL = i;
     else if (strcmp(columns[i], "VfPASP_InnerSetSpd_kph[]") == 0)
@@ -637,6 +640,7 @@ void DataParsing(float** values,
     alcBehav_data[1][t] = ALC_STS ? values[ALC_STS][t] : 0;
     alcBehav_data[2][t] = ALC_LBT ? values[ALC_LBT][t] : 0;
     alcBehav_data[3][t] = ALC_RBT ? values[ALC_RBT][t] : 0;
+    alcBehav_data[4][t] = ALC_RMP_D ? values[ALC_RMP_D][t] : 0;
 
     // alc path and speed plan points
     for (int k = 0; k <= 5; k++) {

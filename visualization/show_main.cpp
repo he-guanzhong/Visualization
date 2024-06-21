@@ -20,7 +20,6 @@ float gTempMeasureVal;
 // Key display information
 // float alc_coeffs[8] =
 // {0,0,0,1.4243e-5,-1.707e-7,6.0113e-10,0,120};changeleft
-
 float egoAcc, egoSpd, spdLmt;
 float alc_coeffs[8] = {0.072, -0.0018, 1.98e-6f, 1.07e-7f,
                        0,     0,       0,        120};  // go straight
@@ -62,7 +61,7 @@ void ReadOutputData(const int t) {
   g_truncated_col = truncated_col_data[t];
   gInnerSpdLmt_kph = innerSpdLmt_data[t];
   gSpecialCaseFlg = specialCaseFlg_data[t];
-  gTempMeasureVal = loopback_data[t];
+  gTempMeasureVal = tempMeasureVal_data[t];
 
   // use alc c7 as line end
   alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
@@ -77,6 +76,7 @@ void ReadInputData(const int t) {
   alcBehav.AutoLaneChgSts = alcBehav_data[1][t];
   alcBehav.LeftBoundaryType = alcBehav_data[2][t];
   alcBehav.RightBoundaryType = alcBehav_data[3][t];
+  alcBehav.NaviPilot1stRampOnDis = alcBehav_data[4][t];
 
   // c0->c5 orders of ego and alc_path are opposite
   for (int i = 0; i <= 5; i++)
@@ -421,7 +421,7 @@ void LoopbackCalculation() {
 
     innerSpdLmt_data[t] = gInnerSpdLmt_kph;
     specialCaseFlg_data[t] = gSpecialCaseFlg;
-    loopback_data[t] = gTempMeasureVal;
+    tempMeasureVal_data[t] = gTempMeasureVal;
 
     alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
   }
@@ -434,7 +434,7 @@ void LocalDummySsmData(SsmObjType* ssmObjs) {
   ssmObjs->obj_lists[0].pos_x = 40;
   ssmObjs->obj_lists[0].pos_y = 0;
   ssmObjs->obj_lists[0].acc_x = 0.0f;
-  ssmObjs->obj_lists[0].speed_x = 0.5f;
+  ssmObjs->obj_lists[0].speed_x = 20.0f;
   ssmObjs->obj_lists[0].speed_y = 0.0f;  // hgz
   ssmObjs->obj_lists[0].type = 1;        // hgz
   ssmObjs->obj_lists[0].lane_index = 3;
@@ -460,10 +460,10 @@ void LocalDummySsmData(SsmObjType* ssmObjs) {
 }
 
 void GenerateLocalData() {
-  egoSpd = 70.0f / 3.6f, egoAcc = 0.0f, spdLmt = 30.0f;
+  egoSpd = 30.0f / 3.6f, egoAcc = 0.0f, spdLmt = 50.0f;
   accMode = 5;
   alcBehav.AutoLaneChgSide = 0;
-  alcBehav.AutoLaneChgSts = 2;
+  alcBehav.AutoLaneChgSts = 1;
   alcBehav.LeftBoundaryType = 2;
   alcBehav.RightBoundaryType = 2;
 
@@ -500,6 +500,8 @@ void GenerateLocalData() {
     alcBehav_data[1][t] = alcBehav.AutoLaneChgSts;
     alcBehav_data[2][t] = alcBehav.LeftBoundaryType;
     alcBehav_data[3][t] = alcBehav.RightBoundaryType;
+    alcBehav_data[4][t] = alcBehav.NaviPilot1stRampOnDis;
+
     accMode_data[t] = accMode;
 
     for (int k = 0; k < 10; k++) {
@@ -667,7 +669,7 @@ void ReleaseWrapper() {
       return;
     }
 #endif
-    playMode = s_points_data[1][0] == 0 ? FUSION : playMode;
+    playMode = t_points_data[1][0] == 0 ? FUSION : playMode;
     playMode = fDistX_data[0][0] ? RADAR : playMode;
     int length = (playMode == FUSION || playMode == RADAR) ? 400 : 750;
     int width = playMode == LOOPBACK ? 900 : 750;

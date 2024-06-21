@@ -4,7 +4,7 @@
 #include <math.h>
 #define MAT_SIZE 6
 
-int combination(int n, int k);
+int combination(int n, int m);
 void bezierPoint(float tau, int n, float points[][2], float* x, float* y);
 void bezierDerivative(float tau,
                       int n,

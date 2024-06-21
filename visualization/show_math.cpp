@@ -2,12 +2,19 @@
 
 float fit_coeffi[6];
 
-int combination(int n, int k) {
-  float result = 1.0f;
-  for (int i = 1; i <= k; i++)
-    result *= (n - i + 1.0f) / i;
-  return result;
+int combination(int n, int m) {
+  long long numerator = 1;
+  int denominator = m;
+  for (int i = 1; i <= m; i++) {
+    numerator *= (n - i + 1);
+    while (denominator != 0 && numerator % denominator == 0) {
+      numerator /= denominator;
+      denominator--;
+    }
+  }
+  return numerator;
 }
+
 void bezierPoint(float tau, int n, float points[][2], float* x, float* y) {
   *x = 0, *y = 0;
   if (n < 1)
