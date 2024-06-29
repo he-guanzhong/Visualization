@@ -269,16 +269,18 @@ void DisplayLog(const int length, const int width, const int offset) {
                                  0,      100.0f, 3.4f * 5.0f};
           showRadarGraph(&BEV_cfg, 30.0f, &radar_info);
         } else if (playMode == LOOPBACK) {
-          DisplaySpdPlanInterface(length, width - 150, offset, &lines_info,
-                                  &spd_info);
-          DisplayLineChart(length, 200, 50, 0, width - 200, t, 120);
-          char szPlanSts[10], szTmpMeas[10];
+          const int chartWidth = 200, charOffset = 50;
+          DisplaySpdPlanInterface(length, width - chartWidth + charOffset,
+                                  offset, &lines_info, &spd_info);
+          DisplayLineChart(length, chartWidth, charOffset, 0,
+                           width - chartWidth, t, 120);
+          char szPlanSts[10], szTmpMeas[20] = "Meas: ";
           itoa(g_truncated_col, szPlanSts, 10);
           const char* str2 = AlcLgtCtrlEnbl ? " Enable" : " Fail  ";
           strcat(szPlanSts, str2);
           sprintf(szTmpMeas, "%.5f", gTempMeasureVal);
-          outtextxy(0, width * 0.75 + 50, szPlanSts);
-          outtextxy(0, width * 0.75 + 80, szTmpMeas);
+          outtextxy(0, width - chartWidth - textheight(szPlanSts), szPlanSts);
+          outtextxy(0, width - chartWidth, szTmpMeas);
         } else {
           DisplaySpdPlanInterface(length, width, offset, &lines_info,
                                   &spd_info);
@@ -320,7 +322,9 @@ void CalcOneStep() {
     alcBehav.AutoLaneChgSts = 1;
     alcBehav.LeftBoundaryType = 2;
     alcBehav.RightBoundaryType = 2;
-    LocalDummySsmData(&ssmObjs);
+    LoadDummySSmData(&ssmObjs);
+    show_predict_swt = false;
+
   } else {
     ssmObjs = g_ssmObjType;
   }
@@ -382,7 +386,7 @@ void DisplayOneStep(const int length, const int width, const int offset) {
   setbkcolor(WHITE);
   setbkmode(TRANSPARENT);
   cleardevice();
-
+  show_predict_swt = true;
   LinesInfo lines_info = {
       alc_coeffs,      ego_coeffs,          left_coeffs,    leftleft_coeffs,
       right_coeffs,    rightright_coeffs,   left_coeffs_me, leftleft_coeffs_me,
@@ -397,7 +401,6 @@ void DisplayOneStep(const int length, const int width, const int offset) {
                       alcBehav.AutoLaneChgSts,
                       alcBehav.LeftBoundaryType,
                       alcBehav.RightBoundaryType};
-  show_predict_swt = true;
   DisplaySpdPlanInterface(length, width, offset, &lines_info, &spd_info);
 
   system("pause");
@@ -427,38 +430,6 @@ void LoopbackCalculation() {
   }
 }
 
-void LocalDummySsmData(SsmObjType* ssmObjs) {
-  // 0 = IV, 1 = RIV, 2 = NIVL, 3 = NIIVL, 4 = RIVL, 5 = RIIVL
-  // 6 = NIVR, 7 = NIIVR, 8 = RIVR, 9 = RIIVR
-  ssmObjs->obj_num = 3;
-  ssmObjs->obj_lists[0].pos_x = 40;
-  ssmObjs->obj_lists[0].pos_y = 0;
-  ssmObjs->obj_lists[0].acc_x = 0.0f;
-  ssmObjs->obj_lists[0].speed_x = 20.0f;
-  ssmObjs->obj_lists[0].speed_y = 0.0f;  // hgz
-  ssmObjs->obj_lists[0].type = 1;        // hgz
-  ssmObjs->obj_lists[0].lane_index = 3;
-  ssmObjs->obj_lists[0].valid_flag = TRUE;
-
-  ssmObjs->obj_lists[2].pos_x = 20;
-  ssmObjs->obj_lists[2].pos_y = 3.4f;
-  ssmObjs->obj_lists[2].acc_x = 0.0f;
-  ssmObjs->obj_lists[2].speed_x = 15.0f;
-  ssmObjs->obj_lists[2].speed_y = -6.8f / 5.0f;  // hgz
-  ssmObjs->obj_lists[2].type = 1;                // hgz
-  ssmObjs->obj_lists[2].lane_index = 2;
-  ssmObjs->obj_lists[2].valid_flag = FALSE;
-
-  ssmObjs->obj_lists[4].pos_x = 1;
-  ssmObjs->obj_lists[4].pos_y = 3.15f;
-  ssmObjs->obj_lists[4].acc_x = 0.0f;
-  ssmObjs->obj_lists[4].speed_x = 50.0f / 3.6f;
-  ssmObjs->obj_lists[4].speed_y = 0.0f;  // hgz
-  ssmObjs->obj_lists[4].type = 6;        // hgz
-  ssmObjs->obj_lists[4].lane_index = 2;
-  ssmObjs->obj_lists[4].valid_flag = FALSE;
-}
-
 void GenerateLocalData() {
   egoSpd = 30.0f / 3.6f, egoAcc = 0.0f, spdLmt = 50.0f;
   accMode = 5;
@@ -477,7 +448,7 @@ void GenerateLocalData() {
   SsmObjType ssmObjs;
   memset(&ssmObjs, 0, sizeof(ssmObjs));
   // DummySsmData(&ssmObjs);
-  LocalDummySsmData(&ssmObjs);
+  LoadDummySSmData(&ssmObjs);
 
   float cycle_s = 0.1f;
   float obs_pos_x[10] = {0};

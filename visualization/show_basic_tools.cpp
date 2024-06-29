@@ -8,6 +8,7 @@ Point g_origin1 = {0.0f, 0.0f};
 float g_xScale1 = 0, g_yScale1 = 0;
 Point g_origin2 = {0.0f, 0.0f};
 float g_xScale2 = 0, g_yScale2 = 0;
+static int s_infoAreaBoundary;
 
 void coordinateTrans1(Point* point) {
   point->x = g_origin1.x + point->x * g_xScale1;
@@ -120,10 +121,9 @@ void drawTsrSign(const TsrInfo* tsr_info) {
     strcpy(tsi_disp, "no entry");
   if (tsr_spd_warn)
     settextcolor(RED);
-  outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y, tsr_disp);
+  outtextxy(s_infoAreaBoundary, g_origin2.y, tsr_disp);
   settextcolor(BLACK);
-  outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y + textheight(tsr_disp),
-            tsi_disp);
+  outtextxy(s_infoAreaBoundary, g_origin2.y + textheight(tsr_disp), tsi_disp);
 
   // TSR original input
   int tsr_spd_table1[14] = {10, 20, 30,  40,  50,  60,  70,
@@ -246,10 +246,10 @@ void drawMotionInfo(const SpdInfo* spd_info) {
       break;
   }
 
-  outtextxy(g_origin2.x + 12 * g_xScale2,
-            g_origin2.y - 4 * textheight(spd_title), spec_case_title);
-  outtextxy(g_origin2.x + 12 * g_xScale2,
-            g_origin2.y - 5 * textheight(spd_title), inner_set_title);
+  outtextxy(s_infoAreaBoundary, g_origin2.y - 4 * textheight(spd_title),
+            spec_case_title);
+  outtextxy(s_infoAreaBoundary, g_origin2.y - 5 * textheight(spd_title),
+            inner_set_title);
 
   // ACC mode: 3-stand still, 4-stand active, 5-active, 6-override
   if (spd_info->acc_mode <= 5 && spd_info->acc_mode >= 3)
@@ -259,11 +259,10 @@ void drawMotionInfo(const SpdInfo* spd_info) {
   else
     settextcolor(BLACK);
 
-  outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y - textheight(spd_title),
-            spd_title);
+  outtextxy(s_infoAreaBoundary, g_origin2.y - textheight(spd_title), spd_title);
   if (spd_info->acc_mode <= 6 && spd_info->acc_mode >= 3) {
-    outtextxy(g_origin2.x + 12 * g_xScale2,
-              g_origin2.y - 2 * textheight(spd_title), set_title);
+    outtextxy(s_infoAreaBoundary, g_origin2.y - 2 * textheight(spd_title),
+              set_title);
   }
 
   char alc_side[8];
@@ -278,16 +277,18 @@ void drawMotionInfo(const SpdInfo* spd_info) {
   memset(alc_sts, '\0', sizeof(alc_sts));
   if (spd_info->alc_sts == 2)
     strcpy(alc_sts, "Hold");
-  else if (spd_info->alc_sts == 3 || spd_info->alc_sts == 4)
-    strcpy(alc_sts, "Changing");
+  else if (spd_info->alc_sts == 3)
+    strcpy(alc_sts, "Chg1");
+  else if (spd_info->alc_sts == 4)
+    strcpy(alc_sts, "Chg2");
   else if (spd_info->alc_sts == 6)
     strcpy(alc_sts, "Back");
   else if (spd_info->alc_sts == 8)
     strcpy(alc_sts, "Takeover");
   if (spd_info->alc_side == 1 || spd_info->alc_side == 2) {
-    outtextxy(g_origin2.x + 12 * g_xScale2, g_origin2.y - 150, alc_side);
-    outtextxy(g_origin2.x + 12 * g_xScale2,
-              g_origin2.y - 150 + textheight(alc_side), alc_sts);
+    outtextxy(s_infoAreaBoundary, g_origin2.y - 150, alc_side);
+    outtextxy(s_infoAreaBoundary, g_origin2.y - 150 + textheight(alc_side),
+              alc_sts);
   }
 }
 
@@ -350,6 +351,7 @@ void drawObstacles(const SsmObjType* g_ssmObjType,
             ego_coeffs[2] * objPosnLgt[i] * objPosnLgt[i] +
             ego_coeffs[3] * objPosnLgt[i] * objPosnLgt[i] * objPosnLgt[i];
         float roadCurveOffset = objPosnLat[i] - objPosnLat[0];
+
         if (fabsf(roadCurveOffset) > fabsf(predLatOffset))
           predLatOffset = roadCurveOffset;
       }
@@ -604,6 +606,7 @@ void showBEVGraph(const GraphConfig* config,
   g_xScale2 = len / config->rangeY;
   g_yScale2 = wid / config->rangeX;
   g_origin2.y -= g_yScale2 * zeroOffsetX;
+  s_infoAreaBoundary = config->oriX + config->length - 65;
 
   // title
   settextcolor(BLACK);
@@ -716,6 +719,8 @@ void showRadarGraph(const GraphConfig* config,
   g_xScale2 = len / config->rangeY;
   g_yScale2 = wid / config->rangeX;
   g_origin2.y -= g_yScale2 * zeroOffsetX;
+  s_infoAreaBoundary = config->oriX + config->length - 65;
+
   settextstyle(20, 0, "Calibri");
 
   // obstacles
@@ -758,8 +763,7 @@ bool button(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
 }
 bool functionButton(ExMessage msg) {
   // while (1) {
-  return button(&msg, g_origin2.x + 11 * g_xScale2, 50, 60, 30,
-                &show_predict_swt);
+  return button(&msg, s_infoAreaBoundary - 2, 50, 60, 30, &show_predict_swt);
 
   // BeginBatchDraw();
   //  cleardevice();

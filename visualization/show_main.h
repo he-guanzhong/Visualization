@@ -4,6 +4,7 @@
 // ordinary user: only replay function provided
 #ifdef SPDPLAN_LOCAL_TEST
 #include "spdplanning/pa_speed_planning.h"
+#include "visualization/show_test_cases.h"
 #endif
 
 #include "visualization/show_basic_tools.h"
@@ -45,7 +46,6 @@ void DisplayOneStep(const int length, const int width, const int offset);
 
 void LoopbackCalculation();
 
-void LocalDummySsmData(SsmObjType* ssmObjs);
 void GenerateLocalData();
 
 void DisplayLoopbackCurve(const int length, const int width, const int offset);
