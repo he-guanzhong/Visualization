@@ -43,15 +43,13 @@ float ll_path_data[8][DATA_NUM];
 float l_path_data[8][DATA_NUM];
 float r_path_data[8][DATA_NUM];
 float rr_path_data[8][DATA_NUM];
-float ll_path_me_data[8][DATA_NUM];
-float l_path_me_data[8][DATA_NUM];
-float r_path_me_data[8][DATA_NUM];
-float rr_path_me_data[8][DATA_NUM];
 
 float original_data[DATA_NUM];
 float loopback_data[DATA_NUM];
 float tempMeasureVal_data[DATA_NUM];
 
+#ifdef RADAR_DEMO_DISP
 int iObjectId_data[32][DATA_NUM];
 float fDistX_data[32][DATA_NUM];
 float fDistY_data[32][DATA_NUM];
+#endif

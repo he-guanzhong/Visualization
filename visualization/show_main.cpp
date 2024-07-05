@@ -18,11 +18,11 @@ float gTempMeasureVal;
 #endif
 
 // Key display information
-// float alc_coeffs[8] =
-// {0,0,0,1.4243e-5,-1.707e-7,6.0113e-10,0,120};changeleft
 float egoAcc, egoSpd, spdLmt;
-float alc_coeffs[8] = {0.072, -0.0018, 1.98e-6f, 1.07e-7f,
-                       0,     0,       0,        120};  // go straight
+// changeleft
+float alc_coeffs[8] = {0, 0, 0, 1.4243e-5, -1.707e-7, 6.0113e-10, 0, 120};
+/* float alc_coeffs[8] = {0.072, -0.0018, 1.98e-6f, 1.07e-7f,
+                       0,     0,       0,        120};  // go straight */
 
 float ego_coeffs[8] = {0, 0, 0, 0, 0, 0, 0, 100};
 int accMode;
@@ -101,16 +101,11 @@ void ReadInputData(const int t) {
 
   // c0->c5 orders of ego and alc_path are opposite
   for (int i = 0; i < 8; i++) {
+    // show me original lines
     left_coeffs[i] = l_path_data[i][t];
     right_coeffs[i] = r_path_data[i][t];
     leftleft_coeffs[i] = ll_path_data[i][t];
     rightright_coeffs[i] = rr_path_data[i][t];
-
-    // show me original lines
-    left_coeffs_me[i] = l_path_me_data[i][t];
-    right_coeffs_me[i] = r_path_me_data[i][t];
-    leftleft_coeffs_me[i] = ll_path_me_data[i][t];
-    rightright_coeffs_me[i] = rr_path_me_data[i][t];
   }
 
   // TSR info
@@ -131,11 +126,13 @@ void ReadInputData(const int t) {
     tsr_info.tsr_signs[0].pos_y = 5;
     tsr_info.tsr_spd_warn = true; */
   // Radar info
+#ifdef RADAR_DEMO_DISP
   for (int j = 0; j < 32; j++) {
     radar_info.iObjectId[j] = iObjectId_data[j][t];
     radar_info.fDistX[j] = fDistX_data[j][t];
     radar_info.fDistY[j] = fDistY_data[j][t];
   }
+#endif
   return;
 }
 
@@ -244,11 +241,10 @@ void DisplayLog(const int length, const int width, const int offset) {
         ReadInputData(t);
         ReadOutputData(t);
 
-        LinesInfo lines_info = {alc_coeffs,      ego_coeffs,
-                                left_coeffs,     leftleft_coeffs,
-                                right_coeffs,    rightright_coeffs,
-                                left_coeffs_me,  leftleft_coeffs_me,
-                                right_coeffs_me, rightright_coeffs_me};
+        LinesInfo lines_info = {
+            alc_coeffs,      ego_coeffs,   left_coeffs,
+            leftleft_coeffs, right_coeffs, rightright_coeffs,
+        };
         SpdInfo spd_info = {egoSpd,
                             fmax(v_points[4].y, v_points[5].y),
                             spdLmt,
@@ -316,10 +312,10 @@ void CalcOneStep() {
   SsmObjType ssmObjs;
   memset(&ssmObjs, 0, sizeof(ssmObjs));
   if (playMode == ONESTEP) {
-    egoSpd = 15.0f, egoAcc = 0, spdLmt = 33.3 * 3.6f;  // kph
+    egoSpd = 15.0f, egoAcc = 0, spdLmt = 15 * 3.6f;  // kph
     accMode = 5;
-    alcBehav.AutoLaneChgSide = 0;
-    alcBehav.AutoLaneChgSts = 1;
+    alcBehav.AutoLaneChgSide = 1;
+    alcBehav.AutoLaneChgSts = 2;
     alcBehav.LeftBoundaryType = 2;
     alcBehav.RightBoundaryType = 2;
     LoadDummySSmData(&ssmObjs);
@@ -386,11 +382,8 @@ void DisplayOneStep(const int length, const int width, const int offset) {
   setbkcolor(WHITE);
   setbkmode(TRANSPARENT);
   cleardevice();
-  show_predict_swt = true;
-  LinesInfo lines_info = {
-      alc_coeffs,      ego_coeffs,          left_coeffs,    leftleft_coeffs,
-      right_coeffs,    rightright_coeffs,   left_coeffs_me, leftleft_coeffs_me,
-      right_coeffs_me, rightright_coeffs_me};
+  LinesInfo lines_info = {alc_coeffs,      ego_coeffs,   left_coeffs,
+                          leftleft_coeffs, right_coeffs, rightright_coeffs};
   SpdInfo spd_info = {v_points[0].y,
                       fmax(v_points[4].y, v_points[5].y),
                       spdLmt,
@@ -431,7 +424,7 @@ void LoopbackCalculation() {
 }
 
 void GenerateLocalData() {
-  egoSpd = 30.0f / 3.6f, egoAcc = 0.0f, spdLmt = 50.0f;
+  egoSpd = 60.0f / 3.6f, egoAcc = 0.0f, spdLmt = 50.0f;
   accMode = 5;
   alcBehav.AutoLaneChgSide = 0;
   alcBehav.AutoLaneChgSts = 1;
@@ -640,8 +633,10 @@ void ReleaseWrapper() {
       return;
     }
 #endif
-    playMode = t_points_data[1][0] == 0 ? FUSION : playMode;
+#ifdef RADAR_DEMO_DISP
     playMode = fDistX_data[0][0] ? RADAR : playMode;
+#endif
+    playMode = t_points_data[1][0] == 0 ? FUSION : playMode;
     int length = (playMode == FUSION || playMode == RADAR) ? 400 : 750;
     int width = playMode == LOOPBACK ? 900 : 750;
     DisplayLog(length, width, 100);

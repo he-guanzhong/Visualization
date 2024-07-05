@@ -323,14 +323,14 @@ void drawTrajectory(const float* coeffs,
   predictPosn->y = last.y;
 }
 
-void drawObstacles(const SsmObjType* g_ssmObjType,
+void drawObstacles(const SsmObjType* ssmObjs,
                    const float* ego_coeffs,
                    const float cur_spd) {
-  for (int i = 0; i < g_ssmObjType->obj_num; i++) {
-    if (!g_ssmObjType->obj_lists[i].valid_flag)
+  for (int i = 0; i < ssmObjs->obj_num; i++) {
+    if (!ssmObjs->obj_lists[i].valid_flag)
       continue;
 
-    SsmObsType obs = g_ssmObjType->obj_lists[i];
+    SsmObsType obs = ssmObjs->obj_lists[i];
     Point obs_cur = {obs.pos_x, obs.pos_y};
     char str_obs_cur[2][8] = {};
     strCompletion(str_obs_cur, i, obs.speed_x);
@@ -453,13 +453,6 @@ void drawBasicGraph(const int len,
   }
 }
 
-/// @brief show bacis x-y graph
-/// @param config       basic graph configuration
-/// @param zeroOffsetY  vertical distance from origin to lower-left corner
-/// @param title        title string
-/// @param pointColor   macro name of color
-/// @param points       point coordinates to be displayed
-/// @param ctrlPoint    a-t graph only, accelerations sent to control
 void showXYGraph(const GraphConfig* config,
                  const float zeroOffsetY,
                  const char* title,
@@ -585,17 +578,10 @@ void showXYGraph(const GraphConfig* config,
   }
 }
 
-/// @brief BEV graph, x-axis_forward_vertical, y-axis_lateral_horizontal
-/// @param config         basic configuration
-/// @param zeroOffsetX    distance behind ego vehicle to be displayed
-/// @param tsr_info       environment TSR info and ego TSR status
-/// @param g_ssmObjType   obstacles info
-/// @param lines_info     lane lines info
-/// @param spd_info       ego vehicle motion status
 void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,
                   const TsrInfo* tsr_info,
-                  const SsmObjType* g_ssmObjType,
+                  const SsmObjType* ssmObjs,
                   const LinesInfo* lines_info,
                   const SpdInfo* spd_info) {
   float len = config->length - 2.0f * config->offset;
@@ -631,32 +617,21 @@ void showBEVGraph(const GraphConfig* config,
       (spd_info->alc_rgt_bd_typ == 2 || spd_info->alc_rgt_bd_typ == 32)
           ? GREEN
           : RGB(0, 87, 55);
-  drawTrajectory(lines_info->left_coeffs, BLUE, lines_info->left_coeffs[6],
-                 lines_info->left_coeffs[7], &lineEnd);
-  drawTrajectory(lines_info->leftleft_coeffs, BLUE,
+  drawTrajectory(lines_info->left_coeffs, leftBoundaryColor,
+                 lines_info->left_coeffs[6], lines_info->left_coeffs[7],
+                 &lineEnd);
+  drawTrajectory(lines_info->leftleft_coeffs, DARKGRAY,
                  lines_info->leftleft_coeffs[6], lines_info->leftleft_coeffs[7],
                  &lineEnd);
-  drawTrajectory(lines_info->right_coeffs, BLUE, lines_info->right_coeffs[6],
-                 lines_info->right_coeffs[7], &lineEnd);
-  drawTrajectory(lines_info->rightright_coeffs, BLUE,
+  drawTrajectory(lines_info->right_coeffs, rightBoundaryColor,
+                 lines_info->right_coeffs[6], lines_info->right_coeffs[7],
+                 &lineEnd);
+  drawTrajectory(lines_info->rightright_coeffs, DARKGRAY,
                  lines_info->rightright_coeffs[6],
                  lines_info->rightright_coeffs[7], &lineEnd);
 
-  drawTrajectory(lines_info->left_coeffs_me, leftBoundaryColor,
-                 lines_info->left_coeffs_me[6], lines_info->left_coeffs_me[7],
-                 &lineEnd);
-  drawTrajectory(lines_info->leftleft_coeffs_me, DARKGRAY,
-                 lines_info->leftleft_coeffs_me[6],
-                 lines_info->leftleft_coeffs_me[7], &lineEnd);
-  drawTrajectory(lines_info->right_coeffs_me, rightBoundaryColor,
-                 lines_info->right_coeffs_me[6], lines_info->right_coeffs_me[7],
-                 &lineEnd);
-  drawTrajectory(lines_info->rightright_coeffs_me, DARKGRAY,
-                 lines_info->rightright_coeffs_me[6],
-                 lines_info->rightright_coeffs_me[7], &lineEnd);
-
   // obstacles
-  drawObstacles(g_ssmObjType, lines_info->ego_coeffs, spd_info->cur_spd);
+  drawObstacles(ssmObjs, lines_info->ego_coeffs, spd_info->cur_spd);
 
   // navigation path, ego c7 as end point
   float naviRange = lines_info->alc_coeffs[7];

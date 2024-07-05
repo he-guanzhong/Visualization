@@ -59,10 +59,6 @@ typedef struct {
   float* leftleft_coeffs;
   float* right_coeffs;
   float* rightright_coeffs;
-  float* left_coeffs_me;
-  float* leftleft_coeffs_me;
-  float* right_coeffs_me;
-  float* rightright_coeffs_me;
 } LinesInfo;
 
 typedef struct {
@@ -97,11 +93,18 @@ void drawBasicGraph(const int len,
                     const float rangeY,
                     const float offsetY);
 
-void drawObstacles(const SsmObjType* g_ssmObjType,
+void drawObstacles(const SsmObjType* ssmObjs,
                    const float* ego_coeffs,
                    const float cur_spd);
 void drawBEVRuler();
 
+/// @brief show bacis x-y graph
+/// @param config       basic graph configuration
+/// @param zeroOffsetY  vertical distance from origin to lower-left corner
+/// @param title        title string
+/// @param pointColor   macro name of color
+/// @param points       point coordinates to be displayed
+/// @param ctrlPoint    a-t graph only, accelerations sent to control
 void showXYGraph(const GraphConfig* config,
                  const float zeroOffsetY,
                  const char* title,
@@ -111,10 +114,17 @@ void showXYGraph(const GraphConfig* config,
                  const int startIndex,
                  Point* ctrlPoint);
 
+/// @brief BEV graph, x-axis_forward_vertical, y-axis_lateral_horizontal
+/// @param config         basic configuration
+/// @param zeroOffsetX    distance behind ego vehicle to be displayed
+/// @param tsr_info       environment TSR info and ego TSR status
+/// @param ssmObjs        obstacles info
+/// @param lines_info     lane lines info
+/// @param spd_info       ego vehicle motion status
 void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,
                   const TsrInfo* tsr_info,
-                  const SsmObjType* g_ssmObjType,
+                  const SsmObjType* ssmObjs,
                   const LinesInfo* lines_info,
                   const SpdInfo* spd_info);
 

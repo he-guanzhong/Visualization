@@ -6,5 +6,7 @@ void CaseLeftChange(SsmObjType* ssmObjs);
 
 void CaseSideCarMoveSlowly(SsmObjType* ssmObjs);
 
+void CaseFollow(SsmObjType* ssmObjs);
+
 void LoadDummySSmData(SsmObjType* ssmObjs);
 #endif  // SHOW_TEST_CASES_H_

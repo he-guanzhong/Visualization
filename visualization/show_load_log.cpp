@@ -130,8 +130,11 @@ void LoadLog() {
       }
       printf("\n");
     } */
+#ifdef RADAR_DEMO_DISP
+  RadarDataParsing(values, numColumns, columns, valuesCount);
+#else
   DataParsing(values, numColumns, columns, valuesCount);
-  // RadarDataParsing(values, numColumns, columns, valuesCount);
+#endif
 
   // 释放已分配的内存
   for (int i = 0; i < numColumns; ++i) {
@@ -461,74 +464,6 @@ void DataParsing(float** values,
     else if (strncmp(columns[i], "VfINP_RIIVRHeading_rad[]", 22) == 0)
       IVS_Yaw[9] = i;
 
-    // lateral control line coefficent
-    else if (strcmp(columns[i], "VfLSSIN_l_LaneMkrOffsLe[]") == 0)
-      L_C[0] = i;
-    else if (strcmp(columns[i], "VfLSSIN_Ag_LaneMkrHdgAgLe[]") == 0)
-      L_C[1] = i;
-    else if (strcmp(columns[i], "VfLSSIN_Crvt_LaneMkrCrvtLe[]") == 0)
-      L_C[2] = i;
-    else if (strcmp(columns[i], "VfLSSIN_dCrvt_LaneMkrCrvtRateLe[]") == 0)
-      L_C[3] = i;
-    else if (strcmp(columns[i], "NaN") == 0)
-      L_C[4] = i;
-    else if (strcmp(columns[i], "NaN") == 0)
-      L_C[5] = i;
-    else if (strcmp(columns[i], "VfLSSIN_l_StrtRngLe[]") == 0)
-      L_C[6] = i;
-    else if (strcmp(columns[i], "VfLSSIN_l_ViewRngLe[]") == 0)
-      L_C[7] = i;
-    else if (strcmp(columns[i], "VfLSSIN_l_LaneMkrOffsRi[]") == 0)
-      R_C[0] = i;
-    else if (strcmp(columns[i], "VfLSSIN_Ag_LaneMkrHdgAgRi[]") == 0)
-      R_C[1] = i;
-    else if (strcmp(columns[i], "VfLSSIN_Crvt_LaneMkrCrvtRi[]") == 0)
-      R_C[2] = i;
-    else if (strcmp(columns[i], "VfLSSIN_dCrvt_LaneMkrCrvtRateRi[]") == 0)
-      R_C[3] = i;
-    else if (strcmp(columns[i], "NaN") == 0)
-      R_C[4] = i;
-    else if (strcmp(columns[i], "NaN") == 0)
-      R_C[5] = i;
-    else if (strcmp(columns[i], "VfLSSIN_l_StrtRngRi[]") == 0)
-      R_C[6] = i;
-    else if (strcmp(columns[i], "VfLSSIN_l_ViewRngRi[]") == 0)
-      R_C[7] = i;
-
-    else if (strcmp(columns[i], "VFLSSIN7_l_LaneMkrOffsNxtLe[]") == 0)
-      LL_C[0] = i;
-    else if (strcmp(columns[i], "VFLSSIN7_Ag_LaneMkrHdgAgNxtLe[]") == 0)
-      LL_C[1] = i;
-    else if (strcmp(columns[i], "VFLSSIN7_Crvt_LaneMkrCrvtNxtLe[]") == 0)
-      LL_C[2] = i;
-    else if (strcmp(columns[i], "VFLSSIN7_dCrvt_LaneMkrCrvtRateNxtLe[]") == 0)
-      LL_C[3] = i;
-    else if (strcmp(columns[i], "NaN") == 0)
-      LL_C[4] = i;
-    else if (strcmp(columns[i], "NaN") == 0)
-      LL_C[5] = i;
-    else if (strcmp(columns[i], "VFLSSIN7_l_StrtRngNxtLe[]") == 0)
-      LL_C[6] = i;
-    else if (strcmp(columns[i], "VfLSSIN7_l_ViewRngNxtLe[]") == 0)
-      LL_C[7] = i;
-
-    else if (strcmp(columns[i], "VFLSSIN7_l_LaneMkrOffsNxtRi[]") == 0)
-      RR_C[0] = i;
-    else if (strcmp(columns[i], "VFLSSIN7_Ag_LaneMkrHdgAgNxtRi[]") == 0)
-      RR_C[1] = i;
-    else if (strcmp(columns[i], "VFLSSIN7_Crvt_LaneMkrCrvtNxtRi[]") == 0)
-      RR_C[2] = i;
-    else if (strcmp(columns[i], "VFLSSIN7_dCrvt_LaneMkrCrvtRateNxtRi[]") == 0)
-      RR_C[3] = i;
-    else if (strcmp(columns[i], "NaN") == 0)
-      RR_C[4] = i;
-    else if (strcmp(columns[i], "NaN") == 0)
-      RR_C[5] = i;
-    else if (strcmp(columns[i], "VFLSSIN7_l_StrtRngNxtRi[]") == 0)
-      RR_C[6] = i;
-    else if (strcmp(columns[i], "VfLSSIN7_l_ViewRngNxtRi[]") == 0)
-      RR_C[7] = i;
-
     //  Mobile Eye original lines
     else if (strncmp(columns[i], "VfINP_LH_Line_First_C0_0[m]", 24) == 0)
       LH_C_0[0] = i;
@@ -694,30 +629,16 @@ void DataParsing(float** values,
         objs_lane_index_data[k][t] = 4;
     }
 
-    // lateral processed lines. c4 and c5 ignored, for no input
-    // c2 = crvt * 0.5, c3 = d_crvt * 1/6
-    for (int k = 0; k < 8; k++) {
-      if (L_C[k] == 0)
-        continue;
-      float correct_fac = (k == 2 ? 0.5f : (k == 3 ? 0.166667f : 1.0f));
-      if (k <= 3 || k >= 6) {
-        l_path_data[k][t] = values[L_C[k]][t] * correct_fac;
-        r_path_data[k][t] = values[R_C[k]][t] * correct_fac;
-        ll_path_data[k][t] = values[LL_C[k]][t] * correct_fac;
-        rr_path_data[k][t] = values[RR_C[k]][t] * correct_fac;
-      }
-    }
-
     // ME original lines. c0~c3 opposite, c4 and c5 ignored, for no input
     for (int k = 0; k < 8; k++) {
       if (LH_C_0[k] == 0)
         continue;
       float correct_fac = (k <= 3 ? -1 : 1);
       if (k <= 3 || k >= 6) {
-        l_path_me_data[k][t] = values[LH_C_0[k]][t] * correct_fac;
-        r_path_me_data[k][t] = values[LH_C_1[k]][t] * correct_fac;
-        ll_path_me_data[k][t] = values[LA_C_0[k]][t] * correct_fac;
-        rr_path_me_data[k][t] = values[LA_C_1[k]][t] * correct_fac;
+        l_path_data[k][t] = values[LH_C_0[k]][t] * correct_fac;
+        r_path_data[k][t] = values[LH_C_1[k]][t] * correct_fac;
+        ll_path_data[k][t] = values[LA_C_0[k]][t] * correct_fac;
+        rr_path_data[k][t] = values[LA_C_1[k]][t] * correct_fac;
       }
     }
 
@@ -742,6 +663,7 @@ void DataParsing(float** values,
   return;
 }
 
+#ifdef RADAR_DEMO_DISP
 void RadarDataParsing(float** values,
                       int numColumns,
                       char** columns,
@@ -790,3 +712,4 @@ void RadarDataParsing(float** values,
   }
   return;
 }
+#endif

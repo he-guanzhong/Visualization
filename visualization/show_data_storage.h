@@ -45,17 +45,15 @@ extern float ll_path_data[8][DATA_NUM];
 extern float l_path_data[8][DATA_NUM];
 extern float r_path_data[8][DATA_NUM];
 extern float rr_path_data[8][DATA_NUM];
-extern float ll_path_me_data[8][DATA_NUM];
-extern float l_path_me_data[8][DATA_NUM];
-extern float r_path_me_data[8][DATA_NUM];
-extern float rr_path_me_data[8][DATA_NUM];
 
 extern float original_data[DATA_NUM];
 extern float loopback_data[DATA_NUM];
 extern float tempMeasureVal_data[DATA_NUM];
 
+#ifdef RADAR_DEMO_DISP
 extern int iObjectId_data[32][DATA_NUM];
 extern float fDistX_data[32][DATA_NUM];
 extern float fDistY_data[32][DATA_NUM];
+#endif
 
 #endif  // SHOW_DATA_STORAGE_H_
