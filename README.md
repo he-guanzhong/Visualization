@@ -6,11 +6,11 @@
 
 ## English
 ### Discription
-This tool, specifically designed and implemented in autonomous driving domain, enables you to replay logs in the (.csv) format  
+This tool, specifically designed and implemented in autonomous driving domain, enables you to replay logs in the **(.csv)** format  
 If equipped with speed planning source code, it could be utilized not only for data loopback but also for local simulation  
 The following display information is currently supported:
 1. Obstacles (position, speed, heading, prediction trajactory)
-2. Lane lines (left, right, next left, next right)
+2. Lane lines (left, right, next left, next right, virtual center line, lane change guide line)
 3. Speed plan results (S-T, V-T, A-T graphs)
 4. Ego motion status (set/actual speed, ACC mode)
 5. TSR info (speed limit sign, special sign, ego display/alert status)
@@ -23,14 +23,16 @@ The following display information is currently supported:
 * Language: C++
 * MinGW: To compile executable file (.exe), an environment installed MinGW is strictly required. [MinGW official download site](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
 * EasyX: For compiling the program with source code, the installlation of EasyX is essential. [EasyX official download site](https://codebus.cn/bestans/easyx-for-mingw)
+### Note
+* ASAMMDF is an open-source MDF offline data analysis software, which can convert mf4 files into csv format. [ASAMMDF official download site](https://github.com/danielhrisca/asammdf)
 
 ## 中文
 ### 概要
-该工具适用于自动驾驶行业，功能是可视化(.csv)格式的日志  
+该工具适用于自动驾驶行业，功能是可视化 **(.csv)** 格式的日志  
 若配合速度规划源码，可额外激活数据回灌和本地仿真功能  
 目前已支持以下信息显示：
 1. 障碍物 （位置、速度、航向角、预测轨迹）
-2. 车道线 （左、右、左左、右右）
+2. 车道线 （左、右、左左、右右，中心虚拟线，变道引导线）
 3. 速度规划结果 （S-T, V-T, A-T 图）
 4. 自车运动状态 （设置/当前 速度, 自适应巡航模式）
 5. 交通标志识别信息 （限速标识、特殊标识、自车显示、报警状态）
@@ -43,14 +45,16 @@ The following display information is currently supported:
 * 语言: C++
 * MinGW: 运行可执行文件 (.exe)，推荐安装MinGW编译器. [MinGW官方下载](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
 * EasyX: 编译源码，还需额外安装EasyX库. [EasyX官方下载](https://codebus.cn/bestans/easyx-for-mingw)
+### 附注
+* ASAMMDF是一款开源的MDF离线数据分析软件，可将mf4文件转化为csv格式。[ASAMMDF官方地址](https://github.com/danielhrisca/asammdf)
 
 ## Français
 ### Description
-Cet outil, spécialement conçu et implémenté dans le domaine de la conduite autonome, vous permet de rejouer les journaux au format (.csv)  
+Cet outil, spécialement conçu et implémenté dans le domaine de la conduite autonome, vous permet de rejouer les journaux au format **(.csv)**
 S’il est équipé d’un code source de planification de vitesse, il pourrait être utilisé non seulement pour le bouclage de données, mais aussi pour la simulation locale  
 Les informations d’affichage suivantes sont actuellement prises en charge :
 1. Obstacles (position, vitesse, cap, trajectoire de prédiction)
-2. Lignes de voie (gauche, droite, prochaine gauche, prochaine droite)
+2. Lignes de voie (gauche, droite, prochaine gauche, prochaine droite, ligne virtuelle centrale, ligne de guidage de changement de voie)
 3. Résultats du plan de vitesse (graphiques S-T, V-T, A-T)
 4. État du mouvement de l’ego (vitesse réglée/réelle, mode ACC)
 5. Infos TSR (panneau de limitation de vitesse, panneau spécial, affichage de l’ego/état d’alerte)
@@ -63,3 +67,5 @@ Les informations d’affichage suivantes sont actuellement prises en charge :
 * Langage : C++
 * MinGW : Pour exécuter un fichier exécutable (.exe), un environnement installé MinGW est strictement requis. [Site de téléchargement officiel de MinGW](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
 * EasyX : Pour compiler le programme avec le code source, l’installation d’EasyX est indispensable. [Site de téléchargement officiel d’EasyX](https://codebus.cn/bestans/easyx-for-mingw)
+### Note
+* ASAMMDF est un logiciel open source d'analyse de données MDF hors ligne, qui peut convertir les fichers mf4 au format csv. [Site de téléchargement officiel d’ASAMMDF](https://github.com/danielhrisca/asammdf)
