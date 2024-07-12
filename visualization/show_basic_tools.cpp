@@ -40,7 +40,7 @@ void drawCar(Point* car,
   // 5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL
   if (carType >= 7)
     carType = 0;
-  float car_len_tbl[7] = {2.2f + 0.4f, 5.0f + 0.4f, 6.8f + 0.4f, 2.5f,
+  float car_len_tbl[7] = {2.2f + 0.4f, 5.0f + 0.4f, 10.0f + 0.4f, 2.5f,
                           2.5f,        1.0f,        2.0f};
   float car_wid_tbl[7] = {1.0f + 0.4f, 1.5f + 0.4f, 1.6f + 0.4f, 0.6f,
                           0.6f,        1.0f,        2.0f};
@@ -48,10 +48,10 @@ void drawCar(Point* car,
   float carWid = car_wid_tbl[carType];
   // display: left-hand system. control: right-hand system
   // vertice order: upper-right -> lower-right-> lower-left -> upper-left
-  float halfLenCos = carLen / 2.0f * cos(yaw),
-        halfLenSin = carLen / 2.0f * sin(yaw);
-  float halfWidCos = carWid / 2.0f * cos(yaw),
-        halfWidSin = carWid / 2.0f * sin(yaw);
+  float halfLenCos = carLen / 2.0f * cosf(yaw),
+        halfLenSin = carLen / 2.0f * sinf(yaw);
+  float halfWidCos = carWid / 2.0f * cosf(yaw),
+        halfWidSin = carWid / 2.0f * sinf(yaw);
   Point vertices[4] = {
       {car->x + halfLenCos - halfWidSin, car->y + halfLenSin + halfWidCos},
       {car->x + halfLenCos + halfWidSin, car->y + halfLenSin - halfWidCos},
@@ -292,11 +292,11 @@ void drawMotionInfo(const SpdInfo* spd_info) {
   }
 }
 
-void drawTrajectory(const float* coeffs,
-                    const int color,
-                    const float startX,
-                    const float lengthS,
-                    Point* predictPosn) {
+void drawQuinticPolyTraj(const float* coeffs,
+                         const int color,
+                         const float startX,
+                         const float lengthS,
+                         Point* predictPosn) {
   setlinecolor(color);
   Point lastPoint = {0.0f, 0.0f};
   Point last = {0.0f, 0.0f};
@@ -312,6 +312,35 @@ void drawTrajectory(const float* coeffs,
       }
       last.x = i, last.y = j;
     }
+    float curPoint_x = i, curPoint_y = j;
+    Point curPoint = {curPoint_x, curPoint_y};
+    coordinateTrans2(&curPoint);
+    if (lastPoint.x != 0.0f)
+      line(curPoint.x, curPoint.y, lastPoint.x, lastPoint.y);
+    lastPoint = curPoint;
+  }
+  predictPosn->x = last.x;
+  predictPosn->y = last.y;
+}
+
+void drawPiecewiseCubicPolyTraj(const float* coeffs,
+                                const int color,
+                                const float startX,
+                                const float length1X,
+                                const float length2X,
+                                const float length3X,
+                                Point* predictPosn) {
+  // coeff[3] = c3_1, coeff[4] = c3_2, coeff[5] = c3_3
+  setlinecolor(color);
+  Point lastPoint = {0.0f, 0.0f};
+  Point last = {0.0f, 0.0f};
+  float totalLen = length1X + length2X + length3X;
+  for (int i = startX; i <= totalLen; i++) {
+    float c3 = i <= length1X
+                   ? coeffs[3]
+                   : (i <= length1X + length2X ? coeffs[4] : coeffs[5]);
+    float j = coeffs[0] + coeffs[1] * i + coeffs[2] * i * i + c3 * i * i * i;
+    last.x = i, last.y = j;
     float curPoint_x = i, curPoint_y = j;
     Point curPoint = {curPoint_x, curPoint_y};
     coordinateTrans2(&curPoint);
@@ -342,21 +371,25 @@ void drawObstacles(const SsmObjType* ssmObjs,
     Point obs_pred, obs_pred_path[6];
     float objPosnLgt[6], objPosnLat[6];
 
-    for (int i = 0; i < 6; i++) {
-      float predLatOffset = obs.speed_y * i;
+    for (int j = 0; j < 6; j++) {
+      obs_pred_path[j].x = obs.pos_x + obs.speed_x * j;
+      float predLatOffset = obs.speed_y * j;
       if (cur_spd > 40.0f / 3.6f && obs.speed_x > 1.0f) {
-        objPosnLgt[i] = obs.pos_x + obs.speed_x * i;
-        objPosnLat[i] =
-            ego_coeffs[1] * objPosnLgt[i] +
-            ego_coeffs[2] * objPosnLgt[i] * objPosnLgt[i] +
-            ego_coeffs[3] * objPosnLgt[i] * objPosnLgt[i] * objPosnLgt[i];
-        float roadCurveOffset = objPosnLat[i] - objPosnLat[0];
+        objPosnLgt[j] = obs.pos_x + obs.speed_x * j;
+        const float C3 = objPosnLgt[j] <= ego_coeffs[6]
+                             ? ego_coeffs[3]
+                             : (objPosnLgt[j] <= ego_coeffs[6] + ego_coeffs[7]
+                                    ? ego_coeffs[4]
+                                    : ego_coeffs[5]);
+        objPosnLat[j] = ego_coeffs[1] * objPosnLgt[j] +
+                        ego_coeffs[2] * objPosnLgt[j] * objPosnLgt[j] +
+                        C3 * objPosnLgt[j] * objPosnLgt[j] * objPosnLgt[j];
+        float roadCurveOffset = objPosnLat[j] - objPosnLat[0];
 
         if (fabsf(roadCurveOffset) > fabsf(predLatOffset))
           predLatOffset = roadCurveOffset;
       }
-      obs_pred_path[i] = {obs.pos_x + obs.speed_x * i,
-                          obs.pos_y + predLatOffset};
+      obs_pred_path[j].y = obs.pos_y + predLatOffset;
     }
 
     obs_pred = obs_pred_path[5];
@@ -378,10 +411,10 @@ void drawObstacles(const SsmObjType* ssmObjs,
       setlinestyle(PS_DASH);
 
       coordinateTrans2(&obs_pred_path[0]);
-      for (int i = 0; i < 5; i++) {
-        coordinateTrans2(&obs_pred_path[i + 1]);
-        line(obs_pred_path[i].x, obs_pred_path[i].y, obs_pred_path[i + 1].x,
-             obs_pred_path[i + 1].y);
+      for (int j = 0; j < 5; j++) {
+        coordinateTrans2(&obs_pred_path[j + 1]);
+        line(obs_pred_path[j].x, obs_pred_path[j].y, obs_pred_path[j + 1].x,
+             obs_pred_path[j + 1].y);
       }
     }
   }
@@ -617,18 +650,18 @@ void showBEVGraph(const GraphConfig* config,
       (spd_info->alc_rgt_bd_typ == 2 || spd_info->alc_rgt_bd_typ == 32)
           ? GREEN
           : RGB(0, 87, 55);
-  drawTrajectory(lines_info->left_coeffs, leftBoundaryColor,
-                 lines_info->left_coeffs[6], lines_info->left_coeffs[7],
-                 &lineEnd);
-  drawTrajectory(lines_info->leftleft_coeffs, DARKGRAY,
-                 lines_info->leftleft_coeffs[6], lines_info->leftleft_coeffs[7],
-                 &lineEnd);
-  drawTrajectory(lines_info->right_coeffs, rightBoundaryColor,
-                 lines_info->right_coeffs[6], lines_info->right_coeffs[7],
-                 &lineEnd);
-  drawTrajectory(lines_info->rightright_coeffs, DARKGRAY,
-                 lines_info->rightright_coeffs[6],
-                 lines_info->rightright_coeffs[7], &lineEnd);
+  drawQuinticPolyTraj(lines_info->left_coeffs, leftBoundaryColor,
+                      lines_info->left_coeffs[6], lines_info->left_coeffs[7],
+                      &lineEnd);
+  drawQuinticPolyTraj(lines_info->leftleft_coeffs, DARKGRAY,
+                      lines_info->leftleft_coeffs[6],
+                      lines_info->leftleft_coeffs[7], &lineEnd);
+  drawQuinticPolyTraj(lines_info->right_coeffs, rightBoundaryColor,
+                      lines_info->right_coeffs[6], lines_info->right_coeffs[7],
+                      &lineEnd);
+  drawQuinticPolyTraj(lines_info->rightright_coeffs, DARKGRAY,
+                      lines_info->rightright_coeffs[6],
+                      lines_info->rightright_coeffs[7], &lineEnd);
 
   // obstacles
   drawObstacles(ssmObjs, lines_info->ego_coeffs, spd_info->cur_spd);
@@ -637,10 +670,15 @@ void showBEVGraph(const GraphConfig* config,
   float naviRange = lines_info->alc_coeffs[7];
   Point predictPosn = {0.0f, 0.0f};
   // ego lane path, c0 ~ c3
-  drawTrajectory(lines_info->ego_coeffs, MAGENTA, 0.0f, 80, &predictPosn);
-  drawTrajectory(lines_info->alc_coeffs, LIGHTRED, naviRange,
-                 fmax(50.0f, naviRange), &predictPosn);
-  drawTrajectory(lines_info->alc_coeffs, RED, 0.0f, naviRange, &predictPosn);
+  // drawQuinticPolyTraj(lines_info->ego_coeffs, MAGENTA, 0.0f, 80,
+  // &predictPosn);
+  drawPiecewiseCubicPolyTraj(
+      lines_info->ego_coeffs, MAGENTA, 0.0f, lines_info->ego_coeffs[6],
+      lines_info->ego_coeffs[7], lines_info->ego_coeffs[8], &predictPosn);
+  drawQuinticPolyTraj(lines_info->alc_coeffs, LIGHTRED, naviRange,
+                      fmax(50.0f, naviRange), &predictPosn);
+  drawQuinticPolyTraj(lines_info->alc_coeffs, RED, 0.0f, naviRange,
+                      &predictPosn);
 
   // ego car
   setfillcolor(RED);

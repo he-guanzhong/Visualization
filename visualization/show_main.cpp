@@ -20,25 +20,21 @@ float gTempMeasureVal;
 // Key display information
 float egoAcc, egoSpd, spdLmt;
 // changeleft
-float alc_coeffs[8] = {0, 0, 0, 1.4243e-5, -1.707e-7, 6.0113e-10, 0, 120};
-/* float alc_coeffs[8] = {0.072, -0.0018, 1.98e-6f, 1.07e-7f,
-                       0,     0,       0,        120};  // go straight */
-
-float ego_coeffs[8] = {0, 0, 0, 0, 0, 0, 0, 100};
+/* float alc_coeffs[8] = {0, 0, 0, 1.4243e-5, -1.707e-7, 6.0113e-10, 0, 120}; */
+float alc_coeffs[8] = {0.072, -0.0018, 1.98e-6f, 1.07e-7f,
+                       0,     0,       0,        120};  // go straight
+// ego_coeff[9]: c0~c2, c31~c32, len1~len2
+float ego_coeffs[9] = {0, 0, 0, 0, 0, 0, 100, 0, 0};
 int accMode;
 AlcBehavior alcBehav;
 Point s_points[6], v_points[6], a_points[6];
 Point ctrlPoint;
-bool AlcLgtCtrlEnbl;
+int spdPlanEnblSts;
 float left_coeffs[8] = {3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100};
 float leftleft_coeffs[8] = {3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100};
 float right_coeffs[8] = {-3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100};
 float rightright_coeffs[8] = {-3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100};
 TsrInfo tsr_info;
-float left_coeffs_me[8];
-float leftleft_coeffs_me[8];
-float right_coeffs_me[8];
-float rightright_coeffs_me[8];
 RadarObjInfo radar_info;
 
 // temporary storage of log data
@@ -57,7 +53,7 @@ void ReadOutputData(const int t) {
     a_points[i].x = t_points_data[i][t];
   }
   ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[1][t]};
-  AlcLgtCtrlEnbl = AlcLgtCtrlEnbl_data[t];
+  spdPlanEnblSts = spdPlanEnblSts_data[t];
   g_truncated_col = truncated_col_data[t];
   gInnerSpdLmt_kph = innerSpdLmt_data[t];
   gSpecialCaseFlg = specialCaseFlg_data[t];
@@ -78,11 +74,12 @@ void ReadInputData(const int t) {
   alcBehav.RightBoundaryType = alcBehav_data[3][t];
   alcBehav.NaviPilot1stRampOnDis = alcBehav_data[4][t];
 
-  // c0->c5 orders of ego and alc_path are opposite
-  for (int i = 0; i <= 5; i++)
+  // alc_path quintic poly
+  for (int i = 0; i < 8; i++)
     alc_coeffs[i] = alc_path_data[i][t];
 
-  for (int i = 0; i <= 3; i++)
+  // ego path, cubic poly
+  for (int i = 0; i < 9; i++)
     ego_coeffs[i] = ego_path_data[i][t];
 
   // obstacles
@@ -150,6 +147,16 @@ void Time2Str(const float time, char* str) {
     sprintf(str, "%.2f", tt_s);
     strcat(str, "s");
   }
+}
+
+void KeyInfoDisplay(const int posY) {
+  char szPlanSts[10], szTmpMeas[20] = "Meas: ";
+  itoa(g_truncated_col, szPlanSts, 10);
+  const char* str2 = spdPlanEnblSts ? " Enable" : " Fail  ";
+  strcat(szPlanSts, str2);
+  sprintf(szTmpMeas, "%.5f", gTempMeasureVal);
+  outtextxy(0, posY - textheight(szPlanSts), szPlanSts);
+  outtextxy(0, posY, szTmpMeas);
 }
 
 void DisplaySpdPlanInterface(const int length,
@@ -263,21 +270,16 @@ void DisplayLog(const int length, const int width, const int offset) {
         } else if (playMode == RADAR) {
           GraphConfig BEV_cfg = {length, width,  offset,     0,
                                  0,      100.0f, 3.4f * 5.0f};
-          showRadarGraph(&BEV_cfg, 30.0f, &radar_info);
+          showRadarGraph(&BEV_cfg, 0.0f, &radar_info);
         } else if (playMode == LOOPBACK) {
           const int chartWidth = 200, charOffset = 50;
           DisplaySpdPlanInterface(length, width - chartWidth + charOffset,
                                   offset, &lines_info, &spd_info);
           DisplayLineChart(length, chartWidth, charOffset, 0,
                            width - chartWidth, t, 120);
-          char szPlanSts[10], szTmpMeas[20] = "Meas: ";
-          itoa(g_truncated_col, szPlanSts, 10);
-          const char* str2 = AlcLgtCtrlEnbl ? " Enable" : " Fail  ";
-          strcat(szPlanSts, str2);
-          sprintf(szTmpMeas, "%.5f", gTempMeasureVal);
-          outtextxy(0, width - chartWidth - textheight(szPlanSts), szPlanSts);
-          outtextxy(0, width - chartWidth, szTmpMeas);
+          KeyInfoDisplay(width - chartWidth);
         } else {
+          KeyInfoDisplay(width - 50);
           DisplaySpdPlanInterface(length, width, offset, &lines_info,
                                   &spd_info);
         }
@@ -302,22 +304,13 @@ void DisplayLog(const int length, const int width, const int offset) {
 
 #ifdef SPEED_PLANNING_H_
 void CalcOneStep() {
-  AlcPathVcc alcPathVcc = {alc_coeffs[0], alc_coeffs[1], alc_coeffs[2],
-                           alc_coeffs[3], alc_coeffs[4], alc_coeffs[5],
-                           alc_coeffs[7]};
-  AlcPathVcc egoPathVcc = {
-      ego_coeffs[0], ego_coeffs[1], ego_coeffs[2], ego_coeffs[3], 0, 0,
-      ego_coeffs[7]};
-
   SsmObjType ssmObjs;
+  AlcPathVcc alcPathVcc;
+  EgoPathVcc egoPathVcc;
+  LoadDummyPathData(alc_coeffs, ego_coeffs, &alcPathVcc, &egoPathVcc);
   memset(&ssmObjs, 0, sizeof(ssmObjs));
   if (playMode == ONESTEP) {
-    egoSpd = 15.0f, egoAcc = 0, spdLmt = 15 * 3.6f;  // kph
-    accMode = 5;
-    alcBehav.AutoLaneChgSide = 1;
-    alcBehav.AutoLaneChgSts = 2;
-    alcBehav.LeftBoundaryType = 2;
-    alcBehav.RightBoundaryType = 2;
+    LoadDummyMotionData(&egoSpd, &egoAcc, &spdLmt, &accMode, &alcBehav);
     LoadDummySSmData(&ssmObjs);
     show_predict_swt = false;
 
@@ -351,26 +344,26 @@ void CalcOneStep() {
   a_points[4] = {output.Point4.t, output.Point4.a};
   a_points[5] = {output.Point5.t, output.Point5.a};
 
-  ctrlPoint = {output.pointCtrl0.t, output.pointCtrl0.a};
-  AlcLgtCtrlEnbl = output.AlcLgtCtrlEnbl;
+  ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.a};
+  spdPlanEnblSts = output.SpdPlanEnblSts;
   alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
 
   /* printf("Direct: %d, Default result: \n", g_laneChangeDirection); */
   if (playMode == ONESTEP) {
-    printf("AlcLatEnbl: %d, \t AlcLgtEnble: %d\n", output.AlcLatCtrlEnbl,
-           output.AlcLgtCtrlEnbl);
+    printf("AlcLatEnbl: %d, \t SpdPlanEnblSts: %d\n", output.AlcLatCtrlEnbl,
+           output.SpdPlanEnblSts);
     printf("Ctrl 0: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
-           output.pointCtrl0.t, output.pointCtrl0.s, output.pointCtrl0.v,
-           output.pointCtrl0.a);
+           output.PointCtrl0.t, output.PointCtrl0.s, output.PointCtrl0.v,
+           output.PointCtrl0.a);
     printf("Ctrl 1: t = %.3f, s = %.2f, v = %.3f, a = %.3f \n",
-           output.pointCtrl1.t, output.pointCtrl1.s, output.pointCtrl1.v,
-           output.pointCtrl1.a);
+           output.PointCtrl1.t, output.PointCtrl1.s, output.PointCtrl1.v,
+           output.PointCtrl1.a);
     printf("Ctrl 2: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
-           output.pointCtrl2.t, output.pointCtrl2.s, output.pointCtrl2.v,
-           output.pointCtrl2.a);
+           output.PointCtrl2.t, output.PointCtrl2.s, output.PointCtrl2.v,
+           output.PointCtrl2.a);
     printf("Ctrl 3: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
-           output.pointCtrl3.t, output.pointCtrl3.s, output.pointCtrl3.v,
-           output.pointCtrl3.a);
+           output.PointCtrl3.t, output.PointCtrl3.s, output.PointCtrl3.v,
+           output.PointCtrl3.a);
     float fit_coeffi[6] = {0};
     quinticPolyFit(s_points[1].x, s_points[0].y, v_points[0].y, a_points[0].y,
                    s_points[1].y, v_points[1].y, a_points[1].y, fit_coeffi);
@@ -410,7 +403,7 @@ void LoopbackCalculation() {
       a_points_data[k][t] = a_points[k].y;
       t_points_data[k][t] = s_points[k].x;
     }
-    AlcLgtCtrlEnbl_data[t] = AlcLgtCtrlEnbl;
+    spdPlanEnblSts_data[t] = spdPlanEnblSts;
     truncated_col_data[t] = g_truncated_col;
     ctrl_point_data[0][t] = ctrlPoint.x;
     ctrl_point_data[1][t] = ctrlPoint.y;
@@ -424,19 +417,10 @@ void LoopbackCalculation() {
 }
 
 void GenerateLocalData() {
-  egoSpd = 60.0f / 3.6f, egoAcc = 0.0f, spdLmt = 50.0f;
-  accMode = 5;
-  alcBehav.AutoLaneChgSide = 0;
-  alcBehav.AutoLaneChgSts = 1;
-  alcBehav.LeftBoundaryType = 2;
-  alcBehav.RightBoundaryType = 2;
-
-  AlcPathVcc alcPathVcc = {alc_coeffs[0], alc_coeffs[1], alc_coeffs[2],
-                           alc_coeffs[3], alc_coeffs[4], alc_coeffs[5],
-                           alc_coeffs[7]};
-  AlcPathVcc egoPathVcc = {
-      ego_coeffs[0], ego_coeffs[1], ego_coeffs[2], ego_coeffs[3], 0, 0,
-      ego_coeffs[7]};
+  AlcPathVcc alcPathVcc;
+  EgoPathVcc egoPathVcc;
+  LoadDummyPathData(alc_coeffs, ego_coeffs, &alcPathVcc, &egoPathVcc);
+  LoadDummyMotionData(&egoSpd, &egoAcc, &spdLmt, &accMode, &alcBehav);
 
   SsmObjType ssmObjs;
   memset(&ssmObjs, 0, sizeof(ssmObjs));
@@ -456,7 +440,7 @@ void GenerateLocalData() {
     time_data[t] = t * cycle_s;
 
     egoAcc = accResponseDelay[accDelay_pos];
-    egoSpd += egoAcc * cycle_s;
+    egoSpd = fmax(0, egoSpd + egoAcc * cycle_s);
     spdLmt_data[t] = spdLmt;
     egoAcc_data[t] = egoAcc;
     egoSpd_data[t] = egoSpd;
@@ -499,10 +483,10 @@ void GenerateLocalData() {
               memcpy(alc_coeffs, source_coeffs, 8 * sizeof(float));
               for (int i = 0; i < 6; i++)
                 alc_path_data[i][t] = alc_coeffs[i];
-              alcPathVcc.FiveCoeff = alc_coeffs[5];
-              alcPathVcc.FourCoeff = alc_coeffs[4];
-              alcPathVcc.ThrdCoeff = alc_coeffs[3];
-              alcPathVcc.SecCoeff = alc_coeffs[2];
+              alcPathVcc.FifthCoeff = alc_coeffs[5];
+              alcPathVcc.FourthCoeff = alc_coeffs[4];
+              alcPathVcc.ThirdCoeff = alc_coeffs[3];
+              alcPathVcc.SecondCoeff = alc_coeffs[2];
               alcPathVcc.FirstCoeff = alc_coeffs[1];
               alcPathVcc.ConCoeff = alc_coeffs[0];
             } */
@@ -539,8 +523,8 @@ void GenerateLocalData() {
     a_points[3] = {output.Point3.t, output.Point3.a};
     a_points[4] = {output.Point4.t, output.Point4.a};
     a_points[5] = {output.Point5.t, output.Point5.a};
-    ctrlPoint = {output.pointCtrl0.t, output.pointCtrl0.a};
-    AlcLgtCtrlEnbl = output.AlcLgtCtrlEnbl;
+    ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.a};
+    spdPlanEnblSts = output.SpdPlanEnblSts;
 
     // assume inertia delay 0.5s
     accResponseDelay[accDelay_pos] = ctrlPoint.y;
@@ -552,7 +536,7 @@ void GenerateLocalData() {
       a_points_data[k][t] = a_points[k].y;
       t_points_data[k][t] = s_points[k].x;
     }
-    AlcLgtCtrlEnbl_data[t] = AlcLgtCtrlEnbl;
+    spdPlanEnblSts_data[t] = spdPlanEnblSts;
     truncated_col_data[t] = g_truncated_col;
     ctrl_point_data[0][t] = ctrlPoint.x;
     ctrl_point_data[1][t] = ctrlPoint.y;
@@ -618,29 +602,30 @@ void ReleaseWrapper() {
   ofn.lpstrFilter = "CSV Files\0*.csv\0All Files\0*.*\0";
   ofn.nFilterIndex = 1;
   ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-  if (GetOpenFileNameA(&ofn) == TRUE) {
-    //   printf("Selected file: %s\n", ofn.lpstrFile);
-    strcpy(csvFileName, ofn.lpstrFile);
-    LoadLog();
-#ifdef SPEED_PLANNING_H_
-    if (playMode == LOOPBACK) {
-      memcpy(original_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
-      LoopbackCalculation();
-      memcpy(loopback_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
-    } else if (playMode == LINECHART) {
-      DisplayLoopbackCurve(1000, 400, 50);
-      return;
-    }
-#endif
-#ifdef RADAR_DEMO_DISP
-    playMode = fDistX_data[0][0] ? RADAR : playMode;
-#endif
-    playMode = t_points_data[1][0] == 0 ? FUSION : playMode;
-    int length = (playMode == FUSION || playMode == RADAR) ? 400 : 750;
-    int width = playMode == LOOPBACK ? 900 : 750;
-    DisplayLog(length, width, 100);
+  if (GetOpenFileNameA(&ofn) == FALSE) {
+    return;
   }
+  //   printf("Selected file: %s\n", ofn.lpstrFile);
+  strcpy(csvFileName, ofn.lpstrFile);
+  LoadLog(csvFileName, &totalFrame);
+#ifdef SPEED_PLANNING_H_
+  if (playMode == LOOPBACK) {
+    memcpy(original_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
+    LoopbackCalculation();
+    memcpy(loopback_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
+  } else if (playMode == LINECHART) {
+    DisplayLoopbackCurve(1000, 400, 50);
+    return;
+  }
+#endif
+  playMode = t_points_data[1][0] == 0 ? FUSION : playMode;
+#ifdef RADAR_DEMO_DISP
+  playMode = fDistX_data[0][0] ? RADAR : playMode;
+#endif
+  int length = (playMode == FUSION || playMode == RADAR) ? 400 : 750;
+  int width = playMode == LOOPBACK ? 900 : 750;
+  DisplayLog(length, width, 100);
+
   return;
 }
 

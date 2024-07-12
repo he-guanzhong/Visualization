@@ -81,11 +81,19 @@ void drawPolygon(const Point* center, const int num, const float rotateDegree);
 void drawTsrSign(const TsrInfo* tsr_info);
 void drawMotionInfo(const SpdInfo* spd_info);
 
-void drawTrajectory(const float* coeffs,
-                    const int color,
-                    const float startX,
-                    const float lengthS,
-                    Point* predictPosn);
+void drawQuinticPolyTraj(const float* coeffs,
+                         const int color,
+                         const float startX,
+                         const float lengthS,
+                         Point* predictPosn);
+
+void drawPiecewiseCubicPolyTraj(const float* coeffs,
+                                const int color,
+                                const float startX,
+                                const float length1X,
+                                const float length2X,
+                                const float length3X,
+                                Point* predictPosn);
 
 void drawBasicGraph(const int len,
                     const int wid,

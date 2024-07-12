@@ -4,12 +4,12 @@ float time_data[DATA_NUM];
 float egoSpd_data[DATA_NUM];
 float egoAcc_data[DATA_NUM];
 float spdLmt_data[DATA_NUM];
-float alc_path_data[6][DATA_NUM];
-float ego_path_data[4][DATA_NUM];
+float alc_path_data[8][DATA_NUM];
+float ego_path_data[9][DATA_NUM];
 int alcBehav_data[5][DATA_NUM];
 int accMode_data[DATA_NUM];
 
-bool AlcLgtCtrlEnbl_data[DATA_NUM];
+int spdPlanEnblSts_data[DATA_NUM];
 int truncated_col_data[DATA_NUM];
 float innerSpdLmt_data[DATA_NUM];
 int specialCaseFlg_data[DATA_NUM];

@@ -7,12 +7,12 @@ extern float time_data[DATA_NUM];
 extern float egoSpd_data[DATA_NUM];
 extern float egoAcc_data[DATA_NUM];
 extern float spdLmt_data[DATA_NUM];
-extern float alc_path_data[6][DATA_NUM];
-extern float ego_path_data[4][DATA_NUM];
+extern float alc_path_data[8][DATA_NUM];
+extern float ego_path_data[9][DATA_NUM];
 extern int alcBehav_data[5][DATA_NUM];
 extern int accMode_data[DATA_NUM];
 
-extern bool AlcLgtCtrlEnbl_data[DATA_NUM];
+extern int spdPlanEnblSts_data[DATA_NUM];
 extern int truncated_col_data[DATA_NUM];
 extern float innerSpdLmt_data[DATA_NUM];
 extern int specialCaseFlg_data[DATA_NUM];

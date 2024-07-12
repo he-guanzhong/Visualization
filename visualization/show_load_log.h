@@ -10,20 +10,22 @@
 // colomns nums (variable count) shall not exceed MAX_COLUMNS
 // row nums (total steps) which exceed MAX_VALUES_PER_COLUMN will be ignored
 #define MAX_LINE_SIZE 4096
-#define MAX_COLUMNS 168
+#define MAX_COLUMNS 192
 #define MAX_VALUES_PER_COLUMN DATA_NUM
 
 float readValue(float** values, int col_name, int t);
 
-void LoadLog();
+void LoadLog(const char csvFileName[], int* totalFrame);
 
 void DataParsing(float** values,
-                 int numColumns,
+                 const int numColumns,
                  char** columns,
-                 int* valuesCount);
+                 const int* valuesCount,
+                 int* totalFrame);
 
 void RadarDataParsing(float** values,
                       int numColumns,
                       char** columns,
-                      int* valuesCount);
+                      int* valuesCount,
+                      int* totalFrame);
 #endif  // SHOW_LOAD_LOG_H_

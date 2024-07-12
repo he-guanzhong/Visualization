@@ -24,6 +24,7 @@ void ReadInputData(const int t);
 void ReadOutputData(const int t);
 
 void Time2Str(const float time, char* str);
+void KeyInfoDisplay(const int posY);
 void DisplaySpdPlanInterface(const int length,
                              const int width,
                              const int offset,

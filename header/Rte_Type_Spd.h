@@ -62,6 +62,11 @@ typedef uint8 UInt8;
 #define Rte_TypeDef_rt_Array_Float_4
 typedef Float rt_Array_Float_4[4];
 
+/* AutoLaneChgSts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving, 4-in target
+                   line, 5-finished, 6-Back to Ego, 8-takeover, 9-popMsgReq
+  AutoLaneChgSide: 0-OFF, 1-left, 2-right
+  BoundaryType: 0-unknown, 1-solid, 2-dash, 32-Dash(inner)_Solid(outer),
+                31-Solid(inner)_Dash(outer) */
 #define Rte_TypeDef_AlcBehavior
 typedef struct {
   UInt8 AutoLaneChgSide;
@@ -76,12 +81,27 @@ typedef struct {
 typedef struct {
   Float ConCoeff;
   Float FirstCoeff;
-  Float SecCoeff;
-  Float ThrdCoeff;
-  Float FourCoeff;
-  Float FiveCoeff;
+  Float SecondCoeff;
+  Float ThirdCoeff;
+  Float FourthCoeff;
+  Float FifthCoeff;
   Float ViewRng;
 } AlcPathVcc;
+
+#define Rte_TypeDef_EgoPathVcc
+typedef struct {
+  Float C0;
+  Float C1;
+  Float C2;
+  Float C3_1;
+  Float C3_2;
+  Float C3_3;
+  Float Length1;
+  Float Length2;
+  Float Length3;
+  Float Width;
+  UInt8 Valid;
+} EgoPathVcc;
 
 #define Rte_TypeDef_SsmCurvatureType
 typedef struct {
@@ -96,6 +116,8 @@ typedef struct {
   UInt32 ts_low;
 } SsmHeaderType;
 
+/* ObjType of ME: 0=UNFILLED, 1=CAR, 2=TRUCK, 3=MOTORBIKE, 4=BICYCLE,
+        5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL */
 #define Rte_TypeDef_SsmObsType
 typedef struct {
   SInt32 id;
@@ -181,11 +203,13 @@ typedef struct {
 #define Rte_TypeDef_StPoint_Array_10
 typedef StPoint StPoint_Array_10[10];
 
+// SpdPlanEnblSts: 1-takeover, 2-minAccel
 #define Rte_TypeDef_DpSpdPoints
 typedef struct {
   Boolean AlcLatCtrlEnbl;
   Boolean AlcLgtCtrlEnbl;
-  UInt8 AlcTextInfo;
+  UInt8 SpdPlanEnblSts;
+  UInt8 SpdPlanTextInfo;
   Boolean Reserved_b;
   UInt8 Reserved_u8;
   UInt16 Reserved_u16;
@@ -206,17 +230,18 @@ typedef struct {
 typedef struct {
   Boolean AlcLatCtrlEnbl;
   Boolean AlcLgtCtrlEnbl;
-  UInt8 AlcTextInfo;  // 0x9 迫近前车 0xB即将超车
+  UInt8 SpdPlanEnblSts;
+  UInt8 SpdPlanTextInfo;  // 0x9 迫近前车 0xB即将超车
   StPoint Point0;
   StPoint Point1;
   StPoint Point2;
   StPoint Point3;
   StPoint Point4;
   StPoint Point5;
-  StPoint pointCtrl0;
-  StPoint pointCtrl1;
-  StPoint pointCtrl2;
-  StPoint pointCtrl3;
+  StPoint PointCtrl0;
+  StPoint PointCtrl1;
+  StPoint PointCtrl2;
+  StPoint PointCtrl3;
 } DpSpeedPoints;
 
 #define Rte_TypeDef_rt_Array_SsmCurvatureType_20
@@ -261,6 +286,7 @@ typedef struct {
   rt_Array_SsmObsType_12 obj_lists;
 } SsmObjType;
 
+/*
 #define Rte_TypeDef_SsmParamType
 typedef struct {
   UInt8 valid_flag;
@@ -303,6 +329,7 @@ typedef struct {
   rt_Array_SsmTrafficLineType_6 Ssm_TrafficLine_st;
   SsmObjType Ssm_Objs_Frame_st;
 } SsmFrameType;
+*/
 
 #endif /* RTE_TYPE_SPD_H */
 

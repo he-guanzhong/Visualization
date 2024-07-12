@@ -1,18 +1,15 @@
 #include "visualization/show_load_log.h"
 
-extern int totalFrame;
-extern char csvFileName[150];
-
 inline float readValue(float** values, int col_name, int t) {
   if (values[col_name][t] == 0 && t > 0)
     values[col_name][t] = values[col_name][t - 1];
   return values[col_name][t];
 }
 
-void LoadLog() {
+void LoadLog(const char csvFileName[], int* totalFrame) {
   FILE* file = fopen(csvFileName, "r");
   if (!file) {
-    totalFrame = 0;  // ERROR CODE
+    *totalFrame = 0;  // ERROR CODE
     perror("Error opening file");
     return;
   }
@@ -131,9 +128,9 @@ void LoadLog() {
       printf("\n");
     } */
 #ifdef RADAR_DEMO_DISP
-  RadarDataParsing(values, numColumns, columns, valuesCount);
+  RadarDataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #else
-  DataParsing(values, numColumns, columns, valuesCount);
+  DataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #endif
 
   // 释放已分配的内存
@@ -154,14 +151,16 @@ void LoadLog() {
 }
 
 void DataParsing(float** values,
-                 int numColumns,
+                 const int numColumns,
                  char** columns,
-                 int* valuesCount) {
+                 const int* valuesCount,
+                 int* totalFrame) {
   // time, alc path and speed plan input and output results
-  int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, LGT_ENBL = 0, TRUC_CL = 0,
-      ACC_MODE = 0, IN_SPDLMT = 0, SPC_FLG = 0, EGO_PATH[4] = {0};
-  int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, ALC_RMP_D = 0,
-      ALC_C[6] = {0};
+  int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, ENBL_STS = 0, TRUC_CL = 0,
+      ACC_MODE = 0, IN_SPDLMT = 0, SPC_FLG = 0;
+  int EGO_PATH[9] = {0};
+  int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, ALC_RMP_D = 0;
+  int ALC_C[8] = {0};
   int P_T[7] = {0}, P_S[7] = {0}, P_V[7] = {0}, P_A[7] = {0};
 
   // Obstacles, In-path VehicleS (IVS)
@@ -212,8 +211,9 @@ void DataParsing(float** values,
       ALC_RBT = i;
     else if (strncmp(columns[i], "VuPASP_NaviPilot1stRampOnDis_m[]", 30) == 0)
       ALC_RMP_D = i;
-    else if (strncmp(columns[i], "VbPASP_AlcLgtCtrlEnbl[]", 21) == 0)
-      LGT_ENBL = i;
+    else if (strncmp(columns[i], "VbPASP_AlcLgtCtrlEnbl[]", 21) == 0 ||
+             strncmp(columns[i], "VePASP_SpdPlanEnblSts[]", 21) == 0)
+      ENBL_STS = i;
     else if (strncmp(columns[i], "VfPASP_InnerSetSpd_kph[]", 22) == 0)
       IN_SPDLMT = i;
     else if (strncmp(columns[i], "VePASP_SpecialCaseFlg[]", 21) == 0)
@@ -234,15 +234,32 @@ void DataParsing(float** values,
       ALC_C[1] = i;
     else if (strncmp(columns[i], "VfPASP_ALC_path_C0[]", 18) == 0)
       ALC_C[0] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path_ViewRng[]", 23) == 0)
+      ALC_C[7] = i;
 
-    else if (strncmp(columns[i], "VfPASP_ego_path_C0[]", 18) == 0)
+    // ego path [9]: c0, c1, c2, c31, c32, c33, len1, len2, len3
+    else if (strncmp(columns[i], "VfPASP_ego_path_C0[]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_EnvModelPath_C0[]", 22) == 0)
       EGO_PATH[0] = i;
-    else if (strncmp(columns[i], "VfPASP_ego_path_C1[]", 18) == 0)
+    else if (strncmp(columns[i], "VfPASP_ego_path_C1[]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_EnvModelPath_C1[]", 22) == 0)
       EGO_PATH[1] = i;
-    else if (strncmp(columns[i], "VfPASP_ego_path_C2[]", 18) == 0)
+    else if (strncmp(columns[i], "VfPASP_ego_path_C2[]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_EnvModelPath_C2[]", 22) == 0)
       EGO_PATH[2] = i;
-    else if (strncmp(columns[i], "VfPASP_ego_path_C3[]", 18) == 0)
+    else if (strncmp(columns[i], "VfPASP_ego_path_C3[]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_EnvModelPath_C3_1[]", 24) == 0)
       EGO_PATH[3] = i;
+    else if (strncmp(columns[i], "VfPASP_EnvModelPath_C3_2[]", 24) == 0)
+      EGO_PATH[4] = i;
+    else if (strncmp(columns[i], "VfPASP_EnvModelPath_C3_3[]", 24) == 0)
+      EGO_PATH[5] = i;
+    else if (strncmp(columns[i], "VfPASP_EnvModelPath_Length1[]", 27) == 0)
+      EGO_PATH[6] = i;
+    else if (strncmp(columns[i], "VfPASP_EnvModelPath_Length2[]", 27) == 0)
+      EGO_PATH[7] = i;
+    else if (strncmp(columns[i], "VfPASP_EnvModelPath_Length3[]", 27) == 0)
+      EGO_PATH[8] = i;
 
     // speed plan output points
     else if (strncmp(columns[i], "VfPASP_StPoint0_t_s[]", 19) == 0)
@@ -552,10 +569,10 @@ void DataParsing(float** values,
       TSR_LgDis[2] = i;
   }
   // log total time. ATTENTION: NaN strings occupy last 8 rows of csv
-  totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
+  *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
 
   // load data to local variables
-  for (int t = 0; t < totalFrame; t++) {
+  for (int t = 0; t < *totalFrame; t++) {
     time_data[t] = values[Ts][t];
 
     //  inner spd lmt unit: m/s, record spd lmt unit:kph
@@ -565,7 +582,7 @@ void DataParsing(float** values,
       spdLmt_data[t] = values[SPD_LMT][t];
       accMode_data[t] = values[ACC_MODE][t];
     }
-    AlcLgtCtrlEnbl_data[t] = LGT_ENBL ? values[LGT_ENBL][t] : 0;
+    spdPlanEnblSts_data[t] = ENBL_STS ? values[ENBL_STS][t] : 0;
     truncated_col_data[t] = TRUC_CL ? values[TRUC_CL][t] : 0;
     innerSpdLmt_data[t] = IN_SPDLMT ? values[IN_SPDLMT][t] : 0;
     specialCaseFlg_data[t] = SPC_FLG ? values[SPC_FLG][t] : 0;
@@ -573,17 +590,21 @@ void DataParsing(float** values,
     // alc_sts[0] for alc side: 0-0ff, 1-left, 2-right
     // alc_sts[1] for alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
     // 4-in target line, 5-finished,6-Back to Ego, 8-takeover, 9-popMsgReq
-    alcBehav_data[0][t] = ALC_SIDE ? values[ALC_SIDE][t] : 0;
-    alcBehav_data[1][t] = ALC_STS ? values[ALC_STS][t] : 0;
-    alcBehav_data[2][t] = ALC_LBT ? values[ALC_LBT][t] : 0;
-    alcBehav_data[3][t] = ALC_RBT ? values[ALC_RBT][t] : 0;
+    alcBehav_data[0][t] = values[ALC_SIDE][t];
+    alcBehav_data[1][t] = values[ALC_STS][t];
+    alcBehav_data[2][t] = values[ALC_LBT][t];
+    alcBehav_data[3][t] = values[ALC_RBT][t];
     alcBehav_data[4][t] = ALC_RMP_D ? values[ALC_RMP_D][t] : 0;
 
     // alc path and speed plan points
-    for (int k = 0; k <= 5; k++) {
-      if (0 == ALC_C[k])
-        continue;
+    for (int k = 0; k < 8; k++) {
       alc_path_data[k][t] = values[ALC_C[k]][t];
+    }
+    alc_path_data[7][t] = ALC_C[7] ? values[ALC_C[7]][t] : 50;
+
+    for (int k = 0; k <= 5; k++) {
+      if (0 == P_S[k])
+        continue;
       s_points_data[k][t] = values[P_S[k]][t];
       v_points_data[k][t] = values[P_V[k]][t];
       a_points_data[k][t] = values[P_A[k]][t];
@@ -591,8 +612,14 @@ void DataParsing(float** values,
     }
     ctrl_point_data[0][t] = P_T[6] ? values[P_T[6]][t] : 0;
     ctrl_point_data[1][t] = P_A[6] ? values[P_A[6]][t] : 0;
-    for (int k = 0; k < 4; k++) {
+
+    for (int k = 0; k < 9; k++) {
       ego_path_data[k][t] = EGO_PATH[k] ? values[EGO_PATH[k]][t] : 0;
+      // if (6 == k && 0 == EGO_PATH[k])
+      if (6 == k)
+        ego_path_data[k][t] = 80;  // default disp ego length: 80
+      else if (7 == k || 8 == k || 4 == k || 5 == k)
+        ego_path_data[k][t] = 0;
     }
     // obstacles, BTL original: lateral distance/speed direction opposite.
     // longi distance needs compensation to transfer pos centre to centre
@@ -606,7 +633,7 @@ void DataParsing(float** values,
       // rear obs lat spd not stable, unacceptable
       if (0 == k || 2 == k || 3 == k || 6 == k || 7 == k) {
         pos_x_compensation =
-            2.5f + (objs_type_data[k][t] == 2 ? 7.6f : 5.0f) / 2.0f;
+            2.5f + (objs_type_data[k][t] == 2 ? 10.0f : 5.0f) / 2.0f;
         objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
       } else {
         pos_x_compensation = 2.5f;
@@ -614,7 +641,7 @@ void DataParsing(float** values,
         // 0;
       }
       objs_valid_flag_data[k][t] = values[IVS_Present[k]][t];
-      objs_type_data[k][t] = values[IVS_Class[k]][t];
+      objs_type_data[k][t] = IVS_Class[k] ? values[IVS_Class[k]][t] : 0;
       objs_pos_x_data[k][t] = values[IVS_LgDis[k]][t] + pos_x_compensation;
       objs_pos_y_data[k][t] = values[IVS_LaDis[k]][t] * -1;
       objs_speed_x_data[k][t] = values[IVS_V[k]][t];
@@ -667,7 +694,8 @@ void DataParsing(float** values,
 void RadarDataParsing(float** values,
                       int numColumns,
                       char** columns,
-                      int* valuesCount) {
+                      int* valuesCount,
+                      int* totalFrame) {
   int Ts = 0;
   int ID[32] = {0}, DIS_X[32] = {0}, DIS_Y[32] = {0};
   for (int i = 0; i < numColumns; i++) {
@@ -696,11 +724,11 @@ void RadarDataParsing(float** values,
     }
   }
 
-  totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
+  *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
   /*   for (int j = 0; j < 32; j++) {
       printf("ID[%d] = %d\n", j, ID[j]);
     } */
-  for (int t = 0; t < totalFrame; t++) {
+  for (int t = 0; t < *totalFrame; t++) {
     time_data[t] = values[Ts][t];
     for (int j = 0; j < 32; j++) {
       if (ID[j] == 0)
