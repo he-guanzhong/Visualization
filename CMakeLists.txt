@@ -8,15 +8,20 @@ project(SPDPLAN VERSION 1.0)
 include_directories(${PROJECT_SOURCE_DIR})
 
 # 收集指定目录中所有源文件的名称，并将名称列表存储在xxxFiles变量中。
-aux_source_directory(${PROJECT_SOURCE_DIR}/spdplanning coreFiles)
+# aux_source_directory(${PROJECT_SOURCE_DIR}/spdplanning coreFiles)
 aux_source_directory(${PROJECT_SOURCE_DIR}/visualization coreFiles)
+aux_source_directory(${PROJECT_SOURCE_DIR}/visualization/agsm coreFiles)
 
 # 库文件路径
 # LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/reference)
 
 # 编译过程中需要链接的文件
 add_executable(SpdPlan ${coreFiles})
+
 # target_compile_definitions(SpdPlan PRIVATE SPDPLAN_LOCAL_TEST)
+
+# AGSM功能宏开关
+# target_compile_definitions(SpdPlan PRIVATE AGSM_LOCAL_TEST)
 
 # target_compile_definitions(SpdPlan PRIVATE RADAR_DEMO_DISP)
 target_link_libraries(SpdPlan libeasyx.a)

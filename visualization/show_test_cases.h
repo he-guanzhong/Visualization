@@ -8,6 +8,8 @@ void CaseSideCarMoveSlowly(SsmObjType* ssmObjs);
 
 void CaseFollow(SsmObjType* ssmObjs);
 
+void LoadDummySSmData(SsmObjType* ssmObjs);
+
 void LoadDummyMotionData(float* egoSpd,
                          float* egoAcc,
                          float* spdLmt,
@@ -17,7 +19,6 @@ void LoadDummyMotionData(float* egoSpd,
 void LoadDummyPathData(const float* alc_coeffs,
                        const float* ego_coeffs,
                        AlcPathVcc* alcPathVcc,
-                       EgoPathVcc* egoPathVcc);
+                       AgsmEnvModelPath* agsmEnvModelPath);
 
-void LoadDummySSmData(SsmObjType* ssmObjs);
 #endif  // SHOW_TEST_CASES_H_

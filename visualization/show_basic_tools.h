@@ -40,25 +40,23 @@ typedef struct {
 } TsrInfo;
 
 typedef struct {
-  float cur_spd;
-  float pred_spd;
-  float disp_set_spd;
-  float inner_spd_lmt;
-  int spec_case_flg;
-  int acc_mode;
-  int alc_side;
-  int alc_sts;
-  int alc_lft_bd_typ;
-  int alc_rgt_bd_typ;
-} SpdInfo;
+  float egoSpd;
+  float egoAcc;
+  float spdLmt;
+  int accMode;
+  float egoPredSpd;
+  float innerSpdLmt;
+  int specCaseFlg;
+  AlcBehavior alcBehav;
+} MotionInfo;
 
 typedef struct {
-  float* alc_coeffs;
-  float* ego_coeffs;
-  float* left_coeffs;
-  float* leftleft_coeffs;
-  float* right_coeffs;
-  float* rightright_coeffs;
+  float alc_coeffs[8];
+  float ego_coeffs[9];
+  float left_coeffs[8];
+  float leftleft_coeffs[8];
+  float right_coeffs[8];
+  float rightright_coeffs[8];
 } LinesInfo;
 
 typedef struct {
@@ -78,21 +76,19 @@ void drawCar(Point* car,
              const int index);
 
 void drawPolygon(const Point* center, const int num, const float rotateDegree);
-void drawTsrSign(const TsrInfo* tsr_info);
-void drawMotionInfo(const SpdInfo* spd_info);
+void drawTsrSign(const TsrInfo* tsrInfo);
+void drawMotionInfo(const MotionInfo* motionInfo);
 
 void drawQuinticPolyTraj(const float* coeffs,
                          const int color,
                          const float startX,
+                         const float lengthX,
                          const float lengthS,
                          Point* predictPosn);
 
 void drawPiecewiseCubicPolyTraj(const float* coeffs,
                                 const int color,
                                 const float startX,
-                                const float length1X,
-                                const float length2X,
-                                const float length3X,
                                 Point* predictPosn);
 
 void drawBasicGraph(const int len,
@@ -104,9 +100,11 @@ void drawBasicGraph(const int len,
 void drawObstacles(const SsmObjType* ssmObjs,
                    const float* ego_coeffs,
                    const float cur_spd);
-void drawBEVRuler();
+void drawBEVRuler(const float zeroOffsetX);
 
-/// @brief show bacis x-y graph
+void initBEVGraph(const GraphConfig* config, const float zeroOffsetX);
+
+/// @brief show basic x-y graph
 /// @param config       basic graph configuration
 /// @param zeroOffsetY  vertical distance from origin to lower-left corner
 /// @param title        title string
@@ -125,16 +123,16 @@ void showXYGraph(const GraphConfig* config,
 /// @brief BEV graph, x-axis_forward_vertical, y-axis_lateral_horizontal
 /// @param config         basic configuration
 /// @param zeroOffsetX    distance behind ego vehicle to be displayed
-/// @param tsr_info       environment TSR info and ego TSR status
 /// @param ssmObjs        obstacles info
-/// @param lines_info     lane lines info
-/// @param spd_info       ego vehicle motion status
+/// @param linesInfo      lane lines info
+/// @param tsrInfo        environment TSR info and ego TSR status
+/// @param motionInfo     ego vehicle motion status
 void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,
-                  const TsrInfo* tsr_info,
                   const SsmObjType* ssmObjs,
-                  const LinesInfo* lines_info,
-                  const SpdInfo* spd_info);
+                  const LinesInfo* linesInfo,
+                  const TsrInfo* tsrInfo,
+                  const MotionInfo* motionInfo);
 
 void drawRadarObj(const RadarObjInfo* radar_info);
 

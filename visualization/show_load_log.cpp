@@ -130,7 +130,10 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
 #ifdef RADAR_DEMO_DISP
   RadarDataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #else
-  DataParsing(values, numColumns, columns, valuesCount, totalFrame);
+  SpdPlanDataParsing(values, numColumns, columns, valuesCount, totalFrame);
+#endif
+#ifdef AGSM_LOCAL_TEST  // HR
+  AgsmDataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #endif
 
   // 释放已分配的内存
@@ -150,11 +153,11 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
   return;
 }
 
-void DataParsing(float** values,
-                 const int numColumns,
-                 char** columns,
-                 const int* valuesCount,
-                 int* totalFrame) {
+void SpdPlanDataParsing(float** values,
+                        const int numColumns,
+                        char** columns,
+                        const int* valuesCount,
+                        int* totalFrame) {
   // time, alc path and speed plan input and output results
   int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, ENBL_STS = 0, TRUC_CL = 0,
       ACC_MODE = 0, IN_SPDLMT = 0, SPC_FLG = 0;
@@ -572,11 +575,11 @@ void DataParsing(float** values,
   *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
 
   // load data to local variables
-  for (int t = 0; t < *totalFrame; t++) {
+  for (int t = 0; t < *totalFrame; ++t) {
     time_data[t] = values[Ts][t];
 
     //  inner spd lmt unit: m/s, record spd lmt unit:kph
-    if (EGO_V != 0) {
+    if (EGO_V) {
       egoSpd_data[t] = values[EGO_V][t];
       egoAcc_data[t] = values[EGO_A][t];
       spdLmt_data[t] = values[SPD_LMT][t];
@@ -590,15 +593,17 @@ void DataParsing(float** values,
     // alc_sts[0] for alc side: 0-0ff, 1-left, 2-right
     // alc_sts[1] for alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
     // 4-in target line, 5-finished,6-Back to Ego, 8-takeover, 9-popMsgReq
-    alcBehav_data[0][t] = values[ALC_SIDE][t];
-    alcBehav_data[1][t] = values[ALC_STS][t];
-    alcBehav_data[2][t] = values[ALC_LBT][t];
-    alcBehav_data[3][t] = values[ALC_RBT][t];
-    alcBehav_data[4][t] = ALC_RMP_D ? values[ALC_RMP_D][t] : 0;
+    if (ALC_SIDE) {
+      alcBehav_data[0][t] = values[ALC_SIDE][t];
+      alcBehav_data[1][t] = values[ALC_STS][t];
+      alcBehav_data[2][t] = values[ALC_LBT][t];
+      alcBehav_data[3][t] = values[ALC_RBT][t];
+      alcBehav_data[4][t] = values[ALC_RMP_D][t];
+    }
 
     // alc path and speed plan points
     for (int k = 0; k < 8; k++) {
-      alc_path_data[k][t] = values[ALC_C[k]][t];
+      alc_path_data[k][t] = ALC_C[k] ? values[ALC_C[k]][t] : 0;
     }
     alc_path_data[7][t] = ALC_C[7] ? values[ALC_C[7]][t] : 50;
 

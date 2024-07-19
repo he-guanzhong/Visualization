@@ -88,7 +88,7 @@ typedef struct {
   Float ViewRng;
 } AlcPathVcc;
 
-#define Rte_TypeDef_EgoPathVcc
+#define Rte_TypeDef_AgsmEnvModelPath
 typedef struct {
   Float C0;
   Float C1;
@@ -101,7 +101,7 @@ typedef struct {
   Float Length3;
   Float Width;
   UInt8 Valid;
-} EgoPathVcc;
+} AgsmEnvModelPath;
 
 #define Rte_TypeDef_SsmCurvatureType
 typedef struct {
@@ -210,6 +210,7 @@ typedef struct {
   Boolean AlcLgtCtrlEnbl;
   UInt8 SpdPlanEnblSts;
   UInt8 SpdPlanTextInfo;
+  UInt16 SpdPlanRollCnt;
   Boolean Reserved_b;
   UInt8 Reserved_u8;
   UInt16 Reserved_u16;
@@ -232,6 +233,7 @@ typedef struct {
   Boolean AlcLgtCtrlEnbl;
   UInt8 SpdPlanEnblSts;
   UInt8 SpdPlanTextInfo;  // 0x9 迫近前车 0xB即将超车
+  UInt16 SpdPlanRollCnt;
   StPoint Point0;
   StPoint Point1;
   StPoint Point2;

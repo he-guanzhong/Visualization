@@ -22,6 +22,7 @@ The following display information is currently supported:
 * Platform: Windows (Linux not supported due to incompatiblity of EasyX)
 * Language: C++
 * MinGW: To compile executable file (.exe), an environment installed MinGW is strictly required. [MinGW official download site](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
+* CMake: To build and package this project, it is recommended to install CMake tool. [CMake official download site](https://cmake.org/download/)
 * EasyX: For compiling the program with source code, the installlation of EasyX is essential. [EasyX official download site](https://codebus.cn/bestans/easyx-for-mingw)
 ### Note
 * ASAMMDF is an open-source MDF offline data analysis software, which can convert mf4 files into csv format. [ASAMMDF official download site](https://github.com/danielhrisca/asammdf)
@@ -44,6 +45,7 @@ The following display information is currently supported:
 * 平台: Windows (Linux不兼容EasyX)
 * 语言: C++
 * MinGW: 运行可执行文件 (.exe)，推荐安装MinGW编译器. [MinGW官方下载](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
+* CMake: 构建、打包本项目，推荐安装CMake工具. [CMake官方下载](https://cmake.org/download/)
 * EasyX: 编译源码，还需额外安装EasyX库. [EasyX官方下载](https://codebus.cn/bestans/easyx-for-mingw)
 ### 附注
 * ASAMMDF是一款开源的MDF离线数据分析软件，可将mf4文件转化为csv格式。[ASAMMDF官方地址](https://github.com/danielhrisca/asammdf)
@@ -66,6 +68,7 @@ Les informations d’affichage suivantes sont actuellement prises en charge :
 * Plate-forme : Windows (Linux non pris en charge en raison de l’incompatibilité d’EasyX)
 * Langage : C++
 * MinGW : Pour exécuter un fichier exécutable (.exe), un environnement installé MinGW est strictement requis. [Site de téléchargement officiel de MinGW](https://github.com/niXman/mingw-builds-binaries/releases/tag/13.2.0-rt_v11-rev1)
+* CMake: Pour construire et empaqueter ce projet, il est recommandé d'installer l'outil cmake. [Site de téléchargement officiel de CMake](https://cmake.org/download/)
 * EasyX : Pour compiler le programme avec le code source, l’installation d’EasyX est indispensable. [Site de téléchargement officiel d’EasyX](https://codebus.cn/bestans/easyx-for-mingw)
 ### Note
 * ASAMMDF est un logiciel open source d'analyse de données MDF hors ligne, qui peut convertir les fichers mf4 au format csv. [Site de téléchargement officiel d’ASAMMDF](https://github.com/danielhrisca/asammdf)

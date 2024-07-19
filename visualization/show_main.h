@@ -7,6 +7,7 @@
 #include "visualization/show_test_cases.h"
 #endif
 
+#include "visualization/agsm/show_agsm_read_data.h"
 #include "visualization/show_basic_tools.h"
 #include "visualization/show_load_log.h"
 
@@ -16,7 +17,7 @@ typedef enum {
   LOOPBACK = 3,
   SIMULATION = 4,
   LINECHART = 5,
-  FUSION = 6,
+  AGSM = 6,
   RADAR = 7
 } PLAYMODE;
 
@@ -24,12 +25,13 @@ void ReadInputData(const int t);
 void ReadOutputData(const int t);
 
 void Time2Str(const float time, char* str);
-void KeyInfoDisplay(const int posY);
-void DisplaySpdPlanInterface(const int length,
-                             const int width,
-                             const int offset,
-                             const LinesInfo* lines_info,
-                             const SpdInfo* spd_info);
+void ShowOutputKeyInfo(const int posY);
+void ShowBasicFrameInfo(int* t, int* cycle, const int length, const int width);
+void ShowSpdPlanInterface(const int length,
+                          const int width,
+                          const int offset,
+                          const LinesInfo* linesInfo,
+                          const MotionInfo* motionInfo);
 
 void DisplayLineChart(const int length,
                       const int width,

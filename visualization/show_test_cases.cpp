@@ -141,14 +141,21 @@ void CaseFollow(SsmObjType* ssmObjs) {
   // 0 = IV, 1 = RIV, 2 = NIVL, 3 = NIIVL, 4 = RIVL, 5 = RIIVL
   // 6 = NIVR, 7 = NIIVR, 8 = RIVR, 9 = RIIVR
   ssmObjs->obj_num = 1;
-  ssmObjs->obj_lists[0].pos_x = 100;
+  ssmObjs->obj_lists[0].pos_x = 6.7 + 4;
   ssmObjs->obj_lists[0].pos_y = 0;
-  ssmObjs->obj_lists[0].acc_x = 0;
-  ssmObjs->obj_lists[0].speed_x = 0.0f;
+  ssmObjs->obj_lists[0].acc_x = -3;
+  ssmObjs->obj_lists[0].speed_x = 1;
   ssmObjs->obj_lists[0].speed_y = 0.0f;  // hgz
-  ssmObjs->obj_lists[0].type = 2;        // hgz
+  ssmObjs->obj_lists[0].type = 1;        // hgz
   ssmObjs->obj_lists[0].lane_index = 3;
-  ssmObjs->obj_lists[0].valid_flag = FALSE;
+  ssmObjs->obj_lists[0].valid_flag = TRUE;
+}
+
+void LoadDummySSmData(SsmObjType* ssmObjs) {
+  // CaseLeftChange(ssmObjs);
+  //  CaseSideCarMoveSlowly(ssmObjs);
+  CaseFollow(ssmObjs);
+  return;
 }
 
 void LoadDummyMotionData(float* egoSpd,
@@ -156,7 +163,7 @@ void LoadDummyMotionData(float* egoSpd,
                          float* spdLmt,
                          int* accMode,
                          AlcBehavior* alcBehav) {
-  *egoSpd = 80.0f / 3.6f, *egoAcc = 0.0f, *spdLmt = 120.0f;
+  *egoSpd = 5.2f, *egoAcc = -1.6f, *spdLmt = 60.0f;
   *accMode = 5;
   alcBehav->AutoLaneChgSide = 0;
   alcBehav->AutoLaneChgSts = 1;
@@ -168,26 +175,21 @@ void LoadDummyMotionData(float* egoSpd,
 void LoadDummyPathData(const float* alc_coeffs,
                        const float* ego_coeffs,
                        AlcPathVcc* alcPathVcc,
-                       EgoPathVcc* egoPathVcc) {
+                       AgsmEnvModelPath* agsmEnvModelPath) {
   *alcPathVcc = {alc_coeffs[0], alc_coeffs[1], alc_coeffs[2], alc_coeffs[3],
                  alc_coeffs[4], alc_coeffs[5], alc_coeffs[7]};
-  *egoPathVcc = {ego_coeffs[0],
-                 ego_coeffs[1],
-                 ego_coeffs[2],
-                 ego_coeffs[3],
-                 ego_coeffs[4],
-                 ego_coeffs[5],
-                 ego_coeffs[6],
-                 ego_coeffs[7],
-                 ego_coeffs[8],
-                 3.4f,
-                 1};
-  return;
-}
 
-void LoadDummySSmData(SsmObjType* ssmObjs) {
-  // CaseLeftChange(ssmObjs);
-  //  CaseSideCarMoveSlowly(ssmObjs);
-  CaseFollow(ssmObjs);
+  agsmEnvModelPath->C0 = ego_coeffs[0];
+  agsmEnvModelPath->C1 = ego_coeffs[1];
+  agsmEnvModelPath->C2 = ego_coeffs[2];
+  agsmEnvModelPath->C3_1 = ego_coeffs[3];
+  agsmEnvModelPath->C3_2 = ego_coeffs[4];
+  agsmEnvModelPath->C3_3 = ego_coeffs[5];
+  agsmEnvModelPath->Length1 = ego_coeffs[6];
+  agsmEnvModelPath->Length2 = ego_coeffs[7];
+  agsmEnvModelPath->Length3 = ego_coeffs[8];
+  agsmEnvModelPath->Width = 3.4f;
+  agsmEnvModelPath->Valid = 1;
+
   return;
 }

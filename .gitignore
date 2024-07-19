@@ -1,4 +1,4 @@
-# 忽略所有的 /build/ 目录
+# 忽略 /build/ 目录下的编译临时文件
 /build/.cmake/
 /build/CMakeFiles/
 *.cmake
