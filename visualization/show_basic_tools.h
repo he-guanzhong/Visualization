@@ -52,7 +52,7 @@ typedef struct {
 
 typedef struct {
   float alc_coeffs[8];
-  float ego_coeffs[9];
+  EgoPathVcc ego_coeffs;
   float left_coeffs[8];
   float leftleft_coeffs[8];
   float right_coeffs[8];
@@ -86,7 +86,7 @@ void drawQuinticPolyTraj(const float* coeffs,
                          const float lengthS,
                          Point* predictPosn);
 
-void drawPiecewiseCubicPolyTraj(const float* coeffs,
+void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
                                 const int color,
                                 const float startX,
                                 Point* predictPosn);
@@ -98,7 +98,7 @@ void drawBasicGraph(const int len,
                     const float offsetY);
 
 void drawObstacles(const SsmObjType* ssmObjs,
-                   const float* ego_coeffs,
+                   const EgoPathVcc* egoPath,
                    const float cur_spd);
 void drawBEVRuler(const float zeroOffsetX);
 

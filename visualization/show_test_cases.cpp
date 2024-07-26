@@ -13,23 +13,23 @@ void CaseLeftChange(SsmObjType* ssmObjs) {
   ssmObjs->obj_lists[0].lane_index = 3;
   ssmObjs->obj_lists[0].valid_flag = TRUE;
 
-  ssmObjs->obj_lists[2].pos_x = 1;
+  ssmObjs->obj_lists[2].pos_x = 10;
   ssmObjs->obj_lists[2].pos_y = 3.4f;
   ssmObjs->obj_lists[2].acc_x = 0.0f;
   ssmObjs->obj_lists[2].speed_x = 50.0f / 3.6f;
-  ssmObjs->obj_lists[2].speed_y = -3.4f / 5.0f;
+  ssmObjs->obj_lists[2].speed_y = 0;
   ssmObjs->obj_lists[2].type = 1;
   ssmObjs->obj_lists[2].lane_index = 2;
   ssmObjs->obj_lists[2].valid_flag = TRUE;
 
-  ssmObjs->obj_lists[3].pos_x = 80;
+  ssmObjs->obj_lists[3].pos_x = 30;
   ssmObjs->obj_lists[3].pos_y = 3.4f;
   ssmObjs->obj_lists[3].acc_x = 0.0f;
-  ssmObjs->obj_lists[3].speed_x = 15.0f;
+  ssmObjs->obj_lists[3].speed_x = 50.0f / 3.6f;
   ssmObjs->obj_lists[3].speed_y = 0;  // hgz
   ssmObjs->obj_lists[3].type = 1;     // hgz
   ssmObjs->obj_lists[3].lane_index = 2;
-  ssmObjs->obj_lists[3].valid_flag = FALSE;
+  ssmObjs->obj_lists[3].valid_flag = TRUE;
 
   ssmObjs->obj_lists[4].pos_x = -20;
   ssmObjs->obj_lists[4].pos_y = 3.15f;
@@ -38,7 +38,7 @@ void CaseLeftChange(SsmObjType* ssmObjs) {
   ssmObjs->obj_lists[4].speed_y = 0.0f;  // hgz
   ssmObjs->obj_lists[4].type = 0;        // hgz
   ssmObjs->obj_lists[4].lane_index = 2;
-  ssmObjs->obj_lists[4].valid_flag = TRUE;
+  ssmObjs->obj_lists[4].valid_flag = FALSE;
 }
 
 void CaseSideCarMoveSlowly(SsmObjType* ssmObjs) {
@@ -152,9 +152,9 @@ void CaseFollow(SsmObjType* ssmObjs) {
 }
 
 void LoadDummySSmData(SsmObjType* ssmObjs) {
-  // CaseLeftChange(ssmObjs);
-  //  CaseSideCarMoveSlowly(ssmObjs);
-  CaseFollow(ssmObjs);
+  CaseLeftChange(ssmObjs);
+  // CaseSideCarMoveSlowly(ssmObjs);
+  // CaseFollow(ssmObjs);
   return;
 }
 
@@ -163,33 +163,46 @@ void LoadDummyMotionData(float* egoSpd,
                          float* spdLmt,
                          int* accMode,
                          AlcBehavior* alcBehav) {
-  *egoSpd = 5.2f, *egoAcc = -1.6f, *spdLmt = 60.0f;
+  *egoSpd = 50.0 / 3.6f, *egoAcc = 0, *spdLmt = 80.0f;
   *accMode = 5;
-  alcBehav->AutoLaneChgSide = 0;
-  alcBehav->AutoLaneChgSts = 1;
+  alcBehav->AutoLaneChgSide = 1;
+  alcBehav->AutoLaneChgSts = 2;
   alcBehav->LeftBoundaryType = 2;
   alcBehav->RightBoundaryType = 2;
 
   return;
 }
-void LoadDummyPathData(const float* alc_coeffs,
-                       const float* ego_coeffs,
+void LoadDummyPathData(float* alc_coeffs,
+                       EgoPathVcc* ego_coeffs,
+                       float* left,
+                       float* leftleft,
+                       float* right,
+                       float* rightright,
                        AlcPathVcc* alcPathVcc,
                        AgsmEnvModelPath* agsmEnvModelPath) {
+  // left corner
+  /*   alc_coeffs[0] = 0, alc_coeffs[1] = 0.01f, alc_coeffs[2] = 1.81E-05f,
+    alc_coeffs[3] = 1.1E-05f;
+
+    ego_coeffs->C1[0] = left[1] = right[1] = leftleft[1] = rightright[1] =
+    0.01f; ego_coeffs->C2[0] = left[2] = right[2] = leftleft[2] = rightright[2]
+    = 1.81E-05f; ego_coeffs->C3[0] = left[3] = right[3] = leftleft[3] =
+    rightright[3] = 1.1E-05f; */
+  /* 1.036868453	-0.03775819	0.000235738	-2.47E-05 */
+
   *alcPathVcc = {alc_coeffs[0], alc_coeffs[1], alc_coeffs[2], alc_coeffs[3],
                  alc_coeffs[4], alc_coeffs[5], alc_coeffs[7]};
-
-  agsmEnvModelPath->C0 = ego_coeffs[0];
-  agsmEnvModelPath->C1 = ego_coeffs[1];
-  agsmEnvModelPath->C2 = ego_coeffs[2];
-  agsmEnvModelPath->C3_1 = ego_coeffs[3];
-  agsmEnvModelPath->C3_2 = ego_coeffs[4];
-  agsmEnvModelPath->C3_3 = ego_coeffs[5];
-  agsmEnvModelPath->Length1 = ego_coeffs[6];
-  agsmEnvModelPath->Length2 = ego_coeffs[7];
-  agsmEnvModelPath->Length3 = ego_coeffs[8];
-  agsmEnvModelPath->Width = 3.4f;
-  agsmEnvModelPath->Valid = 1;
+  agsmEnvModelPath->C0 = ego_coeffs->C0[0];
+  agsmEnvModelPath->C1 = ego_coeffs->C1[0];
+  agsmEnvModelPath->C2 = ego_coeffs->C2[0];
+  agsmEnvModelPath->C3_1 = ego_coeffs->C3[0];
+  agsmEnvModelPath->C3_2 = ego_coeffs->C3[1];
+  agsmEnvModelPath->C3_3 = ego_coeffs->C3[2];
+  agsmEnvModelPath->Length1 = ego_coeffs->Len[0];
+  agsmEnvModelPath->Length2 = ego_coeffs->Len[1];
+  agsmEnvModelPath->Length3 = ego_coeffs->Len[2];
+  agsmEnvModelPath->Width = ego_coeffs->Width;
+  agsmEnvModelPath->Valid = ego_coeffs->Valid;
 
   return;
 }

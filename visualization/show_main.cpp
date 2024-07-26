@@ -9,6 +9,7 @@ extern uint8 g_truncated_col;
 extern float gInnerSpdLmt_kph;
 extern uint8 gSpecialCaseFlg;
 extern float gTempMeasureVal;
+extern float fit_coeffi[6];
 #else
 SsmObjType g_ssmObjType;
 uint8 g_truncated_col;
@@ -29,7 +30,7 @@ int spdPlanEnblSts;
  */
 LinesInfo linesInfo = {
     .alc_coeffs = {0.072, -0.0018, 1.98e-6f, 1.07e-7f, 0, 0, 0, 120},
-    .ego_coeffs = {0, 0, 0, 0, 0, 0, 100, 0, 0},
+    .ego_coeffs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 3.4, 1},
     .left_coeffs = {3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100},
     .leftleft_coeffs = {3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100},
     .right_coeffs = {-3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100},
@@ -90,8 +91,32 @@ void ReadInputData(const int t) {
   }
 
   // ego path, cubic polynominal
-  for (int i = 0; i < 9; i++)
-    linesInfo.ego_coeffs[i] = ego_path_data[i][t];
+  linesInfo.ego_coeffs.C0[0] = ego_path_data[0][t];
+  linesInfo.ego_coeffs.C1[0] = ego_path_data[1][t];
+  linesInfo.ego_coeffs.C2[0] = ego_path_data[2][t];
+  linesInfo.ego_coeffs.C3[0] = ego_path_data[3][t];
+  linesInfo.ego_coeffs.C3[1] = ego_path_data[4][t];
+  linesInfo.ego_coeffs.C3[2] = ego_path_data[5][t];
+  linesInfo.ego_coeffs.Len[0] = ego_path_data[6][t];
+  linesInfo.ego_coeffs.Len[1] = ego_path_data[7][t];
+  linesInfo.ego_coeffs.Len[2] = ego_path_data[8][t];
+  for (int i = 0; i <= 1; i++) {
+    linesInfo.ego_coeffs.C0[i + 1] =
+        linesInfo.ego_coeffs.C0[i] +
+        linesInfo.ego_coeffs.C1[i] * linesInfo.ego_coeffs.Len[i] +
+        linesInfo.ego_coeffs.C2[i] * linesInfo.ego_coeffs.Len[i] *
+            linesInfo.ego_coeffs.Len[i] +
+        linesInfo.ego_coeffs.C3[i] * linesInfo.ego_coeffs.Len[i] *
+            linesInfo.ego_coeffs.Len[i] * linesInfo.ego_coeffs.Len[i];
+    linesInfo.ego_coeffs.C1[i + 1] =
+        linesInfo.ego_coeffs.C1[i] +
+        2 * linesInfo.ego_coeffs.C2[i] * linesInfo.ego_coeffs.Len[i] +
+        3 * linesInfo.ego_coeffs.C3[i] * linesInfo.ego_coeffs.Len[i] *
+            linesInfo.ego_coeffs.Len[i];
+    linesInfo.ego_coeffs.C2[i + 1] =
+        2 * linesInfo.ego_coeffs.C2[i] +
+        6 * linesInfo.ego_coeffs.C3[i] * linesInfo.ego_coeffs.Len[i];
+  }
 
   // alc_path and Mobileye lines, quintic polynominal
   for (int i = 0; i < 8; i++) {
@@ -292,15 +317,17 @@ void CalcOneStep() {
   SsmObjType ssmObjs;
   AlcPathVcc alcPathVcc;
   AgsmEnvModelPath agsmEnvModelPath;
-  LoadDummyPathData(linesInfo.alc_coeffs, linesInfo.ego_coeffs, &alcPathVcc,
-                    &agsmEnvModelPath);
+  LoadDummyPathData(linesInfo.alc_coeffs, &linesInfo.ego_coeffs,
+                    linesInfo.left_coeffs, linesInfo.leftleft_coeffs,
+                    linesInfo.right_coeffs, linesInfo.rightright_coeffs,
+                    &alcPathVcc, &agsmEnvModelPath);
   memset(&ssmObjs, 0, sizeof(ssmObjs));
   if (playMode == ONESTEP) {
     LoadDummyMotionData(&motionInfo.egoSpd, &motionInfo.egoAcc,
                         &motionInfo.spdLmt, &motionInfo.accMode,
                         &motionInfo.alcBehav);
     LoadDummySSmData(&ssmObjs);
-    show_predict_swt = false;
+    show_predict_swt = true;
 
   } else {
     ssmObjs = g_ssmObjType;
@@ -353,9 +380,15 @@ void CalcOneStep() {
     printf("Ctrl 3: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
            output.PointCtrl3.t, output.PointCtrl3.s, output.PointCtrl3.v,
            output.PointCtrl3.a);
-    float fit_coeffi[6] = {0};
-    quinticPolyFit(s_points[1].x, s_points[0].y, v_points[0].y, a_points[0].y,
-                   s_points[1].y, v_points[1].y, a_points[1].y, fit_coeffi);
+    float time = 5;
+    float dst_v =
+        (ssmObjs.obj_lists[2].speed_x + ssmObjs.obj_lists[3].speed_x) / 2.0f;
+    float dst_a = 0;
+    float dst_s =
+        (ssmObjs.obj_lists[2].pos_x + ssmObjs.obj_lists[3].pos_x) / 2.0f +
+        dst_v * time;
+    quinticPolyFit(time, s_points[0].y, v_points[0].y, a_points[0].y, dst_s,
+                   dst_v, dst_a, fit_coeffi);
   }
 }
 
@@ -401,8 +434,10 @@ void LoopbackCalculation() {
 void GenerateLocalData() {
   AlcPathVcc alcPathVcc;
   AgsmEnvModelPath agsmEnvModelPath;
-  LoadDummyPathData(linesInfo.alc_coeffs, linesInfo.ego_coeffs, &alcPathVcc,
-                    &agsmEnvModelPath);
+  LoadDummyPathData(linesInfo.alc_coeffs, &linesInfo.ego_coeffs,
+                    linesInfo.left_coeffs, linesInfo.leftleft_coeffs,
+                    linesInfo.right_coeffs, linesInfo.rightright_coeffs,
+                    &alcPathVcc, &agsmEnvModelPath);
   LoadDummyMotionData(&motionInfo.egoSpd, &motionInfo.egoAcc,
                       &motionInfo.spdLmt, &motionInfo.accMode,
                       &motionInfo.alcBehav);
@@ -420,7 +455,7 @@ void GenerateLocalData() {
   float accResponseDelay[5] = {0};
   int accDelay_pos = 0;
 
-  totalFrame = 300;
+  totalFrame = 100;
   for (int t = 0; t < totalFrame; t++) {
     time_data[t] = t * cycle_s;
 
@@ -459,31 +494,33 @@ void GenerateLocalData() {
       objs_speed_y_data[k][t] = obs_speed_y[k];
       objs_acc_x_data[k][t] = ssmObjs.obj_lists[k].acc_x;
       objs_pos_yaw_data[k][t] = ssmObjs.obj_lists[k].pos_yaw;
-
-      // simulate auto lane change
-      /*       if (objs_pos_x_data[2][t] > 20 && alcBehav_data[0][t] == 1 &&
-                alcBehav_data[1][t] == 2) {
-              alcBehav_data[1][t] = 3;
-              float source_coeffs[] = {0,         0,          0, 1.4243e-5,
-                                       -1.707e-7, 6.0113e-10, 0, 120};
-              memcpy(alc_coeffs, source_coeffs, 8 * sizeof(float));
-              for (int i = 0; i < 6; i++)
-                alc_path_data[i][t] = alc_coeffs[i];
-              alcPathVcc.FifthCoeff = alc_coeffs[5];
-              alcPathVcc.FourthCoeff = alc_coeffs[4];
-              alcPathVcc.ThirdCoeff = alc_coeffs[3];
-              alcPathVcc.SecondCoeff = alc_coeffs[2];
-              alcPathVcc.FirstCoeff = alc_coeffs[1];
-              alcPathVcc.ConCoeff = alc_coeffs[0];
-            } */
     }
-
+    // simulate auto lane change
+    /*       if (objs_pos_x_data[2][t] > 20 && alcBehav_data[0][t] == 1 &&
+              alcBehav_data[1][t] == 2) {
+            alcBehav_data[1][t] = 3;
+            float source_coeffs[] = {0,         0,          0, 1.4243e-5,
+                                     -1.707e-7, 6.0113e-10, 0, 120};
+            memcpy(alc_coeffs, source_coeffs, 8 * sizeof(float));
+            for (int i = 0; i < 6; i++)
+              alc_path_data[i][t] = alc_coeffs[i];
+          } */
     for (int k = 0; k < 8; k++) {
+      alc_path_data[k][t] = linesInfo.alc_coeffs[k];
       l_path_data[k][t] = linesInfo.left_coeffs[k];
       r_path_data[k][t] = linesInfo.right_coeffs[k];
       ll_path_data[k][t] = linesInfo.leftleft_coeffs[k];
       rr_path_data[k][t] = linesInfo.rightright_coeffs[k];
     }
+    ego_path_data[0][t] = linesInfo.ego_coeffs.C0[0];
+    ego_path_data[1][t] = linesInfo.ego_coeffs.C1[0];
+    ego_path_data[2][t] = linesInfo.ego_coeffs.C2[0];
+    ego_path_data[3][t] = linesInfo.ego_coeffs.C3[0];
+    ego_path_data[4][t] = linesInfo.ego_coeffs.C3[1];
+    ego_path_data[5][t] = linesInfo.ego_coeffs.C3[2];
+    ego_path_data[6][t] = linesInfo.ego_coeffs.Len[0];
+    ego_path_data[7][t] = linesInfo.ego_coeffs.Len[1];
+    ego_path_data[8][t] = linesInfo.ego_coeffs.Len[2];
 
     DpSpeedPoints output = SpeedPlanProcessor(
         motionInfo.egoSpd, motionInfo.egoAcc, motionInfo.spdLmt,
@@ -530,6 +567,7 @@ void GenerateLocalData() {
 
     innerSpdLmt_data[t] = gInnerSpdLmt_kph;
     specialCaseFlg_data[t] = gSpecialCaseFlg;
+    tempMeasureVal_data[t] = gTempMeasureVal;
   }
 }
 
@@ -624,7 +662,7 @@ void ReleaseWrapper() {
 int main() {
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(2);
+  playMode = PLAYMODE(1);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();

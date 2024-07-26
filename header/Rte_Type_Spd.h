@@ -62,6 +62,9 @@ typedef uint8 UInt8;
 #define Rte_TypeDef_rt_Array_Float_4
 typedef Float rt_Array_Float_4[4];
 
+#define Rte_TypeDef_rt_Array_Float_3
+typedef Float rt_Array_Float_3[3];
+
 /* AutoLaneChgSts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving, 4-in target
                    line, 5-finished, 6-Back to Ego, 8-takeover, 9-popMsgReq
   AutoLaneChgSide: 0-OFF, 1-left, 2-right
@@ -102,6 +105,17 @@ typedef struct {
   Float Width;
   UInt8 Valid;
 } AgsmEnvModelPath;
+
+#define Rte_TypeDef_EgoPathVcc
+typedef struct {
+  rt_Array_Float_3 C0;
+  rt_Array_Float_3 C1;
+  rt_Array_Float_3 C2;
+  rt_Array_Float_3 C3;
+  rt_Array_Float_3 Len;
+  Float Width;
+  UInt8 Valid;
+} EgoPathVcc;
 
 #define Rte_TypeDef_SsmCurvatureType
 typedef struct {
@@ -208,6 +222,7 @@ typedef StPoint StPoint_Array_10[10];
 typedef struct {
   Boolean AlcLatCtrlEnbl;
   Boolean AlcLgtCtrlEnbl;
+  UInt8 AlcFindGapSts;
   UInt8 SpdPlanEnblSts;
   UInt8 SpdPlanTextInfo;
   UInt16 SpdPlanRollCnt;
@@ -231,6 +246,7 @@ typedef struct {
 typedef struct {
   Boolean AlcLatCtrlEnbl;
   Boolean AlcLgtCtrlEnbl;
+  UInt8 AlcFindGapSts;
   UInt8 SpdPlanEnblSts;
   UInt8 SpdPlanTextInfo;  // 0x9 迫近前车 0xB即将超车
   UInt16 SpdPlanRollCnt;

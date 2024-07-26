@@ -16,8 +16,12 @@ void LoadDummyMotionData(float* egoSpd,
                          int* accMode,
                          AlcBehavior* alcBehav);
 
-void LoadDummyPathData(const float* alc_coeffs,
-                       const float* ego_coeffs,
+void LoadDummyPathData(float* alc_coeffs,
+                       EgoPathVcc* ego_coeffs,
+                       float* left,
+                       float* leftleft,
+                       float* right,
+                       float* rightright,
                        AlcPathVcc* alcPathVcc,
                        AgsmEnvModelPath* agsmEnvModelPath);
 

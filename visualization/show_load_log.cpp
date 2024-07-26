@@ -618,6 +618,7 @@ void SpdPlanDataParsing(float** values,
     ctrl_point_data[0][t] = P_T[6] ? values[P_T[6]][t] : 0;
     ctrl_point_data[1][t] = P_A[6] ? values[P_A[6]][t] : 0;
 
+    // ego_path[9]: c0,c1,c2,c31,c32,c33,len1,len2,len3
     for (int k = 0; k < 9; k++) {
       ego_path_data[k][t] = EGO_PATH[k] ? values[EGO_PATH[k]][t] : 0;
       // if (6 == k && 0 == EGO_PATH[k])

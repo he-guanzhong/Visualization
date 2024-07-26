@@ -1,6 +1,6 @@
 #include "visualization/show_math.h"
 
-float fit_coeffi[6];
+// float fit_coeffi[6];
 
 int combination(int n, int m) {
   long long numerator = 1;

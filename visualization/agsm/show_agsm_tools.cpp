@@ -70,8 +70,8 @@ void showAGSMGraph(const GraphConfig* config,
   initBEVGraph(config, zeroOffsetX);
 
   // obstacles
-  float default_ego_coeffs[9] = {0};
-  drawObstacles(ssmObjs, default_ego_coeffs, motionInfo->egoSpd);
+  EgoPathVcc default_ego_path = {0};
+  drawObstacles(ssmObjs, &default_ego_path, motionInfo->egoSpd);
 
   // ego lane path
   drawConftPath(&agsmlinesInfo->conft_path_record, MAGENTA, 0.0f);

@@ -1,7 +1,8 @@
 #include "visualization/show_basic_tools.h"
 
-#define CURVE_FITTING_TYPE 0
+#define CURVE_FITTING_TYPE 2
 bool show_predict_swt = false;
+float fit_coeffi[6] = {0};
 
 // Draw graph origins
 static Point s_origin1 = {0.0f, 0.0f};
@@ -217,7 +218,7 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
       break;
     case 3:
     case 13:
-      strcat(spec_case_title, "curv");
+      strcat(spec_case_title, "cut");
       break;
     case 10:
       strcat(spec_case_title, "Ndg");
@@ -326,41 +327,29 @@ void drawQuinticPolyTraj(const float* coeffs,
   predictPosn->y = last.y;
 }
 
-void drawPiecewiseCubicPolyTraj(const float* coeffs,
+void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
                                 const int color,
                                 const float startX,
                                 Point* predictPosn) {
   setlinecolor(color);
   Point lastDrawPoint = {0.0f, 0.0f};
   Point last = {0.0f, 0.0f};
-  float c0_arr[3] = {coeffs[0], 0, 0}, c1_arr[3] = {coeffs[1], 0, 0},
-        c2_arr[3] = {coeffs[2], 0, 0},
-        c3_arr[3] = {coeffs[3], coeffs[4], coeffs[5]};
-  float totalLen = coeffs[6] + coeffs[7] + coeffs[8];
-  float len_arr[3] = {coeffs[6], coeffs[7], coeffs[8]};
-  for (int i = 0; i <= 1; i++) {
-    c0_arr[i + 1] = c0_arr[i] + c1_arr[i] * len_arr[i] +
-                    c2_arr[i] * len_arr[i] * len_arr[i] +
-                    c3_arr[i] * len_arr[i] * len_arr[i] * len_arr[i];
-    c1_arr[i + 1] = c1_arr[i] + 2 * c2_arr[i] * len_arr[i] +
-                    3 * c3_arr[i] * len_arr[i] * len_arr[i];
-    c2_arr[i + 1] = 2 * c2_arr[i] + 6 * c3_arr[i] * len_arr[i];
-  }
 
+  float totalLen = egoPath->Len[0] + egoPath->Len[1] + egoPath->Len[2];
   for (float x = startX; x < totalLen; x += 3.0f) {
     float x_prime = x, y = 0;
     float c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-    if (x <= len_arr[0]) {
-      setlinecolor(RED);
-      c0 = c0_arr[0], c1 = c1_arr[0], c2 = c2_arr[0], c3 = c3_arr[0];
-    } else if (x <= len_arr[0] + len_arr[1]) {
-      setlinecolor(LIGHTBLUE);
-      x_prime = x - len_arr[0];
-      c0 = c0_arr[1], c1 = c1_arr[1], c2 = c2_arr[1], c3 = c3_arr[1];
+    if (x <= egoPath->Len[0]) {
+      c0 = egoPath->C0[0], c1 = egoPath->C1[0], c2 = egoPath->C2[0],
+      c3 = egoPath->C3[0];
+    } else if (x <= egoPath->Len[0] + egoPath->Len[1]) {
+      x_prime = x - egoPath->Len[0];
+      c0 = egoPath->C0[1], c1 = egoPath->C1[1], c2 = egoPath->C2[1],
+      c3 = egoPath->C3[1];
     } else {
-      setlinecolor(GREEN);
-      x_prime = x - len_arr[0] - len_arr[1];
-      c0 = c0_arr[2], c1 = c1_arr[2], c2 = c2_arr[2], c3 = c3_arr[2];
+      x_prime = x - egoPath->Len[0] - egoPath->Len[1];
+      c0 = egoPath->C0[2], c1 = egoPath->C1[2], c2 = egoPath->C2[2],
+      c3 = egoPath->C3[2];
     }
     y = c0 + c1 * x_prime + c2 * x_prime * x_prime +
         c3 * x_prime * x_prime * x_prime;
@@ -377,22 +366,8 @@ void drawPiecewiseCubicPolyTraj(const float* coeffs,
 }
 
 void drawObstacles(const SsmObjType* ssmObjs,
-                   const float* coeffs,
+                   const EgoPathVcc* egoPath,
                    const float cur_spd) {
-  float c0_arr[3] = {coeffs[0], 0, 0}, c1_arr[3] = {coeffs[1], 0, 0},
-        c2_arr[3] = {coeffs[2], 0, 0},
-        c3_arr[3] = {coeffs[3], coeffs[4], coeffs[5]};
-  float totalLen = coeffs[6] + coeffs[7] + coeffs[8];
-  float len_arr[3] = {coeffs[6], coeffs[7], coeffs[8]};
-  for (int i = 0; i <= 1; i++) {
-    c0_arr[i + 1] = c0_arr[i] + c1_arr[i] * len_arr[i] +
-                    c2_arr[i] * len_arr[i] * len_arr[i] +
-                    c3_arr[i] * len_arr[i] * len_arr[i] * len_arr[i];
-    c1_arr[i + 1] = c1_arr[i] + 2 * c2_arr[i] * len_arr[i] +
-                    3 * c3_arr[i] * len_arr[i] * len_arr[i];
-    c2_arr[i + 1] = 2 * c2_arr[i] + 6 * c3_arr[i] * len_arr[i];
-  }
-
   for (int i = 0; i < ssmObjs->obj_num; i++) {
     if (!ssmObjs->obj_lists[i].valid_flag)
       continue;
@@ -417,14 +392,17 @@ void drawObstacles(const SsmObjType* ssmObjs,
 
         float x_prime = objPosnLgt[j];
         float c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-        if (objPosnLgt[j] <= len_arr[0]) {
-          c0 = c0_arr[0], c1 = c1_arr[0], c2 = c2_arr[0], c3 = c3_arr[0];
-        } else if (objPosnLgt[j] <= len_arr[0] + len_arr[1]) {
-          x_prime = objPosnLgt[j] - len_arr[0];
-          c0 = c0_arr[1], c1 = c1_arr[1], c2 = c2_arr[1], c3 = c3_arr[1];
+        if (objPosnLgt[j] <= egoPath->Len[0]) {
+          c0 = egoPath->C0[0], c1 = egoPath->C1[0], c2 = egoPath->C2[0],
+          c3 = egoPath->C3[0];
+        } else if (objPosnLgt[j] <= egoPath->Len[0] + egoPath->Len[1]) {
+          x_prime = objPosnLgt[j] - egoPath->Len[0];
+          c0 = egoPath->C0[1], c1 = egoPath->C1[1], c2 = egoPath->C2[1],
+          c3 = egoPath->C3[1];
         } else {
-          x_prime = objPosnLgt[j] - len_arr[0] - len_arr[1];
-          c0 = c0_arr[2], c1 = c1_arr[2], c2 = c2_arr[2], c3 = c3_arr[2];
+          x_prime = objPosnLgt[j] - egoPath->Len[0] - egoPath->Len[1];
+          c0 = egoPath->C0[2], c1 = egoPath->C1[2], c2 = egoPath->C2[2],
+          c3 = egoPath->C3[2];
         }
         objPosnLat[j] = c0 + c1 * x_prime + c2 * x_prime * x_prime +
                         c3 * x_prime * x_prime * x_prime;
@@ -609,7 +587,7 @@ void showXYGraph(const GraphConfig* config,
     // bezierPoint(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
   }
 #elif CURVE_FITTING_TYPE == 2
-  for (float i = 0.0f; i < 2; i += 0.1f) {
+  for (float i = 0.0f; i < 9; i += 0.2f) {
     if (title[0] == 'S') {
       curDrawP = {i, fit_coeffi[0] + fit_coeffi[1] * i + fit_coeffi[2] * i * i +
                          fit_coeffi[3] * powf(i, 3) +
@@ -717,13 +695,13 @@ void showBEVGraph(const GraphConfig* config,
                       linesInfo->rightright_coeffs[7], &lineEnd);
 
   // obstacles
-  drawObstacles(ssmObjs, linesInfo->ego_coeffs, motionInfo->egoSpd);
+  drawObstacles(ssmObjs, &linesInfo->ego_coeffs, motionInfo->egoSpd);
 
   // navigation path, ego c7 as end point
   float naviRange = linesInfo->alc_coeffs[7];
   Point predictPosn = {0.0f, 0.0f};
   // ego lane path, c0 ~ c3
-  drawPiecewiseCubicPolyTraj(linesInfo->ego_coeffs, MAGENTA, 0.0f,
+  drawPiecewiseCubicPolyTraj(&linesInfo->ego_coeffs, MAGENTA, 0.0f,
                              &predictPosn);
 
   drawQuinticPolyTraj(linesInfo->alc_coeffs, LIGHTRED, naviRange,
