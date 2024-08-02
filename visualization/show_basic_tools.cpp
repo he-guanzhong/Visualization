@@ -2,7 +2,7 @@
 
 #define CURVE_FITTING_TYPE 2
 bool show_predict_swt = false;
-float fit_coeffi[6] = {0};
+// float fit_coeffi[6] = {0};
 
 // Draw graph origins
 static Point s_origin1 = {0.0f, 0.0f};
@@ -190,6 +190,7 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
   char set_title[10] = "SET: ";
   char inner_set_title[10] = "Inn: ";
   char spec_case_title[10] = "Spc: ";
+  char scenario_title[10] = "Sce: ";
 
   char str_cur_spd[5];
   char str_disp_set_spd[5];
@@ -220,39 +221,61 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     case 13:
       strcat(spec_case_title, "cut");
       break;
-    case 10:
-      strcat(spec_case_title, "Ndg");
-      break;
-    case 4:
-    case 14:
-      strcat(spec_case_title, "ramp");
-      break;
-    case 5:
-      strcat(spec_case_title, "dec");
-      break;
-    case 15:
-      strcat(spec_case_title, "decN");
-      break;
-    case 6:
-      strcat(spec_case_title, "hold");
-      break;
-    case 16:
-      strcat(spec_case_title, "hldN");
-      break;
-    case 7:
-      strcat(spec_case_title, "acc");
-      break;
-    case 17:
-      strcat(spec_case_title, "accN");
-      break;
     default:
       break;
   }
 
-  outtextxy(s_infoAreaBoundary, s_origin2.y - 4 * textheight(spd_title),
+  switch (motionInfo->scenarioFlg) {
+    case 3:
+    case 13:
+      strcat(scenario_title, "curv");
+      break;
+    case 10:
+      strcat(scenario_title, "Ndg");
+      break;
+    case 4:
+    case 14:
+      strcat(scenario_title, "ramp");
+      break;
+    case 5:
+      strcat(scenario_title, "dec");
+      break;
+    case 15:
+      strcat(scenario_title, "decN");
+      break;
+    case 6:
+      strcat(scenario_title, "hold");
+      break;
+    case 16:
+      strcat(scenario_title, "hldN");
+      break;
+    case 7:
+      strcat(scenario_title, "acc");
+      break;
+    case 17:
+      strcat(scenario_title, "accN");
+      break;
+    case 8:
+      strcat(scenario_title, "gapf");
+      break;
+    case 18:
+      strcat(scenario_title, "gapfN");
+      break;
+    case 9:
+      strcat(scenario_title, "gap");
+      break;
+    case 19:
+      strcat(scenario_title, "gapN");
+      break;
+    default:
+      break;
+  }
+  outtextxy(s_infoAreaBoundary, s_origin2.y - 7 * textheight(spd_title),
+            inner_set_title);
+  outtextxy(s_infoAreaBoundary, s_origin2.y - 6 * textheight(spd_title),
             spec_case_title);
   outtextxy(s_infoAreaBoundary, s_origin2.y - 5 * textheight(spd_title),
-            inner_set_title);
+            scenario_title);
 
   // ACC mode: 3-stand still, 4-stand active, 5-active, 6-override
   if (motionInfo->accMode <= 5 && motionInfo->accMode >= 3)
@@ -290,8 +313,8 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     strcpy(alc_sts, "Takeover");
   if (motionInfo->alcBehav.AutoLaneChgSide == 1 ||
       motionInfo->alcBehav.AutoLaneChgSide == 2) {
-    outtextxy(s_infoAreaBoundary, s_origin2.y - 150, alc_side);
-    outtextxy(s_infoAreaBoundary, s_origin2.y - 150 + textheight(alc_side),
+    outtextxy(s_infoAreaBoundary, s_origin2.y - 200, alc_side);
+    outtextxy(s_infoAreaBoundary, s_origin2.y - 200 + textheight(alc_side),
               alc_sts);
   }
 }
@@ -519,7 +542,8 @@ void showXYGraph(const GraphConfig* config,
                  Point* points,
                  const int startIndex,
                  const int pointNums,
-                 Point* ctrlPoint) {
+                 Point* ctrlPoint,
+                 const float quinticPoly[6]) {
   // float zeroOffsetY = 4.0f;  // positive means: 0 moves up
   float len = config->length - 2 * config->offset;
   float wid = config->width - 2 * config->offset;
@@ -587,21 +611,21 @@ void showXYGraph(const GraphConfig* config,
     // bezierPoint(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
   }
 #elif CURVE_FITTING_TYPE == 2
-  for (float i = 0.0f; i < 9; i += 0.2f) {
+  for (float i = 0.0f; i < 5; i += 0.2f) {
     if (title[0] == 'S') {
-      curDrawP = {i, fit_coeffi[0] + fit_coeffi[1] * i + fit_coeffi[2] * i * i +
-                         fit_coeffi[3] * powf(i, 3) +
-                         fit_coeffi[4] * powf(i, 4) +
-                         fit_coeffi[5] * powf(i, 5)};
+      curDrawP = {i, quinticPoly[0] + quinticPoly[1] * i +
+                         quinticPoly[2] * i * i + quinticPoly[3] * i * i * i +
+                         quinticPoly[4] * i * i * i * i +
+                         quinticPoly[5] * i * i * i * i * i};
     } else if (title[0] == 'V') {
-      curDrawP = {i, fit_coeffi[1] + 2 * fit_coeffi[2] * i +
-                         3 * fit_coeffi[3] * i * i +
-                         4 * fit_coeffi[4] * powf(i, 3) +
-                         5 * fit_coeffi[5] * powf(i, 4)};
+      curDrawP = {i, quinticPoly[1] + 2 * quinticPoly[2] * i +
+                         3 * quinticPoly[3] * i * i +
+                         4 * quinticPoly[4] * i * i * i +
+                         5 * quinticPoly[5] * i * i * i * i};
     } else if (title[0] == 'A') {
-      curDrawP = {i, 2 * fit_coeffi[2] + 6 * fit_coeffi[3] * i +
-                         12 * fit_coeffi[4] * i * i +
-                         20 * fit_coeffi[5] * powf(i, 3)};
+      curDrawP = {i, 2 * quinticPoly[2] + 6 * quinticPoly[3] * i +
+                         12 * quinticPoly[4] * i * i +
+                         20 * quinticPoly[5] * i * i * i};
     }
     curDrawP.y += zeroOffsetY;
     coordinateTrans1(&curDrawP);

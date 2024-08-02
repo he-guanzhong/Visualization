@@ -47,6 +47,7 @@ typedef struct {
   float egoPredSpd;
   float innerSpdLmt;
   int specCaseFlg;
+  int scenarioFlg;
   AlcBehavior alcBehav;
 } MotionInfo;
 
@@ -104,13 +105,16 @@ void drawBEVRuler(const float zeroOffsetX);
 
 void initBEVGraph(const GraphConfig* config, const float zeroOffsetX);
 
-/// @brief show basic x-y graph
-/// @param config       basic graph configuration
-/// @param zeroOffsetY  vertical distance from origin to lower-left corner
-/// @param title        title string
-/// @param pointColor   macro name of color
-/// @param points       point coordinates to be displayed
-/// @param ctrlPoint    a-t graph only, accelerations sent to control
+/// @brief  show basic x-y graph
+/// @param config         basic graph configuration
+/// @param zeroOffsetY    vertical distance from origin to lower-left corner
+/// @param title          title string
+/// @param pointColor     macro name of color
+/// @param points         point coordinates to be displayed
+/// @param pointNums
+/// @param startIndex
+/// @param ctrlPoint      a-t graph only, accelerations sent to control
+/// @param quinticPoly
 void showXYGraph(const GraphConfig* config,
                  const float zeroOffsetY,
                  const char* title,
@@ -118,7 +122,8 @@ void showXYGraph(const GraphConfig* config,
                  Point* points,
                  const int pointNums,
                  const int startIndex,
-                 Point* ctrlPoint);
+                 Point* ctrlPoint,
+                 const float quinticPoly[6]);
 
 /// @brief BEV graph, x-axis_forward_vertical, y-axis_lateral_horizontal
 /// @param config         basic configuration

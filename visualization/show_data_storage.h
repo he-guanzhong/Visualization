@@ -16,6 +16,8 @@ extern int spdPlanEnblSts_data[DATA_NUM];
 extern int truncated_col_data[DATA_NUM];
 extern float innerSpdLmt_data[DATA_NUM];
 extern int specialCaseFlg_data[DATA_NUM];
+extern int scenarioFlg_data[DATA_NUM];
+
 extern float ctrl_point_data[2][DATA_NUM];
 extern float s_points_data[6][DATA_NUM];
 extern float v_points_data[6][DATA_NUM];
@@ -49,6 +51,7 @@ extern float rr_path_data[8][DATA_NUM];
 extern float original_data[DATA_NUM];
 extern float loopback_data[DATA_NUM];
 extern float tempMeasureVal_data[DATA_NUM];
+extern float alcStCoeff_data[6][DATA_NUM];
 
 #ifdef RADAR_DEMO_DISP
 extern int iObjectId_data[32][DATA_NUM];

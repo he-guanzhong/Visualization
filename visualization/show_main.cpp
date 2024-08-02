@@ -8,14 +8,17 @@ extern SsmObjType g_ssmObjType;
 extern uint8 g_truncated_col;
 extern float gInnerSpdLmt_kph;
 extern uint8 gSpecialCaseFlg;
+extern uint8 gScenarioFlg;
 extern float gTempMeasureVal;
-extern float fit_coeffi[6];
+extern float gAlcStCoeff[6];
 #else
 SsmObjType g_ssmObjType;
 uint8 g_truncated_col;
 float gInnerSpdLmt_kph;
 uint8 gSpecialCaseFlg;
+uint8 gScenarioFlg;
 float gTempMeasureVal;
+float gAlcStCoeff[6];
 #endif
 
 // Key display information
@@ -59,8 +62,12 @@ void ReadOutputData(const int t) {
   g_truncated_col = truncated_col_data[t];
   gInnerSpdLmt_kph = innerSpdLmt_data[t];
   gSpecialCaseFlg = specialCaseFlg_data[t];
-  gTempMeasureVal = tempMeasureVal_data[t];
+  gScenarioFlg = scenarioFlg_data[t];
 
+  gTempMeasureVal = tempMeasureVal_data[t];
+  for (int k = 0; k < 6; k++) {
+    gAlcStCoeff[k] = alcStCoeff_data[k][t];
+  }
   // use alc c7 as line end
   linesInfo.alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
 }
@@ -220,9 +227,12 @@ void ShowSpdPlanInterface(const int length,
                         0,          (int)(width * 0.56), 5.0f,
                         6.0f};
   showBEVGraph(&BEV_cfg, 30.0f, &g_ssmObjType, linesInfo, &tsrInfo, motionInfo);
-  showXYGraph(&ST_cfg, 0.0f, "S-T Graph", BLUE, s_points, 0, 6, &ctrlPoint);
-  showXYGraph(&VT_cfg, 0.0f, "V-T", BLUE, v_points, 0, 6, &ctrlPoint);
-  showXYGraph(&AT_cfg, 4.0f, "A-T", RED, a_points, 0, 6, &ctrlPoint);
+  showXYGraph(&ST_cfg, 0.0f, "S-T Graph", BLUE, s_points, 0, 6, &ctrlPoint,
+              gAlcStCoeff);
+  showXYGraph(&VT_cfg, 0.0f, "V-T", BLUE, v_points, 0, 6, &ctrlPoint,
+              gAlcStCoeff);
+  showXYGraph(&AT_cfg, 4.0f, "A-T", RED, a_points, 0, 6, &ctrlPoint,
+              gAlcStCoeff);
   return;
 }
 
@@ -273,6 +283,7 @@ void DisplayLog(const int length, const int width, const int offset) {
         motionInfo.egoPredSpd = fmax(v_points[4].y, v_points[5].y);
         motionInfo.innerSpdLmt = gInnerSpdLmt_kph;
         motionInfo.specCaseFlg = gSpecialCaseFlg;
+        motionInfo.scenarioFlg = gScenarioFlg;
 
         if (playMode == AGSM) {  // HR
           GraphConfig BEV_cfg = {length, width, offset, 0, 0, 120.0f, 30.0f};
@@ -387,8 +398,8 @@ void CalcOneStep() {
     float dst_s =
         (ssmObjs.obj_lists[2].pos_x + ssmObjs.obj_lists[3].pos_x) / 2.0f +
         dst_v * time;
-    quinticPolyFit(time, s_points[0].y, v_points[0].y, a_points[0].y, dst_s,
-                   dst_v, dst_a, fit_coeffi);
+    /*     quinticPolyFit(time, s_points[0].y, v_points[0].y, a_points[0].y,
+       dst_s, dst_v, dst_a, gAlcStCoeff); */
   }
 }
 
@@ -401,6 +412,7 @@ void DisplayOneStep(const int length, const int width, const int offset) {
   motionInfo.egoPredSpd = fmax(v_points[4].y, v_points[5].y);
   motionInfo.innerSpdLmt = gInnerSpdLmt_kph;
   motionInfo.specCaseFlg = gSpecialCaseFlg;
+  motionInfo.scenarioFlg = gScenarioFlg;
 
   ShowSpdPlanInterface(length, width, offset, &linesInfo, &motionInfo);
 
@@ -425,8 +437,11 @@ void LoopbackCalculation() {
 
     innerSpdLmt_data[t] = gInnerSpdLmt_kph;
     specialCaseFlg_data[t] = gSpecialCaseFlg;
+    scenarioFlg_data[t] = gScenarioFlg;
     tempMeasureVal_data[t] = gTempMeasureVal;
-
+    for (int k = 0; k < 6; k++) {
+      alcStCoeff_data[k][t] = gAlcStCoeff[k];
+    }
     linesInfo.alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
   }
 }
@@ -455,7 +470,7 @@ void GenerateLocalData() {
   float accResponseDelay[5] = {0};
   int accDelay_pos = 0;
 
-  totalFrame = 100;
+  totalFrame = 200;
   for (int t = 0; t < totalFrame; t++) {
     time_data[t] = t * cycle_s;
 
@@ -567,7 +582,11 @@ void GenerateLocalData() {
 
     innerSpdLmt_data[t] = gInnerSpdLmt_kph;
     specialCaseFlg_data[t] = gSpecialCaseFlg;
+    scenarioFlg_data[t] = gScenarioFlg;
     tempMeasureVal_data[t] = gTempMeasureVal;
+    for (int k = 0; k < 6; k++) {
+      alcStCoeff_data[k][t] = gAlcStCoeff[k];
+    }
   }
 }
 
@@ -611,8 +630,9 @@ void DisplayLineChart(const int length,
       oriX,   oriY,  original_arr[frameNums - 1].x - original_arr[0].x,
       6.0f};
   showXYGraph(&XY_cfg, 4.0f, "Origin(BLUE), New(RED)", BLUE, original_arr, 0,
-              frameNums, &ctrlPoint);
-  showXYGraph(&XY_cfg, 4.0f, "", RED, loopback_arr, 0, frameNums, &ctrlPoint);
+              frameNums, &ctrlPoint, gAlcStCoeff);
+  showXYGraph(&XY_cfg, 4.0f, "", RED, loopback_arr, 0, frameNums, &ctrlPoint,
+              gAlcStCoeff);
   return;
 }
 
@@ -662,7 +682,7 @@ void ReleaseWrapper() {
 int main() {
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(1);
+  playMode = PLAYMODE(4);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();
