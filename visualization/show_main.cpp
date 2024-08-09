@@ -9,16 +9,22 @@ extern uint8 g_truncated_col;
 extern float gInnerSpdLmt_kph;
 extern uint8 gSpecialCaseFlg;
 extern uint8 gScenarioFlg;
-extern float gTempMeasureVal;
+extern uint8 gGapIndex;
+extern float gGapTarS;
+extern float gGapTarV;
 extern float gAlcStCoeff[6];
+extern float gTempMeasureVal;
 #else
 SsmObjType g_ssmObjType;
 uint8 g_truncated_col;
 float gInnerSpdLmt_kph;
 uint8 gSpecialCaseFlg;
 uint8 gScenarioFlg;
-float gTempMeasureVal;
+uint8 gGapIndex;
+float gGapTarS;
+float gGapTarV;
 float gAlcStCoeff[6];
+float gTempMeasureVal;
 #endif
 
 // Key display information
@@ -63,6 +69,9 @@ void ReadOutputData(const int t) {
   gInnerSpdLmt_kph = innerSpdLmt_data[t];
   gSpecialCaseFlg = specialCaseFlg_data[t];
   gScenarioFlg = scenarioFlg_data[t];
+  gGapIndex = alcGapIndex_data[t];
+  gGapTarS = alcGapTarS_data[t];
+  gGapTarV = alcGapTarV_data[t];
 
   gTempMeasureVal = tempMeasureVal_data[t];
   for (int k = 0; k < 6; k++) {
@@ -226,13 +235,19 @@ void ShowSpdPlanInterface(const int length,
   GraphConfig AT_cfg = {length / 2, (int)(width * 0.44), offset,
                         0,          (int)(width * 0.56), 5.0f,
                         6.0f};
+  char ST_title[10] = "S-T Graph";
+  PlotInfo ST_info = {ST_title, s_points, &ctrlPoint, 0,
+                      6,        BLUE,     true,       gAlcStCoeff};
+  char VT_title[10] = "V-T";
+  PlotInfo VT_info = {VT_title, v_points, &ctrlPoint, 0,
+                      6,        BLUE,     true,       gAlcStCoeff};
+  char AT_title[10] = "A-T";
+  PlotInfo AT_info = {AT_title, a_points, &ctrlPoint, 0,
+                      6,        RED,      true,       gAlcStCoeff};
   showBEVGraph(&BEV_cfg, 30.0f, &g_ssmObjType, linesInfo, &tsrInfo, motionInfo);
-  showXYGraph(&ST_cfg, 0.0f, "S-T Graph", BLUE, s_points, 0, 6, &ctrlPoint,
-              gAlcStCoeff);
-  showXYGraph(&VT_cfg, 0.0f, "V-T", BLUE, v_points, 0, 6, &ctrlPoint,
-              gAlcStCoeff);
-  showXYGraph(&AT_cfg, 4.0f, "A-T", RED, a_points, 0, 6, &ctrlPoint,
-              gAlcStCoeff);
+  showXYGraph(&ST_cfg, 0.0f, &ST_info);
+  showXYGraph(&VT_cfg, 0.0f, &VT_info);
+  showXYGraph(&AT_cfg, 4.0f, &AT_info);
   return;
 }
 
@@ -284,6 +299,9 @@ void DisplayLog(const int length, const int width, const int offset) {
         motionInfo.innerSpdLmt = gInnerSpdLmt_kph;
         motionInfo.specCaseFlg = gSpecialCaseFlg;
         motionInfo.scenarioFlg = gScenarioFlg;
+        motionInfo.gapIndex = gGapIndex;
+        motionInfo.gapTarS = gGapTarS;
+        motionInfo.gapTarV = gGapTarV;
 
         if (playMode == AGSM) {  // HR
           GraphConfig BEV_cfg = {length, width, offset, 0, 0, 120.0f, 30.0f};
@@ -413,7 +431,9 @@ void DisplayOneStep(const int length, const int width, const int offset) {
   motionInfo.innerSpdLmt = gInnerSpdLmt_kph;
   motionInfo.specCaseFlg = gSpecialCaseFlg;
   motionInfo.scenarioFlg = gScenarioFlg;
-
+  motionInfo.gapIndex = gGapIndex;
+  motionInfo.gapTarS = gGapTarS;
+  motionInfo.gapTarV = gGapTarV;
   ShowSpdPlanInterface(length, width, offset, &linesInfo, &motionInfo);
 
   system("pause");
@@ -438,6 +458,10 @@ void LoopbackCalculation() {
     innerSpdLmt_data[t] = gInnerSpdLmt_kph;
     specialCaseFlg_data[t] = gSpecialCaseFlg;
     scenarioFlg_data[t] = gScenarioFlg;
+    alcGapIndex_data[t] = gGapIndex;
+    alcGapTarS_data[t] = gGapTarS;
+    alcGapTarV_data[t] = gGapTarV;
+
     tempMeasureVal_data[t] = gTempMeasureVal;
     for (int k = 0; k < 6; k++) {
       alcStCoeff_data[k][t] = gAlcStCoeff[k];
@@ -470,7 +494,7 @@ void GenerateLocalData() {
   float accResponseDelay[5] = {0};
   int accDelay_pos = 0;
 
-  totalFrame = 200;
+  totalFrame = 300;
   for (int t = 0; t < totalFrame; t++) {
     time_data[t] = t * cycle_s;
 
@@ -583,6 +607,10 @@ void GenerateLocalData() {
     innerSpdLmt_data[t] = gInnerSpdLmt_kph;
     specialCaseFlg_data[t] = gSpecialCaseFlg;
     scenarioFlg_data[t] = gScenarioFlg;
+    alcGapIndex_data[t] = gGapIndex;
+    alcGapTarS_data[t] = gGapTarS;
+    alcGapTarV_data[t] = gGapTarV;
+
     tempMeasureVal_data[t] = gTempMeasureVal;
     for (int k = 0; k < 6; k++) {
       alcStCoeff_data[k][t] = gAlcStCoeff[k];
@@ -629,10 +657,14 @@ void DisplayLineChart(const int length,
       length, width, offset,
       oriX,   oriY,  original_arr[frameNums - 1].x - original_arr[0].x,
       6.0f};
-  showXYGraph(&XY_cfg, 4.0f, "Origin(BLUE), New(RED)", BLUE, original_arr, 0,
-              frameNums, &ctrlPoint, gAlcStCoeff);
-  showXYGraph(&XY_cfg, 4.0f, "", RED, loopback_arr, 0, frameNums, &ctrlPoint,
-              gAlcStCoeff);
+  char title1[25] = "Origin(BLUE), New(RED)";
+  PlotInfo plot_info1 = {title1,    original_arr, &ctrlPoint, 0,
+                         frameNums, BLUE,         false,      gAlcStCoeff};
+  char title2[1] = "";
+  PlotInfo plot_info2 = {title2,    loopback_arr, &ctrlPoint, 0,
+                         frameNums, RED,          false,      gAlcStCoeff};
+  showXYGraph(&XY_cfg, 4.0f, &plot_info1);
+  showXYGraph(&XY_cfg, 4.0f, &plot_info2);
   return;
 }
 
@@ -682,7 +714,7 @@ void ReleaseWrapper() {
 int main() {
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(4);
+  playMode = PLAYMODE(2);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();

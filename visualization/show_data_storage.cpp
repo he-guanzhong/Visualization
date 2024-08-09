@@ -14,6 +14,10 @@ int truncated_col_data[DATA_NUM];
 float innerSpdLmt_data[DATA_NUM];
 int specialCaseFlg_data[DATA_NUM];
 int scenarioFlg_data[DATA_NUM];
+int alcGapIndex_data[DATA_NUM];
+float alcGapTarS_data[DATA_NUM];
+float alcGapTarV_data[DATA_NUM];
+float alcStCoeff_data[6][DATA_NUM];
 
 float ctrl_point_data[2][DATA_NUM];
 float s_points_data[6][DATA_NUM];
@@ -48,7 +52,6 @@ float rr_path_data[8][DATA_NUM];
 float original_data[DATA_NUM];
 float loopback_data[DATA_NUM];
 float tempMeasureVal_data[DATA_NUM];
-float alcStCoeff_data[6][DATA_NUM];
 
 #ifdef RADAR_DEMO_DISP
 int iObjectId_data[32][DATA_NUM];

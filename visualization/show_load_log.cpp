@@ -160,9 +160,10 @@ void SpdPlanDataParsing(float** values,
                         int* totalFrame) {
   // time, alc path and speed plan input and output results
   int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, ENBL_STS = 0, TRUC_CL = 0,
-      ACC_MODE = 0, IN_SPDLMT = 0, SPC_FLG = 0;
+      ACC_MODE = 0, IN_SPDLMT = 0, SPC_FLG = 0, SCE_FLG = 0;
   int EGO_PATH[9] = {0};
   int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, ALC_RMP_D = 0;
+  int ALC_GAP = 0, ALC_TARS = 0, ALC_TARV = 0, ALC_ST[6] = {0};
   int ALC_C[8] = {0};
   int P_T[7] = {0}, P_S[7] = {0}, P_V[7] = {0}, P_A[7] = {0};
 
@@ -214,6 +215,13 @@ void SpdPlanDataParsing(float** values,
       ALC_RBT = i;
     else if (strncmp(columns[i], "VuPASP_NaviPilot1stRampOnDis_m[]", 30) == 0)
       ALC_RMP_D = i;
+    else if (strncmp(columns[i], "VePASP_AlcGapIndex[]", 18) == 0)
+      ALC_GAP = i;
+    else if (strncmp(columns[i], "VfPASP_AlcGapTarS_m[]", 19) == 0)
+      ALC_TARS = i;
+    else if (strncmp(columns[i], "VfPASP_AlcGapTarV_mps[]", 21) == 0)
+      ALC_TARV = i;
+
     else if (strncmp(columns[i], "VbPASP_AlcLgtCtrlEnbl[]", 21) == 0 ||
              strncmp(columns[i], "VePASP_SpdPlanEnblSts[]", 21) == 0)
       ENBL_STS = i;
@@ -221,6 +229,8 @@ void SpdPlanDataParsing(float** values,
       IN_SPDLMT = i;
     else if (strncmp(columns[i], "VePASP_SpecialCaseFlg[]", 21) == 0)
       SPC_FLG = i;
+    else if (strncmp(columns[i], "VePASP_ScenarioFlg[]", 18) == 0)
+      SCE_FLG = i;
     else if (strncmp(columns[i], "g_truncated_col[]", 15) == 0)
       TRUC_CL = i;
 
@@ -589,6 +599,15 @@ void SpdPlanDataParsing(float** values,
     truncated_col_data[t] = TRUC_CL ? values[TRUC_CL][t] : 0;
     innerSpdLmt_data[t] = IN_SPDLMT ? values[IN_SPDLMT][t] : 0;
     specialCaseFlg_data[t] = SPC_FLG ? values[SPC_FLG][t] : 0;
+    scenarioFlg_data[t] = SCE_FLG ? values[SCE_FLG][t] : 0;
+
+    // alc find gap
+    for (int k = 0; k < 6; k++) {
+      alcStCoeff_data[k][t] = ALC_ST[k] ? values[ALC_ST[k]][t] : 0;
+    }
+    alcGapIndex_data[t] = ALC_GAP ? values[ALC_GAP][t] : 0;
+    alcGapTarS_data[t] = ALC_TARS ? values[ALC_TARS][t] : 0;
+    alcGapTarV_data[t] = ALC_TARV ? values[ALC_TARV][t] : 0;
 
     // alc_sts[0] for alc side: 0-0ff, 1-left, 2-right
     // alc_sts[1] for alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
@@ -621,11 +640,12 @@ void SpdPlanDataParsing(float** values,
     // ego_path[9]: c0,c1,c2,c31,c32,c33,len1,len2,len3
     for (int k = 0; k < 9; k++) {
       ego_path_data[k][t] = EGO_PATH[k] ? values[EGO_PATH[k]][t] : 0;
-      // if (6 == k && 0 == EGO_PATH[k])
-      if (6 == k)
-        ego_path_data[k][t] = 80;  // default disp ego length: 80
-      else if (7 == k || 8 == k || 4 == k || 5 == k)
-        ego_path_data[k][t] = 0;
+      if (6 == k && 0 == EGO_PATH[k])
+        ego_path_data[k][t] = 80;
+      /*       if (6 == k)
+              ego_path_data[k][t] = 80;  // default disp ego length: 80
+            else if (7 == k || 8 == k || 4 == k || 5 == k)
+              ego_path_data[k][t] = 0; */
     }
     // obstacles, BTL original: lateral distance/speed direction opposite.
     // longi distance needs compensation to transfer pos centre to centre

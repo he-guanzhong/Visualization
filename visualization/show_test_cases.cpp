@@ -7,13 +7,13 @@ void CaseLeftChange(SsmObjType* ssmObjs) {
   ssmObjs->obj_lists[0].pos_x = 60;
   ssmObjs->obj_lists[0].pos_y = 0;
   ssmObjs->obj_lists[0].acc_x = 0.0f;
-  ssmObjs->obj_lists[0].speed_x = 25.0f;
+  ssmObjs->obj_lists[0].speed_x = 20.0f;
   ssmObjs->obj_lists[0].speed_y = 0.0f;  // hgz
   ssmObjs->obj_lists[0].type = 1;        // hgz
   ssmObjs->obj_lists[0].lane_index = 3;
   ssmObjs->obj_lists[0].valid_flag = TRUE;
 
-  ssmObjs->obj_lists[2].pos_x = 20;
+  ssmObjs->obj_lists[2].pos_x = 10;
   ssmObjs->obj_lists[2].pos_y = 3.4f;
   ssmObjs->obj_lists[2].acc_x = 0.0f;
   ssmObjs->obj_lists[2].speed_x = 20.0f;
@@ -22,7 +22,7 @@ void CaseLeftChange(SsmObjType* ssmObjs) {
   ssmObjs->obj_lists[2].lane_index = 2;
   ssmObjs->obj_lists[2].valid_flag = TRUE;
 
-  ssmObjs->obj_lists[3].pos_x = 40;
+  ssmObjs->obj_lists[3].pos_x = 45;
   ssmObjs->obj_lists[3].pos_y = 3.4f;
   ssmObjs->obj_lists[3].acc_x = 0.0f;
   ssmObjs->obj_lists[3].speed_x = 20.0f;

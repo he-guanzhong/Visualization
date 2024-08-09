@@ -41,6 +41,25 @@ void strCompletion(char str[2][8], const int index, const int spd) {
   strcat(str[1], " m/s");
 }
 
+float getPiecewiseCubicPolyY(const float x, const EgoPathVcc* egoPath) {
+  float x_prime = x;
+  float c0 = 0, c1 = 0, c2 = 0, c3 = 0;
+  if (x <= egoPath->Len[0]) {
+    c0 = egoPath->C0[0], c1 = egoPath->C1[0], c2 = egoPath->C2[0],
+    c3 = egoPath->C3[0];
+  } else if (x <= egoPath->Len[0] + egoPath->Len[1]) {
+    x_prime = x - egoPath->Len[0];
+    c0 = egoPath->C0[1], c1 = egoPath->C1[1], c2 = egoPath->C2[1],
+    c3 = egoPath->C3[1];
+  } else {
+    x_prime = x - egoPath->Len[0] - egoPath->Len[1];
+    c0 = egoPath->C0[2], c1 = egoPath->C1[2], c2 = egoPath->C2[2],
+    c3 = egoPath->C3[2];
+  }
+  return c0 + c1 * x_prime + c2 * x_prime * x_prime +
+         c3 * x_prime * x_prime * x_prime;
+}
+
 void drawCar(Point* car,
              const char str[2][8],
              int carType,
@@ -86,9 +105,9 @@ void drawCar(Point* car,
   }
 
   if (index == 0 || index == 1 || index == 10) {
-    outtextxy(car->x - textwidth(str[0]), car->y + textheight(str[0]) / 2,
-              str[0]);
-    outtextxy(car->x, car->y + textheight(str[1]) / 2, str[1]);
+    int y_offset = carType == 2 ? textheight(str[0]) : textheight(str[0]) / 2;
+    outtextxy(car->x - textwidth(str[0]), car->y + y_offset, str[0]);
+    outtextxy(car->x, car->y + y_offset, str[1]);
   } else if (index <= 5) {
     outtextxy(car->x - 20 - textwidth(str[0]), car->y - textheight(str[0]),
               str[0]);
@@ -317,6 +336,27 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     outtextxy(s_infoAreaBoundary, s_origin2.y - 200 + textheight(alc_side),
               alc_sts);
   }
+
+  settextcolor(BLACK);
+  if (motionInfo->gapIndex < 5 && motionInfo->gapTarV) {
+    float tarS = motionInfo->gapTarS;
+    float tarL = motionInfo->alcBehav.AutoLaneChgSide == 1 ? 3.4f : -3.4f;
+    Point tarPoint = {tarS, tarL};
+    coordinateTrans2(&tarPoint);
+    solidcircle(tarPoint.x, tarPoint.y, 5);
+    char str_tar1[10] = "Gap:";
+    char str_tar2[10] = {0};
+    snprintf(str_tar1 + strlen(str_tar1), sizeof(str_tar1) - strlen(str_tar1),
+             " %d", motionInfo->gapIndex);
+    snprintf(str_tar2 + strlen(str_tar2), sizeof(str_tar2) - strlen(str_tar2),
+             "%.1f m/s", motionInfo->gapTarV);
+    int offset = motionInfo->alcBehav.AutoLaneChgSide == 1
+                     ? -textwidth(str_tar2)
+                     : textwidth(str_tar2);
+    outtextxy(tarPoint.x + offset, tarPoint.y - textheight(str_tar1), str_tar1);
+    outtextxy(tarPoint.x + offset, tarPoint.y, str_tar2);
+  }
+  return;
 }
 
 void drawQuinticPolyTraj(const float* coeffs,
@@ -360,22 +400,7 @@ void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
 
   float totalLen = egoPath->Len[0] + egoPath->Len[1] + egoPath->Len[2];
   for (float x = startX; x < totalLen; x += 3.0f) {
-    float x_prime = x, y = 0;
-    float c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-    if (x <= egoPath->Len[0]) {
-      c0 = egoPath->C0[0], c1 = egoPath->C1[0], c2 = egoPath->C2[0],
-      c3 = egoPath->C3[0];
-    } else if (x <= egoPath->Len[0] + egoPath->Len[1]) {
-      x_prime = x - egoPath->Len[0];
-      c0 = egoPath->C0[1], c1 = egoPath->C1[1], c2 = egoPath->C2[1],
-      c3 = egoPath->C3[1];
-    } else {
-      x_prime = x - egoPath->Len[0] - egoPath->Len[1];
-      c0 = egoPath->C0[2], c1 = egoPath->C1[2], c2 = egoPath->C2[2],
-      c3 = egoPath->C3[2];
-    }
-    y = c0 + c1 * x_prime + c2 * x_prime * x_prime +
-        c3 * x_prime * x_prime * x_prime;
+    float y = getPiecewiseCubicPolyY(x, egoPath);
     last.x = x, last.y = y;
     Point curDrawPoint = {x, y};
     coordinateTrans2(&curDrawPoint);
@@ -410,29 +435,13 @@ void drawObstacles(const SsmObjType* ssmObjs,
     for (int j = 0; j < 6; j++) {
       obs_pred_path[j].x = obs->pos_x + obs->speed_x * j;
       float predLatOffset = obs->speed_y * j;
-      if (cur_spd > 40.0f / 3.6f && obs->speed_x > 1.0f) {
-        objPosnLgt[j] = obs->pos_x + obs->speed_x * j;
-
-        float x_prime = objPosnLgt[j];
-        float c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-        if (objPosnLgt[j] <= egoPath->Len[0]) {
-          c0 = egoPath->C0[0], c1 = egoPath->C1[0], c2 = egoPath->C2[0],
-          c3 = egoPath->C3[0];
-        } else if (objPosnLgt[j] <= egoPath->Len[0] + egoPath->Len[1]) {
-          x_prime = objPosnLgt[j] - egoPath->Len[0];
-          c0 = egoPath->C0[1], c1 = egoPath->C1[1], c2 = egoPath->C2[1],
-          c3 = egoPath->C3[1];
-        } else {
-          x_prime = objPosnLgt[j] - egoPath->Len[0] - egoPath->Len[1];
-          c0 = egoPath->C0[2], c1 = egoPath->C1[2], c2 = egoPath->C2[2],
-          c3 = egoPath->C3[2];
-        }
-        objPosnLat[j] = c0 + c1 * x_prime + c2 * x_prime * x_prime +
-                        c3 * x_prime * x_prime * x_prime;
-
+      objPosnLgt[j] = obs->pos_x + obs->speed_x * j;
+      if (cur_spd > 30.0f / 3.6f && obs->speed_x > 1.0f &&
+          objPosnLgt[j] < 120.0f) {
+        objPosnLat[j] = getPiecewiseCubicPolyY(objPosnLgt[j], egoPath);
         float roadCurveOffset = objPosnLat[j] - objPosnLat[0];
-
-        if (fabsf(roadCurveOffset) > fabsf(predLatOffset))
+        if (roadCurveOffset > predLatOffset && predLatOffset >= 0 ||
+            roadCurveOffset < predLatOffset && predLatOffset <= 0)
           predLatOffset = roadCurveOffset;
       }
       obs_pred_path[j].y = obs->pos_y + predLatOffset;
@@ -537,13 +546,7 @@ void drawBasicGraph(const int len,
 
 void showXYGraph(const GraphConfig* config,
                  const float zeroOffsetY,
-                 const char* title,
-                 const int pointColor,
-                 Point* points,
-                 const int startIndex,
-                 const int pointNums,
-                 Point* ctrlPoint,
-                 const float quinticPoly[6]) {
+                 const PlotInfo* plot) {
   // float zeroOffsetY = 4.0f;  // positive means: 0 moves up
   float len = config->length - 2 * config->offset;
   float wid = config->width - 2 * config->offset;
@@ -559,16 +562,16 @@ void showXYGraph(const GraphConfig* config,
   //  titles
   settextcolor(BLACK);
   settextstyle(25, 0, "Calibri");
-  outtextxy(s_origin1.x + len / 2 - textwidth(title) / 2,
-            s_origin1.y - wid - textheight(title), title);
+  outtextxy(s_origin1.x + len / 2 - textwidth(plot->title) / 2,
+            s_origin1.y - wid - textheight(plot->title), plot->title);
   settextstyle(20, 0, "Calibri", 900, 900, 0, 0, 0, 0);
 
   char titleY[10];
-  if (title[0] == 'A')
+  if (plot->title[0] == 'A')
     strcpy(titleY, "A (m/s2)");
-  else if (title[0] == 'V')
+  else if (plot->title[0] == 'V')
     strcpy(titleY, "V (m/s)");
-  else if (title[0] == 'S')
+  else if (plot->title[0] == 'S')
     strcpy(titleY, "S (m)");
   else
     strcpy(titleY, "y");
@@ -580,7 +583,7 @@ void showXYGraph(const GraphConfig* config,
             s_origin1.y + textheight(titleX), titleX);
 
   Point curDrawP = {0, 0};
-  Point lastDrawP = points[0];
+  Point lastDrawP = plot->points[0];
   coordinateTrans1(&lastDrawP);
 #if CURVE_FITTING_TYPE == 1
   float drawP[6][2];
@@ -610,54 +613,60 @@ void showXYGraph(const GraphConfig* config,
     }
     // bezierPoint(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
   }
-#elif CURVE_FITTING_TYPE == 2
-  for (float i = 0.0f; i < 5; i += 0.2f) {
-    if (title[0] == 'S') {
-      curDrawP = {i, quinticPoly[0] + quinticPoly[1] * i +
-                         quinticPoly[2] * i * i + quinticPoly[3] * i * i * i +
-                         quinticPoly[4] * i * i * i * i +
-                         quinticPoly[5] * i * i * i * i * i};
-    } else if (title[0] == 'V') {
-      curDrawP = {i, quinticPoly[1] + 2 * quinticPoly[2] * i +
-                         3 * quinticPoly[3] * i * i +
-                         4 * quinticPoly[4] * i * i * i +
-                         5 * quinticPoly[5] * i * i * i * i};
-    } else if (title[0] == 'A') {
-      curDrawP = {i, 2 * quinticPoly[2] + 6 * quinticPoly[3] * i +
-                         12 * quinticPoly[4] * i * i +
-                         20 * quinticPoly[5] * i * i * i};
-    }
-    curDrawP.y += zeroOffsetY;
-    coordinateTrans1(&curDrawP);
-    line(lastDrawP.x, lastDrawP.y, curDrawP.x, curDrawP.y);
-    lastDrawP = curDrawP;
-  }
 #endif
+  // quintic polynominal curve
+  if (plot->showPoly) {
+    for (float i = 0.0f; i < 5; i += 0.2f) {
+      if (plot->title[0] == 'S') {
+        curDrawP = {i, plot->quinticPoly[0] + plot->quinticPoly[1] * i +
+                           plot->quinticPoly[2] * i * i +
+                           plot->quinticPoly[3] * i * i * i +
+                           plot->quinticPoly[4] * i * i * i * i +
+                           plot->quinticPoly[5] * i * i * i * i * i};
+      } else if (plot->title[0] == 'V') {
+        curDrawP = {i, plot->quinticPoly[1] + 2 * plot->quinticPoly[2] * i +
+                           3 * plot->quinticPoly[3] * i * i +
+                           4 * plot->quinticPoly[4] * i * i * i +
+                           5 * plot->quinticPoly[5] * i * i * i * i};
+      } else if (plot->title[0] == 'A') {
+        curDrawP = {i, 2 * plot->quinticPoly[2] + 6 * plot->quinticPoly[3] * i +
+                           12 * plot->quinticPoly[4] * i * i +
+                           20 * plot->quinticPoly[5] * i * i * i};
+      }
+      curDrawP.y += zeroOffsetY;
+      coordinateTrans1(&curDrawP);
+      line(lastDrawP.x, lastDrawP.y, curDrawP.x, curDrawP.y);
+      lastDrawP = curDrawP;
+    }
+  }
+
   // result points
-  setfillcolor(pointColor);
-  setlinecolor(pointColor);
-  for (int i = startIndex; i < startIndex + pointNums; i++) {
-    float val = points[i].y;
-    points[i].y += zeroOffsetY;
-    coordinateTrans1(&points[i]);
+  setfillcolor(plot->pointColor);
+  setlinecolor(plot->pointColor);
+  for (int i = plot->startIndex; i < plot->startIndex + plot->pointNums; i++) {
+    float val = plot->points[i].y;
+    plot->points[i].y += zeroOffsetY;
+    coordinateTrans1(&plot->points[i]);
     if (i > 0)
-      line(points[i - 1].x, points[i - 1].y, points[i].x, points[i].y);
-    if (title[0] == 'A' || title[0] == 'S' || title[0] == 'V') {
-      solidcircle(points[i].x, points[i].y, 5);
+      line(plot->points[i - 1].x, plot->points[i - 1].y, plot->points[i].x,
+           plot->points[i].y);
+    if (plot->title[0] == 'A' || plot->title[0] == 'S' ||
+        plot->title[0] == 'V') {
+      solidcircle(plot->points[i].x, plot->points[i].y, 5);
       char str[4] = "";
       sprintf(str, "%.1f", val);
-      outtextxy(points[i].x + 5, points[i].y + 5, str);
+      outtextxy(plot->points[i].x + 5, plot->points[i].y + 5, str);
     }
   }
-  if (title[0] == 'A') {
-    float val = ctrlPoint->y;
-    ctrlPoint->y += zeroOffsetY;
-    coordinateTrans1(ctrlPoint);
-    solidcircle(ctrlPoint->x, ctrlPoint->y, 5);
+  if (plot->title[0] == 'A') {
+    float val = plot->ctrlPoint->y;
+    plot->ctrlPoint->y += zeroOffsetY;
+    coordinateTrans1(plot->ctrlPoint);
+    solidcircle(plot->ctrlPoint->x, plot->ctrlPoint->y, 5);
     char str[4] = "";
     sprintf(str, "%.1f", val);
-    outtextxy(ctrlPoint->x - textwidth(str) / 2, ctrlPoint->y - textheight(str),
-              str);
+    outtextxy(plot->ctrlPoint->x - textwidth(str) / 2,
+              plot->ctrlPoint->y - textheight(str), str);
   }
 }
 

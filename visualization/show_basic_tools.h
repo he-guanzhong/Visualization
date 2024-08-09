@@ -26,6 +26,17 @@ typedef struct {
 } GraphConfig;
 
 typedef struct {
+  char* title;
+  Point* points;     // point coordinates to be displayed
+  Point* ctrlPoint;  // a-t graph only, accelerations sent to control
+  int startIndex;
+  int pointNums;
+  int pointColor;
+  bool showPoly;
+  float* quinticPoly;
+} PlotInfo;
+
+typedef struct {
   bool valid;
   int type;
   float pos_x;
@@ -48,6 +59,9 @@ typedef struct {
   float innerSpdLmt;
   int specCaseFlg;
   int scenarioFlg;
+  int gapIndex;
+  float gapTarS;
+  float gapTarV;
   AlcBehavior alcBehav;
 } MotionInfo;
 
@@ -70,6 +84,8 @@ void coordinateTrans1(Point* point);
 void coordinateTrans2(Point* point);
 
 void strCompletion(char str[2][8], const int index, const int spd);
+float getPiecewiseCubicPolyY(const float x, const EgoPathVcc* egoPath);
+
 void drawCar(Point* car,
              const char str[2][8],
              int carType,
@@ -108,22 +124,10 @@ void initBEVGraph(const GraphConfig* config, const float zeroOffsetX);
 /// @brief  show basic x-y graph
 /// @param config         basic graph configuration
 /// @param zeroOffsetY    vertical distance from origin to lower-left corner
-/// @param title          title string
-/// @param pointColor     macro name of color
-/// @param points         point coordinates to be displayed
-/// @param pointNums
-/// @param startIndex
-/// @param ctrlPoint      a-t graph only, accelerations sent to control
-/// @param quinticPoly
+/// @param plot
 void showXYGraph(const GraphConfig* config,
                  const float zeroOffsetY,
-                 const char* title,
-                 const int pointColor,
-                 Point* points,
-                 const int pointNums,
-                 const int startIndex,
-                 Point* ctrlPoint,
-                 const float quinticPoly[6]);
+                 const PlotInfo* plot);
 
 /// @brief BEV graph, x-axis_forward_vertical, y-axis_lateral_horizontal
 /// @param config         basic configuration
