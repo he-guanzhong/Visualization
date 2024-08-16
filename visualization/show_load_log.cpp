@@ -215,15 +215,27 @@ void SpdPlanDataParsing(float** values,
       ALC_RBT = i;
     else if (strncmp(columns[i], "VuPASP_NaviPilot1stRampOnDis_m[]", 30) == 0)
       ALC_RMP_D = i;
+
     else if (strncmp(columns[i], "VePASP_AlcGapIndex[]", 18) == 0)
       ALC_GAP = i;
     else if (strncmp(columns[i], "VfPASP_AlcGapTarS_m[]", 19) == 0)
       ALC_TARS = i;
     else if (strncmp(columns[i], "VfPASP_AlcGapTarV_mps[]", 21) == 0)
       ALC_TARV = i;
+    else if (strncmp(columns[i], "VfPASP_AlcGapSt_C0[]", 18) == 0)
+      ALC_ST[0] = i;
+    else if (strncmp(columns[i], "VfPASP_AlcGapSt_C1[]", 18) == 0)
+      ALC_ST[1] = i;
+    else if (strncmp(columns[i], "VfPASP_AlcGapSt_C2[]", 18) == 0)
+      ALC_ST[2] = i;
+    else if (strncmp(columns[i], "VfPASP_AlcGapSt_C3[]", 18) == 0)
+      ALC_ST[3] = i;
+    else if (strncmp(columns[i], "VfPASP_AlcGapSt_C4[]", 18) == 0)
+      ALC_ST[4] = i;
+    else if (strncmp(columns[i], "VfPASP_AlcGapSt_C5[]", 18) == 0)
+      ALC_ST[5] = i;
 
-    else if (strncmp(columns[i], "VbPASP_AlcLgtCtrlEnbl[]", 21) == 0 ||
-             strncmp(columns[i], "VePASP_SpdPlanEnblSts[]", 21) == 0)
+    else if (strncmp(columns[i], "VePASP_SpdPlanEnblSts[]", 21) == 0)
       ENBL_STS = i;
     else if (strncmp(columns[i], "VfPASP_InnerSetSpd_kph[]", 22) == 0)
       IN_SPDLMT = i;
@@ -671,7 +683,7 @@ void SpdPlanDataParsing(float** values,
       objs_pos_x_data[k][t] = values[IVS_LgDis[k]][t] + pos_x_compensation;
       objs_pos_y_data[k][t] = values[IVS_LaDis[k]][t] * -1;
       objs_speed_x_data[k][t] = values[IVS_V[k]][t];
-      objs_acc_x_data[k][t] = values[IVS_A[k]][t];
+      objs_acc_x_data[k][t] = IVS_A[k] ? values[IVS_A[k]][t] : 0;
       objs_pos_yaw_data[k][t] = values[IVS_Yaw[k]][t] * -1;
 
       if (k <= 1)

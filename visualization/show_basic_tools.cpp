@@ -245,15 +245,15 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
   }
 
   switch (motionInfo->scenarioFlg) {
-    case 3:
-    case 13:
+    case 8:
+    case 18:
       strcat(scenario_title, "curv");
       break;
     case 10:
       strcat(scenario_title, "Ndg");
       break;
-    case 4:
-    case 14:
+    case 9:
+    case 19:
       strcat(scenario_title, "ramp");
       break;
     case 5:
@@ -274,17 +274,29 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     case 17:
       strcat(scenario_title, "accN");
       break;
-    case 8:
-      strcat(scenario_title, "gapf");
+    case 1:
+      strcat(scenario_title, "gA");
       break;
-    case 18:
-      strcat(scenario_title, "gapfN");
+    case 11:
+      strcat(scenario_title, "gAN");
       break;
-    case 9:
-      strcat(scenario_title, "gap");
+    case 2:
+      strcat(scenario_title, "gC");
       break;
-    case 19:
-      strcat(scenario_title, "gapN");
+    case 12:
+      strcat(scenario_title, "gCN");
+      break;
+    case 3:
+      strcat(scenario_title, "gB");
+      break;
+    case 13:
+      strcat(scenario_title, "gBN");
+      break;
+    case 4:
+      strcat(scenario_title, "gF");
+      break;
+    case 14:
+      strcat(scenario_title, "gFN");
       break;
     default:
       break;
@@ -317,7 +329,7 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
   else if (motionInfo->alcBehav.AutoLaneChgSide == 2)
     strcpy(alc_side, "ALC_R");
   // alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
-  // 4-in target line, 5-finished,6-Back to Ego, 8-takeover, 9-popMsgReq
+  // 4-in target line, 5-finished, 6-Back to Ego, 8-takeover, 9-popMsgReq
   char alc_sts[12];
   memset(alc_sts, '\0', sizeof(alc_sts));
   if (motionInfo->alcBehav.AutoLaneChgSts == 2)
@@ -330,6 +342,8 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     strcpy(alc_sts, "Back");
   else if (motionInfo->alcBehav.AutoLaneChgSts == 8)
     strcpy(alc_sts, "Takeover");
+  else if (motionInfo->alcBehav.AutoLaneChgSts == 9)
+    strcpy(alc_sts, "PopMsg");
   if (motionInfo->alcBehav.AutoLaneChgSide == 1 ||
       motionInfo->alcBehav.AutoLaneChgSide == 2) {
     outtextxy(s_infoAreaBoundary, s_origin2.y - 200, alc_side);
@@ -352,7 +366,7 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
              "%.1f m/s", motionInfo->gapTarV);
     int offset = motionInfo->alcBehav.AutoLaneChgSide == 1
                      ? -textwidth(str_tar2)
-                     : textwidth(str_tar2);
+                     : textwidth(str_tar2) / 4.0f;
     outtextxy(tarPoint.x + offset, tarPoint.y - textheight(str_tar1), str_tar1);
     outtextxy(tarPoint.x + offset, tarPoint.y, str_tar2);
   }
@@ -369,7 +383,7 @@ void drawQuinticPolyTraj(const float* coeffs,
   Point lastDrawPoint = {0.0f, 0.0f};
   Point last = {0.0f, 0.0f};
   float restLen = lengthS;
-  for (float x = startX; x < lengthX || restLen > 0; x += 3.0f) {
+  for (float x = startX; x < lengthX && restLen > 0; x += 3.0f) {
     float y = coeffs[0] + coeffs[1] * x + coeffs[2] * x * x +
               coeffs[3] * x * x * x + coeffs[4] * x * x * x * x +
               coeffs[5] * x * x * x * x * x;
@@ -740,7 +754,7 @@ void showBEVGraph(const GraphConfig* config,
   drawQuinticPolyTraj(linesInfo->alc_coeffs, LIGHTRED, naviRange,
                       fmax(50.0f, naviRange), fmax(50.0f, naviRange),
                       &predictPosn);
-  drawQuinticPolyTraj(linesInfo->alc_coeffs, RED, 0.0f, naviRange, naviRange,
+  drawQuinticPolyTraj(linesInfo->alc_coeffs, RED, 0.0f, naviRange, 120.0f,
                       &predictPosn);
 
   // ego car

@@ -66,6 +66,7 @@ void ReadOutputData(const int t) {
   ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[1][t]};
   spdPlanEnblSts = spdPlanEnblSts_data[t];
   g_truncated_col = truncated_col_data[t];
+
   gInnerSpdLmt_kph = innerSpdLmt_data[t];
   gSpecialCaseFlg = specialCaseFlg_data[t];
   gScenarioFlg = scenarioFlg_data[t];
@@ -79,6 +80,31 @@ void ReadOutputData(const int t) {
   }
   // use alc c7 as line end
   linesInfo.alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
+}
+
+void WriteOutputData(const int t) {
+  for (int k = 0; k <= 5; k++) {
+    s_points_data[k][t] = s_points[k].y;
+    v_points_data[k][t] = v_points[k].y;
+    a_points_data[k][t] = a_points[k].y;
+    t_points_data[k][t] = s_points[k].x;
+  }
+  ctrl_point_data[0][t] = ctrlPoint.x;
+  ctrl_point_data[1][t] = ctrlPoint.y;
+  spdPlanEnblSts_data[t] = spdPlanEnblSts;
+  truncated_col_data[t] = g_truncated_col;
+
+  innerSpdLmt_data[t] = gInnerSpdLmt_kph;
+  specialCaseFlg_data[t] = gSpecialCaseFlg;
+  scenarioFlg_data[t] = gScenarioFlg;
+  alcGapIndex_data[t] = gGapIndex;
+  alcGapTarS_data[t] = gGapTarS;
+  alcGapTarV_data[t] = gGapTarV;
+
+  tempMeasureVal_data[t] = gTempMeasureVal;
+  for (int k = 0; k < 6; k++) {
+    alcStCoeff_data[k][t] = gAlcStCoeff[k];
+  }
 }
 
 void ReadInputData(const int t) {
@@ -444,28 +470,8 @@ void LoopbackCalculation() {
   for (int t = 0; t < totalFrame; t++) {
     ReadInputData(t);
     CalcOneStep();
-    for (int k = 0; k <= 5; k++) {
-      s_points_data[k][t] = s_points[k].y;
-      v_points_data[k][t] = v_points[k].y;
-      a_points_data[k][t] = a_points[k].y;
-      t_points_data[k][t] = s_points[k].x;
-    }
-    spdPlanEnblSts_data[t] = spdPlanEnblSts;
-    truncated_col_data[t] = g_truncated_col;
-    ctrl_point_data[0][t] = ctrlPoint.x;
-    ctrl_point_data[1][t] = ctrlPoint.y;
+    WriteOutputData(t);
 
-    innerSpdLmt_data[t] = gInnerSpdLmt_kph;
-    specialCaseFlg_data[t] = gSpecialCaseFlg;
-    scenarioFlg_data[t] = gScenarioFlg;
-    alcGapIndex_data[t] = gGapIndex;
-    alcGapTarS_data[t] = gGapTarS;
-    alcGapTarV_data[t] = gGapTarV;
-
-    tempMeasureVal_data[t] = gTempMeasureVal;
-    for (int k = 0; k < 6; k++) {
-      alcStCoeff_data[k][t] = gAlcStCoeff[k];
-    }
     linesInfo.alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
   }
 }
@@ -593,28 +599,7 @@ void GenerateLocalData() {
     accResponseDelay[accDelay_pos] = ctrlPoint.y;
     accDelay_pos = accDelay_pos >= 4 ? 0 : accDelay_pos + 1;
 
-    for (int k = 0; k <= 5; k++) {
-      s_points_data[k][t] = s_points[k].y;
-      v_points_data[k][t] = v_points[k].y;
-      a_points_data[k][t] = a_points[k].y;
-      t_points_data[k][t] = s_points[k].x;
-    }
-    spdPlanEnblSts_data[t] = spdPlanEnblSts;
-    truncated_col_data[t] = g_truncated_col;
-    ctrl_point_data[0][t] = ctrlPoint.x;
-    ctrl_point_data[1][t] = ctrlPoint.y;
-
-    innerSpdLmt_data[t] = gInnerSpdLmt_kph;
-    specialCaseFlg_data[t] = gSpecialCaseFlg;
-    scenarioFlg_data[t] = gScenarioFlg;
-    alcGapIndex_data[t] = gGapIndex;
-    alcGapTarS_data[t] = gGapTarS;
-    alcGapTarV_data[t] = gGapTarV;
-
-    tempMeasureVal_data[t] = gTempMeasureVal;
-    for (int k = 0; k < 6; k++) {
-      alcStCoeff_data[k][t] = gAlcStCoeff[k];
-    }
+    WriteOutputData(t);
   }
 }
 
@@ -714,7 +699,7 @@ void ReleaseWrapper() {
 int main() {
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(2);
+  playMode = PLAYMODE(3);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();
