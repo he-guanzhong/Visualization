@@ -1,7 +1,8 @@
 # 忽略 /build/ 目录下的编译临时文件
 /build/.cmake/
 /build/CMakeFiles/
+/build/Makefile
 *.cmake
 *.txt
 *.json
-/build/Makefile
+rtwtypes.h

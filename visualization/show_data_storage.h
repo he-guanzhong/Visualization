@@ -54,7 +54,8 @@ extern float rr_path_data[8][DATA_NUM];
 
 extern float original_data[DATA_NUM];
 extern float loopback_data[DATA_NUM];
-extern float tempMeasureVal_data[DATA_NUM];
+extern float tempMeasureVal1_data[DATA_NUM];
+extern float tempMeasureVal2_data[DATA_NUM];
 
 #ifdef RADAR_DEMO_DISP
 extern int iObjectId_data[32][DATA_NUM];

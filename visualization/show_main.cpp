@@ -13,7 +13,8 @@ extern uint8 gGapIndex;
 extern float gGapTarS;
 extern float gGapTarV;
 extern float gAlcStCoeff[6];
-extern float gTempMeasureVal;
+extern float gTempMeasureVal1;
+extern float gTempMeasureVal2;
 #else
 SsmObjType g_ssmObjType;
 uint8 g_truncated_col;
@@ -24,7 +25,8 @@ uint8 gGapIndex;
 float gGapTarS;
 float gGapTarV;
 float gAlcStCoeff[6];
-float gTempMeasureVal;
+float gTempMeasureVal1;
+float gTempMeasureVal2;
 #endif
 
 // Key display information
@@ -74,7 +76,8 @@ void ReadOutputData(const int t) {
   gGapTarS = alcGapTarS_data[t];
   gGapTarV = alcGapTarV_data[t];
 
-  gTempMeasureVal = tempMeasureVal_data[t];
+  gTempMeasureVal1 = tempMeasureVal1_data[t];
+  gTempMeasureVal2 = tempMeasureVal2_data[t];
   for (int k = 0; k < 6; k++) {
     gAlcStCoeff[k] = alcStCoeff_data[k][t];
   }
@@ -101,7 +104,8 @@ void WriteOutputData(const int t) {
   alcGapTarS_data[t] = gGapTarS;
   alcGapTarV_data[t] = gGapTarV;
 
-  tempMeasureVal_data[t] = gTempMeasureVal;
+  tempMeasureVal1_data[t] = gTempMeasureVal1;
+  tempMeasureVal2_data[t] = gTempMeasureVal2;
   for (int k = 0; k < 6; k++) {
     alcStCoeff_data[k][t] = gAlcStCoeff[k];
   }
@@ -208,13 +212,18 @@ void Time2Str(const float time, char* str) {
 }
 
 void ShowOutputKeyInfo(const int posY) {
-  char szPlanSts[10], szTmpMeas[20] = "Meas: ";
+  char szPlanSts[10];
+  char szTmpMeas1[20] = "Meas1: ", szTmpMeas2[20] = "Meas2: ";
   itoa(g_truncated_col, szPlanSts, 10);
   const char* str2 = spdPlanEnblSts ? " Enable" : " Fail  ";
   strcat(szPlanSts, str2);
-  sprintf(szTmpMeas, "%.5f", gTempMeasureVal);
-  outtextxy(0, posY - textheight(szPlanSts), szPlanSts);
-  outtextxy(0, posY, szTmpMeas);
+  snprintf(szTmpMeas1 + strlen(szTmpMeas1),
+           sizeof(szTmpMeas1) - strlen(szTmpMeas1), "%.3f", gTempMeasureVal1);
+  snprintf(szTmpMeas2 + strlen(szTmpMeas2),
+           sizeof(szTmpMeas2) - strlen(szTmpMeas2), "%.3f", gTempMeasureVal2);
+  outtextxy(0, posY - textheight(szPlanSts) * 3, szPlanSts);
+  outtextxy(0, posY - textheight(szPlanSts) * 2, szTmpMeas1);
+  outtextxy(0, posY - textheight(szPlanSts), szTmpMeas2);
 }
 
 void ShowBasicFrameInfo(int* t, int* cycle, const int length, const int width) {
