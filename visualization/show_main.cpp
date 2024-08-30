@@ -160,8 +160,9 @@ void ReadInputData(const int t) {
         3 * linesInfo.ego_coeffs.C3[i] * linesInfo.ego_coeffs.Len[i] *
             linesInfo.ego_coeffs.Len[i];
     linesInfo.ego_coeffs.C2[i + 1] =
-        2 * linesInfo.ego_coeffs.C2[i] +
-        6 * linesInfo.ego_coeffs.C3[i] * linesInfo.ego_coeffs.Len[i];
+        (2 * linesInfo.ego_coeffs.C2[i] +
+         6 * linesInfo.ego_coeffs.C3[i] * linesInfo.ego_coeffs.Len[i]) /
+        2.0f;
   }
 
   // alc_path and Mobileye lines, quintic polynominal
@@ -708,7 +709,7 @@ void ReleaseWrapper() {
 int main() {
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(3);
+  playMode = PLAYMODE(2);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();

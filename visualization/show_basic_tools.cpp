@@ -152,7 +152,6 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
   outtextxy(s_infoAreaBoundary, s_origin2.y + textheight(tsr_disp), tsi_disp);
 
   // TSR original input
-
   for (int i = 0; i < 3; i++) {
     if (!tsrInfo->tsr_signs[i].valid || tsrInfo->tsr_signs[i].type < 0 ||
         tsrInfo->tsr_signs[i].type > 210)
@@ -454,8 +453,8 @@ void drawObstacles(const SsmObjType* ssmObjs,
           objPosnLgt[j] < 120.0f) {
         objPosnLat[j] = getPiecewiseCubicPolyY(objPosnLgt[j], egoPath);
         float roadCurveOffset = objPosnLat[j] - objPosnLat[0];
-        if (roadCurveOffset > predLatOffset && predLatOffset >= 0 ||
-            roadCurveOffset < predLatOffset && predLatOffset <= 0)
+        if ((roadCurveOffset > predLatOffset && predLatOffset >= 0) ||
+            (roadCurveOffset < predLatOffset && predLatOffset <= 0))
           predLatOffset = roadCurveOffset;
       }
       obs_pred_path[j].y = obs->pos_y + predLatOffset;

@@ -34,7 +34,7 @@ void drawConftPath(const ConftPathTyp* path,
                     c3_arr[i] * len_arr[i] * len_arr[i] * len_arr[i];
     c1_arr[i + 1] = c1_arr[i] + 2 * c2_arr[i] * len_arr[i] +
                     3 * c3_arr[i] * len_arr[i] * len_arr[i];
-    c2_arr[i + 1] = 2 * c2_arr[i] + 6 * c3_arr[i] * len_arr[i];
+    c2_arr[i + 1] = (2 * c2_arr[i] + 6 * c3_arr[i] * len_arr[i]) / 2.0f;
   }
 
   for (float x = startX; x < totalLen; x += 2.0f) {
