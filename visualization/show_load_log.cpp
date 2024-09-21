@@ -1,6 +1,6 @@
 #include "visualization/show_load_log.h"
 
-inline float readValue(float** values, int col_name, int t) {
+static inline float readValue(float** values, int col_name, int t) {
   if (values[col_name][t] == 0 && t > 0)
     values[col_name][t] = values[col_name][t - 1];
   return values[col_name][t];
@@ -19,6 +19,7 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
   char* line = (char*)malloc(MAX_LINE_SIZE * sizeof(char));
   if (line == NULL) {
     perror("Failed to allocate memory for line");
+    (void)fclose(file);
     exit(EXIT_FAILURE);
   }
 
@@ -27,6 +28,7 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
     // 处理内存分配失败的情况
     perror("Failed to allocate memory for columns");
     free(line);  // 释放已分配的内存
+    (void)fclose(file);
     exit(EXIT_FAILURE);
   }
   // 初始化 columns 数组中的每个指针为 NULL
@@ -44,6 +46,7 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
     }
     free(columns);  // 释放 columns 指针数组
     free(line);     // 释放 line 数组
+    (void)fclose(file);
     exit(EXIT_FAILURE);
   }
   for (int i = 0; i < MAX_COLUMNS; ++i) {
@@ -60,6 +63,7 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
       }
       free(columns);  // 释放 columns 指针数组
       free(line);     // 释放 line 数组
+      (void)fclose(file);
       exit(EXIT_FAILURE);
     }
   }
@@ -84,6 +88,7 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
     }
     free(columns);  // 释放 columns 指针数组
     free(line);     // 释放 line 数组
+    (void)fclose(file);
     exit(EXIT_FAILURE);
   }
   // 初始化 valuesCount 数组为 0
@@ -148,7 +153,7 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
   free(line);
   free(valuesCount);
 
-  fclose(file);
+  (void)fclose(file);
 
   return;
 }
@@ -179,9 +184,9 @@ void SpdPlanDataParsing(float** values,
   int TSR_ID[3] = {0}, TSR_Type[3] = {0}, TSR_LaDis[3] = {0},
       TSR_LgDis[3] = {0};
 
-  // Lateral control lines.
+  // Lateral control lines (no longer used)
   // 8 coeffs, [0,5] for c0~c5(to be corrected), 6 = start, 7 = end.
-  int L_C[8] = {0}, R_C[8] = {0}, LL_C[8] = {0}, RR_C[8] = {0};
+  // int L_C[8] = {0}, R_C[8] = {0}, LL_C[8] = {0}, RR_C[8] = {0};
 
   // ME road lines. Lane Host(LH), Lane Adjacent(LA) Coefficient
   // 8 coeffs, [0,5] for c0~c5(real), 6 = start, 7 = end.

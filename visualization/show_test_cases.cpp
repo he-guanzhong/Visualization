@@ -150,10 +150,10 @@ void CaseFollow(SsmObjType* ssmObjs) {
   // 0 = IV, 1 = RIV, 2 = NIVL, 3 = NIIVL, 4 = RIVL, 5 = RIIVL
   // 6 = NIVR, 7 = NIIVR, 8 = RIVR, 9 = RIIVR
   ssmObjs->obj_num = 1;
-  ssmObjs->obj_lists[0].pos_x = 6.7 + 4;
+  ssmObjs->obj_lists[0].pos_x = 60;
   ssmObjs->obj_lists[0].pos_y = 0;
-  ssmObjs->obj_lists[0].acc_x = -3;
-  ssmObjs->obj_lists[0].speed_x = 1;
+  ssmObjs->obj_lists[0].acc_x = 0;
+  ssmObjs->obj_lists[0].speed_x = 30;
   ssmObjs->obj_lists[0].speed_y = 0.0f;  // hgz
   ssmObjs->obj_lists[0].type = 1;        // hgz
   ssmObjs->obj_lists[0].lane_index = 3;
@@ -177,8 +177,8 @@ void CaseCutIn(SsmObjType* ssmObjs) {
 void LoadDummySSmData(SsmObjType* ssmObjs) {
   // CaseLeftChange(ssmObjs);
   // CaseSideCarMoveSlowly(ssmObjs);
-  // CaseFollow(ssmObjs);
-  CaseCutIn(ssmObjs);
+  CaseFollow(ssmObjs);
+  // CaseCutIn(ssmObjs);
   return;
 }
 
@@ -187,7 +187,7 @@ void LoadDummyMotionData(float* egoSpd,
                          float* spdLmt,
                          int* accMode,
                          AlcBehavior* alcBehav) {
-  *egoSpd = 20.0f, *egoAcc = 0, *spdLmt = 72.0f;
+  *egoSpd = 20.0f, *egoAcc = 0, *spdLmt = 90.0f;
   *accMode = 5;
   alcBehav->AutoLaneChgSide = 1;
   alcBehav->AutoLaneChgSts = 1;

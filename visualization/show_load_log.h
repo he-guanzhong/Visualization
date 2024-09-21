@@ -14,8 +14,6 @@
 #define MAX_COLUMNS 192
 #define MAX_VALUES_PER_COLUMN DATA_NUM
 
-float readValue(float** values, int col_name, int t);
-
 void LoadLog(const char csvFileName[], int* totalFrame);
 
 void SpdPlanDataParsing(float** values,

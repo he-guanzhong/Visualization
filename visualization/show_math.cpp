@@ -17,23 +17,24 @@ int combination(int n, int m) {
 
 void bezierPoint(float tau, int n, float points[][2], float* x, float* y) {
   *x = 0, *y = 0;
-  if (n < 1)
+  if (n < 1 || n > 100)
     return;
-  float t = tau / (float)n;
+  const float t = tau / (float)n;
   for (int i = 0; i <= n; i++) {
     *x += combination(n, i) * pow(1 - t, n - i) * pow(t, i) * points[i][0];
     *y += combination(n, i) * pow(1 - t, n - i) * pow(t, i) * points[i][1];
   }
 }
+
 void bezierDerivative(float tau,
                       int n,
                       float points[][2],
                       float* dx,
                       float* dy) {
   *dx = 0, *dy = 0;
-  if (n < 2)
+  if (n < 2 || n > 100)
     return;
-  float t = tau / (float)n;
+  const float t = tau / (float)n;
   for (int i = 0; i < n; i++) {
     *dx += n * combination(n - 1, i) * pow(1 - t, n - 1 - i) * pow(t, i) *
            (points[i + 1][0] - points[i][0]);
@@ -42,15 +43,16 @@ void bezierDerivative(float tau,
   }
   // printf("t = %.2f, dx = %.2f, dy = %.2f\n", t, *dx, *dy);
 }
+
 void bezierSecDerivative(float tau,
                          int n,
                          float points[][2],
                          float* ddx,
                          float* ddy) {
   *ddx = 0, *ddy = 0;
-  if (n < 3)
+  if (n < 3 || n > 100)
     return;
-  float t = tau / (float)n;
+  const float t = tau / (float)n;
   for (int i = 0; i < n - 1; i++) {
     float dx = n * (points[i + 2][0] - 2 * points[i + 1][0] + points[i][0]);
 
@@ -64,25 +66,25 @@ void bezierSecDerivative(float tau,
 }
 
 void gaussianElimination(float a[MAT_SIZE][MAT_SIZE + 1]) {
-  int n = MAT_SIZE;
+  const int n = MAT_SIZE;
   for (int i = 0; i < n; i++) {
     // find largest absolute value of a[i][i] as main element
     int maxElem = i;
     for (int k = i + 1; k < n; k++) {
-      if (fabs(a[k][i]) > fabs(a[maxElem][i]))
+      if (fabsf(a[k][i]) > fabsf(a[maxElem][i]))
         maxElem = k;
     }
     // swap row of main element to first row
     if (maxElem != i) {
       for (int j = i; j <= n; j++) {
-        float tmp = a[i][j];
+        const float tmp = a[i][j];
         a[i][j] = a[maxElem][j];
         a[maxElem][j] = tmp;
       }
     }
     // simplify elements of [i+1,n) to 0. Upper triangular matrix converting
     for (int k = i + 1; k < n; k++) {
-      float factor = a[k][i] / a[i][i];
+      const float factor = a[k][i] / a[i][i];
       for (int j = i; j <= n; j++) {
         a[k][j] -= factor * a[i][j];
       }

@@ -84,10 +84,10 @@ void drawCar(Point* car,
       {car->x - halfLenCos + halfWidSin, car->y - halfLenSin - halfWidCos},
       {car->x - halfLenCos - halfWidSin, car->y - halfLenSin + halfWidCos}};
   coordinateTrans2(car);
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 4; ++i)
     coordinateTrans2(&vertices[i]);
   POINT vertices_show[4];
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; ++i) {
     vertices_show[i].x = vertices[i].x;
     vertices_show[i].y = vertices[i].y;
   }
@@ -467,7 +467,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
       obs_pred.x = obs->pos_x +
                    (obs->speed_x + obs->acc_x * const_acc_time) * 5.0f -
                    0.5f * obs->acc_x * const_acc_time * const_acc_time;
-      obs_pred.x = fmax(obs->pos_x, obs_pred.x);
+      obs_pred.x = fmaxf(obs->pos_x, obs_pred.x);
     }
 
     if (show_predict_swt && fabsf(obs_pred.x - obs->pos_x) > 5.0f) {
@@ -491,13 +491,13 @@ void drawObstacles(const SsmObjType* ssmObjs,
 
 void drawBEVRuler(const float zeroOffsetX) {
   settextcolor(BLACK);
-  float coordinate_x_of_ruler_y = fmin(-6.0f, -zeroOffsetX);
+  float coordinate_x_of_ruler_y = fminf(-6.0f, -zeroOffsetX);
   Point ruler_x[4] = {
       {-30.0f, -6.0f}, {0.0f, -6.0f}, {50.0f, -6.0f}, {100.0f, -6.0f}};
   Point ruler_y[2] = {{coordinate_x_of_ruler_y, -5.0f},
                       {coordinate_x_of_ruler_y, 5.0f}};
   char str[7];
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; ++i) {
     str[0] = '\0';
     itoa(ruler_x[i].x, str, 10);
     strcat(str, " m");
@@ -611,14 +611,14 @@ void showXYGraph(const GraphConfig* config,
 
   for (float i = 0.0f; i < 5; i += 0.4f) {
     if (title[0] == 'S') {
-      bezierPoint(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
+      bezierPoint(i, 5, drawP, &curDrawP.x, &curDrawP.y);
     } else if (title[0] == 'V') {
-      bezierDerivative(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
+      bezierDerivative(i, 5, drawP, &curDrawP.x, &curDrawP.y);
       curDrawP.y = curDrawP.y / curDrawP.x;
       curDrawP.x = i;
       // printf("v, x =%.2f , y =%.2f\n ", curDrawP.x, curDrawP.y);
     } else if (title[0] == 'A') {
-      bezierSecDerivative(i, 5.0f, drawP, &curDrawP.x, &curDrawP.y);
+      bezierSecDerivative(i, 5, drawP, &curDrawP.x, &curDrawP.y);
       curDrawP.y = curDrawP.y;
       curDrawP.y += zeroOffsetY;
       curDrawP.x = i;
@@ -751,7 +751,7 @@ void showBEVGraph(const GraphConfig* config,
                              &predictPosn);
 
   drawQuinticPolyTraj(linesInfo->alc_coeffs, LIGHTRED, naviRange,
-                      fmax(50.0f, naviRange), fmax(50.0f, naviRange),
+                      fmaxf(50.0f, naviRange), fmaxf(50.0f, naviRange),
                       &predictPosn);
   drawQuinticPolyTraj(linesInfo->alc_coeffs, RED, 0.0f, naviRange, 120.0f,
                       &predictPosn);

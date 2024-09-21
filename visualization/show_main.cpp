@@ -82,7 +82,7 @@ void ReadOutputData(const int t) {
     gAlcStCoeff[k] = alcStCoeff_data[k][t];
   }
   // use alc c7 as line end
-  linesInfo.alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
+  linesInfo.alc_coeffs[7] = fmaxf(s_points[4].y, s_points[5].y);
 }
 
 void WriteOutputData(const int t) {
@@ -199,7 +199,7 @@ void ReadInputData(const int t) {
 void Time2Str(const float time, char* str) {
   char szTime_s[8];
   int tt_m = (int)time / 60;
-  float tt_s = fmod(time, 60);
+  float tt_s = fmodf(time, 60);
   if (tt_m) {
     sprintf(str, "%d", tt_m);
     strcat(str, "m ");
@@ -331,7 +331,7 @@ void DisplayLog(const int length, const int width, const int offset) {
 #endif
         ReadOutputData(t);
 
-        motionInfo.egoPredSpd = fmax(v_points[4].y, v_points[5].y);
+        motionInfo.egoPredSpd = fmaxf(v_points[4].y, v_points[5].y);
         motionInfo.innerSpdLmt = gInnerSpdLmt_kph;
         motionInfo.specCaseFlg = gSpecialCaseFlg;
         motionInfo.scenarioFlg = gScenarioFlg;
@@ -375,36 +375,21 @@ void DisplayLog(const int length, const int width, const int offset) {
   }
   EndBatchDraw();
   closegraph();
+  return;
 }
 
 #ifdef SPEED_PLANNING_H_
-void CalcOneStep() {
-  SsmObjType ssmObjs;
-  AlcPathVcc alcPathVcc;
-  AgsmEnvModelPath agsmEnvModelPath;
-  LoadDummyPathData(linesInfo.alc_coeffs, &linesInfo.ego_coeffs,
-                    linesInfo.left_coeffs, linesInfo.leftleft_coeffs,
-                    linesInfo.right_coeffs, linesInfo.rightright_coeffs,
-                    &alcPathVcc, &agsmEnvModelPath);
-  memset(&ssmObjs, 0, sizeof(ssmObjs));
-  if (playMode == ONESTEP) {
-    LoadDummyMotionData(&motionInfo.egoSpd, &motionInfo.egoAcc,
-                        &motionInfo.spdLmt, &motionInfo.accMode,
-                        &motionInfo.alcBehav);
-    LoadDummySSmData(&ssmObjs);
-    show_predict_swt = true;
-
-  } else {
-    ssmObjs = g_ssmObjType;
-  }
-
-  DpSpeedPoints output = SpeedPlanProcessor(
-      motionInfo.egoSpd, motionInfo.egoAcc, motionInfo.spdLmt,
-      &motionInfo.alcBehav, &alcPathVcc, &agsmEnvModelPath,
-      &ssmObjs.obj_lists[0], &ssmObjs.obj_lists[1], &ssmObjs.obj_lists[2],
-      &ssmObjs.obj_lists[3], &ssmObjs.obj_lists[4], &ssmObjs.obj_lists[5],
-      &ssmObjs.obj_lists[6], &ssmObjs.obj_lists[7], &ssmObjs.obj_lists[8],
-      &ssmObjs.obj_lists[9]);
+void ExecuteSpdPlan(const AlcPathVcc* alcPathVcc,
+                    const AgsmEnvModelPath* agsmEnvModelPath,
+                    const SsmObjType* ssmObjs) {
+  DpSpeedPoints output;
+  SpeedPlanProcessor(motionInfo.egoSpd, motionInfo.egoAcc, motionInfo.spdLmt,
+                     &motionInfo.alcBehav, alcPathVcc, agsmEnvModelPath,
+                     &ssmObjs->obj_lists[0], &ssmObjs->obj_lists[1],
+                     &ssmObjs->obj_lists[2], &ssmObjs->obj_lists[3],
+                     &ssmObjs->obj_lists[4], &ssmObjs->obj_lists[5],
+                     &ssmObjs->obj_lists[6], &ssmObjs->obj_lists[7],
+                     &ssmObjs->obj_lists[8], &ssmObjs->obj_lists[9], &output);
 
   s_points[0] = {output.Point0.t, output.Point0.s};
   s_points[1] = {output.Point1.t, output.Point1.s};
@@ -427,34 +412,62 @@ void CalcOneStep() {
 
   ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.a};
   spdPlanEnblSts = output.SpdPlanEnblSts;
-  linesInfo.alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
+  return;
+}
 
+void PrintOutputInfo(const DpSpeedPoints* output) {
   /* printf("Direct: %d, Default result: \n", s_laneChangeDirection); */
+  printf("AlcLatEnbl: %d, \t SpdPlanEnblSts: %d\n", output->AlcLatCtrlEnbl,
+         output->SpdPlanEnblSts);
+  printf("Ctrl 0: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
+         output->PointCtrl0.t, output->PointCtrl0.s, output->PointCtrl0.v,
+         output->PointCtrl0.a);
+  printf("Ctrl 1: t = %.3f, s = %.2f, v = %.3f, a = %.3f \n",
+         output->PointCtrl1.t, output->PointCtrl1.s, output->PointCtrl1.v,
+         output->PointCtrl1.a);
+  printf("Ctrl 2: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
+         output->PointCtrl2.t, output->PointCtrl2.s, output->PointCtrl2.v,
+         output->PointCtrl2.a);
+  printf("Ctrl 3: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
+         output->PointCtrl3.t, output->PointCtrl3.s, output->PointCtrl3.v,
+         output->PointCtrl3.a);
+  /* float time = 5;
+ float dst_v =
+     (ssmObjs.obj_lists[2].speed_x + ssmObjs.obj_lists[3].speed_x) / 2.0f;
+ float dst_a = 0;
+ float dst_s =
+     (ssmObjs.obj_lists[2].pos_x + ssmObjs.obj_lists[3].pos_x) / 2.0f +
+     dst_v * time;
+    quinticPolyFit(time, s_points[0].y, v_points[0].y, a_points[0].y,
+    dst_s, dst_v, dst_a, gAlcStCoeff); */
+}
+
+void CalcOneStep() {
+  SsmObjType ssmObjs;
+  AlcPathVcc alcPathVcc;
+  AgsmEnvModelPath agsmEnvModelPath;
+  LoadDummyPathData(linesInfo.alc_coeffs, &linesInfo.ego_coeffs,
+                    linesInfo.left_coeffs, linesInfo.leftleft_coeffs,
+                    linesInfo.right_coeffs, linesInfo.rightright_coeffs,
+                    &alcPathVcc, &agsmEnvModelPath);
+  memset(&ssmObjs, 0, sizeof(ssmObjs));
   if (playMode == ONESTEP) {
-    printf("AlcLatEnbl: %d, \t SpdPlanEnblSts: %d\n", output.AlcLatCtrlEnbl,
-           output.SpdPlanEnblSts);
-    printf("Ctrl 0: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
-           output.PointCtrl0.t, output.PointCtrl0.s, output.PointCtrl0.v,
-           output.PointCtrl0.a);
-    printf("Ctrl 1: t = %.3f, s = %.2f, v = %.3f, a = %.3f \n",
-           output.PointCtrl1.t, output.PointCtrl1.s, output.PointCtrl1.v,
-           output.PointCtrl1.a);
-    printf("Ctrl 2: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
-           output.PointCtrl2.t, output.PointCtrl2.s, output.PointCtrl2.v,
-           output.PointCtrl2.a);
-    printf("Ctrl 3: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
-           output.PointCtrl3.t, output.PointCtrl3.s, output.PointCtrl3.v,
-           output.PointCtrl3.a);
-    float time = 5;
-    float dst_v =
-        (ssmObjs.obj_lists[2].speed_x + ssmObjs.obj_lists[3].speed_x) / 2.0f;
-    float dst_a = 0;
-    float dst_s =
-        (ssmObjs.obj_lists[2].pos_x + ssmObjs.obj_lists[3].pos_x) / 2.0f +
-        dst_v * time;
-    /*     quinticPolyFit(time, s_points[0].y, v_points[0].y, a_points[0].y,
-       dst_s, dst_v, dst_a, gAlcStCoeff); */
+    LoadDummyMotionData(&motionInfo.egoSpd, &motionInfo.egoAcc,
+                        &motionInfo.spdLmt, &motionInfo.accMode,
+                        &motionInfo.alcBehav);
+    LoadDummySSmData(&ssmObjs);
+    show_predict_swt = true;
+  } else {
+    ssmObjs = g_ssmObjType;
   }
+  ExecuteSpdPlan(&alcPathVcc, &agsmEnvModelPath, &ssmObjs);
+
+  linesInfo.alc_coeffs[7] = fmaxf(s_points[4].y, s_points[5].y);
+
+  /*   if (playMode == ONESTEP) {
+      PrintOutputInfo(&output);
+    } */
+  return;
 }
 
 void DisplayOneStep(const int length, const int width, const int offset) {
@@ -463,7 +476,7 @@ void DisplayOneStep(const int length, const int width, const int offset) {
   setbkmode(TRANSPARENT);
   cleardevice();
 
-  motionInfo.egoPredSpd = fmax(v_points[4].y, v_points[5].y);
+  motionInfo.egoPredSpd = fmaxf(v_points[4].y, v_points[5].y);
   motionInfo.innerSpdLmt = gInnerSpdLmt_kph;
   motionInfo.specCaseFlg = gSpecialCaseFlg;
   motionInfo.scenarioFlg = gScenarioFlg;
@@ -482,7 +495,7 @@ void LoopbackCalculation() {
     CalcOneStep();
     WriteOutputData(t);
 
-    linesInfo.alc_coeffs[7] = fmax(s_points[4].y, s_points[5].y);
+    linesInfo.alc_coeffs[7] = fmaxf(s_points[4].y, s_points[5].y);
   }
 }
 
@@ -516,7 +529,7 @@ void GenerateLocalData() {
 
     motionInfo.egoAcc = accResponseDelay[accDelay_pos];
     motionInfo.egoSpd =
-        fmax(0, motionInfo.egoSpd + motionInfo.egoAcc * cycle_s);
+        fmaxf(0, motionInfo.egoSpd + motionInfo.egoAcc * cycle_s);
     spdLmt_data[t] = motionInfo.spdLmt;
     egoAcc_data[t] = motionInfo.egoAcc;
     egoSpd_data[t] = motionInfo.egoSpd;
@@ -525,7 +538,6 @@ void GenerateLocalData() {
     alcBehav_data[2][t] = motionInfo.alcBehav.LeftBoundaryType;
     alcBehav_data[3][t] = motionInfo.alcBehav.RightBoundaryType;
     alcBehav_data[4][t] = motionInfo.alcBehav.NaviPilot1stRampOnDis;
-
     accMode_data[t] = motionInfo.accMode;
 
     for (int k = 0; k < 10; k++) {
@@ -577,33 +589,7 @@ void GenerateLocalData() {
     ego_path_data[7][t] = linesInfo.ego_coeffs.Len[1];
     ego_path_data[8][t] = linesInfo.ego_coeffs.Len[2];
 
-    DpSpeedPoints output = SpeedPlanProcessor(
-        motionInfo.egoSpd, motionInfo.egoAcc, motionInfo.spdLmt,
-        &motionInfo.alcBehav, &alcPathVcc, &agsmEnvModelPath,
-        &ssmObjs.obj_lists[0], &ssmObjs.obj_lists[1], &ssmObjs.obj_lists[2],
-        &ssmObjs.obj_lists[3], &ssmObjs.obj_lists[4], &ssmObjs.obj_lists[5],
-        &ssmObjs.obj_lists[6], &ssmObjs.obj_lists[7], &ssmObjs.obj_lists[8],
-        &ssmObjs.obj_lists[9]);
-    s_points[0] = {output.Point0.t, output.Point0.s};
-    s_points[1] = {output.Point1.t, output.Point1.s};
-    s_points[2] = {output.Point2.t, output.Point2.s};
-    s_points[3] = {output.Point3.t, output.Point3.s};
-    s_points[4] = {output.Point4.t, output.Point4.s};
-    s_points[5] = {output.Point5.t, output.Point5.s};
-    v_points[0] = {output.Point0.t, output.Point0.v};
-    v_points[1] = {output.Point1.t, output.Point1.v};
-    v_points[2] = {output.Point2.t, output.Point2.v};
-    v_points[3] = {output.Point3.t, output.Point3.v};
-    v_points[4] = {output.Point4.t, output.Point4.v};
-    v_points[5] = {output.Point5.t, output.Point5.v};
-    a_points[0] = {output.Point0.t, output.Point0.a};
-    a_points[1] = {output.Point1.t, output.Point1.a};
-    a_points[2] = {output.Point2.t, output.Point2.a};
-    a_points[3] = {output.Point3.t, output.Point3.a};
-    a_points[4] = {output.Point4.t, output.Point4.a};
-    a_points[5] = {output.Point5.t, output.Point5.a};
-    ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.a};
-    spdPlanEnblSts = output.SpdPlanEnblSts;
+    ExecuteSpdPlan(&alcPathVcc, &agsmEnvModelPath, &ssmObjs);
 
     // assume inertia delay 0.5s
     accResponseDelay[accDelay_pos] = ctrlPoint.y;

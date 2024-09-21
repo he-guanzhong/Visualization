@@ -45,7 +45,13 @@ void DisplayLineChart(const int length,
 void DisplayLog(const int length, const int width, const int offset);
 
 #ifdef SPEED_PLANNING_H_
+void ExecuteSpdPlan(const AlcPathVcc* alcPathVcc,
+                    const AgsmEnvModelPath* agsmEnvModelPath,
+                    const SsmObjType* ssmObjs);
+void PrintOutputInfo(const DpSpeedPoints* output);
+
 void CalcOneStep();
+
 void DisplayOneStep(const int length, const int width, const int offset);
 
 void LoopbackCalculation();
