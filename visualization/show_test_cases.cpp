@@ -196,6 +196,7 @@ void LoadDummyMotionData(float* egoSpd,
 
   return;
 }
+
 void LoadDummyPathData(float* alc_coeffs,
                        EgoPathVcc* ego_coeffs,
                        float* left,
