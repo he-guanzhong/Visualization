@@ -23,9 +23,9 @@ void SpdPlanDataParsing(float** values,
                         int* totalFrame);
 
 void RadarDataParsing(float** values,
-                      int numColumns,
+                      const int numColumns,
                       char** columns,
-                      int* valuesCount,
+                      const int* valuesCount,
                       int* totalFrame);
 
 #endif  // SHOW_LOAD_LOG_H_

@@ -378,6 +378,39 @@ void DisplayLog(const int length, const int width, const int offset) {
   return;
 }
 
+void DisplayLineChart(const int length,
+                      const int width,
+                      const int offset,
+                      const int oriX,
+                      const int oriY,
+                      const int curFrame,
+                      const int frameNums) {
+  const int startFrame = fmax(0, curFrame - frameNums / 2);
+  const int endFrame = fmin(totalFrame - 1, curFrame + frameNums / 2);
+
+  Point original_arr[frameNums];
+  Point loopback_arr[frameNums];
+  for (int i = 0; i < frameNums; i++) {
+    original_arr[i].x = time_data[i + startFrame] - time_data[startFrame];
+    original_arr[i].y = original_data[i + startFrame];
+    loopback_arr[i].x = original_arr[i].x;
+    loopback_arr[i].y = loopback_data[i + startFrame];
+  }
+  GraphConfig XY_cfg = {
+      length, width, offset,
+      oriX,   oriY,  original_arr[frameNums - 1].x - original_arr[0].x,
+      6.0f};
+  char title1[25] = "Origin(BLUE), New(RED)";
+  PlotInfo plot_info1 = {title1,    original_arr, &ctrlPoint, 0,
+                         frameNums, BLUE,         false,      gAlcStCoeff};
+  char title2[1] = "";
+  PlotInfo plot_info2 = {title2,    loopback_arr, &ctrlPoint, 0,
+                         frameNums, RED,          false,      gAlcStCoeff};
+  showXYGraph(&XY_cfg, 4.0f, &plot_info1);
+  showXYGraph(&XY_cfg, 4.0f, &plot_info2);
+  return;
+}
+
 #ifdef SPEED_PLANNING_H_
 void ExecuteSpdPlan(const AlcPathVcc* alcPathVcc,
                     const AgsmEnvModelPath* agsmEnvModelPath,
@@ -616,39 +649,6 @@ void DisplayLoopbackCurve(const int length, const int width, const int offset) {
 }
 #endif
 
-void DisplayLineChart(const int length,
-                      const int width,
-                      const int offset,
-                      const int oriX,
-                      const int oriY,
-                      const int curFrame,
-                      const int frameNums) {
-  const int startFrame = fmax(0, curFrame - frameNums / 2);
-  const int endFrame = fmin(totalFrame - 1, curFrame + frameNums / 2);
-
-  Point original_arr[frameNums];
-  Point loopback_arr[frameNums];
-  for (int i = 0; i < frameNums; i++) {
-    original_arr[i].x = time_data[i + startFrame] - time_data[startFrame];
-    original_arr[i].y = original_data[i + startFrame];
-    loopback_arr[i].x = original_arr[i].x;
-    loopback_arr[i].y = loopback_data[i + startFrame];
-  }
-  GraphConfig XY_cfg = {
-      length, width, offset,
-      oriX,   oriY,  original_arr[frameNums - 1].x - original_arr[0].x,
-      6.0f};
-  char title1[25] = "Origin(BLUE), New(RED)";
-  PlotInfo plot_info1 = {title1,    original_arr, &ctrlPoint, 0,
-                         frameNums, BLUE,         false,      gAlcStCoeff};
-  char title2[1] = "";
-  PlotInfo plot_info2 = {title2,    loopback_arr, &ctrlPoint, 0,
-                         frameNums, RED,          false,      gAlcStCoeff};
-  showXYGraph(&XY_cfg, 4.0f, &plot_info1);
-  showXYGraph(&XY_cfg, 4.0f, &plot_info2);
-  return;
-}
-
 void ReleaseWrapper() {
   OPENFILENAME ofn;
   char szFile[260];
@@ -688,7 +688,6 @@ void ReleaseWrapper() {
   length = 400;
 #endif
   DisplayLog(length, width, 100);
-
   return;
 }
 

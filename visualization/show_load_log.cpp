@@ -184,10 +184,6 @@ void SpdPlanDataParsing(float** values,
   int TSR_ID[3] = {0}, TSR_Type[3] = {0}, TSR_LaDis[3] = {0},
       TSR_LgDis[3] = {0};
 
-  // Lateral control lines (no longer used)
-  // 8 coeffs, [0,5] for c0~c5(to be corrected), 6 = start, 7 = end.
-  // int L_C[8] = {0}, R_C[8] = {0}, LL_C[8] = {0}, RR_C[8] = {0};
-
   // ME road lines. Lane Host(LH), Lane Adjacent(LA) Coefficient
   // 8 coeffs, [0,5] for c0~c5(real), 6 = start, 7 = end.
   int LH_C_0[8] = {0}, LH_C_1[8] = {0}, LA_C_0[8] = {0}, LA_C_1[8] = {0};
@@ -735,9 +731,9 @@ void SpdPlanDataParsing(float** values,
 
 #ifdef RADAR_DEMO_DISP
 void RadarDataParsing(float** values,
-                      int numColumns,
+                      const int numColumns,
                       char** columns,
-                      int* valuesCount,
+                      const int* valuesCount,
                       int* totalFrame) {
   int Ts = 0;
   int ID[32] = {0}, DIS_X[32] = {0}, DIS_Y[32] = {0};

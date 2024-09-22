@@ -1,8 +1,6 @@
 #include "visualization/show_math.h"
 
-// float fit_coeffi[6];
-
-int combination(int n, int m) {
+int combination(const int n, const int m) {
   long long numerator = 1;
   int denominator = m;
   for (int i = 1; i <= m; i++) {
@@ -15,7 +13,11 @@ int combination(int n, int m) {
   return numerator;
 }
 
-void bezierPoint(float tau, int n, float points[][2], float* x, float* y) {
+void bezierPoint(const float tau,
+                 const int n,
+                 const float points[][2],
+                 float* x,
+                 float* y) {
   *x = 0, *y = 0;
   if (n < 1 || n > 100)
     return;
@@ -26,9 +28,9 @@ void bezierPoint(float tau, int n, float points[][2], float* x, float* y) {
   }
 }
 
-void bezierDerivative(float tau,
-                      int n,
-                      float points[][2],
+void bezierDerivative(const float tau,
+                      const int n,
+                      const float points[][2],
                       float* dx,
                       float* dy) {
   *dx = 0, *dy = 0;
@@ -44,9 +46,9 @@ void bezierDerivative(float tau,
   // printf("t = %.2f, dx = %.2f, dy = %.2f\n", t, *dx, *dy);
 }
 
-void bezierSecDerivative(float tau,
-                         int n,
-                         float points[][2],
+void bezierSecDerivative(const float tau,
+                         const int n,
+                         const float points[][2],
                          float* ddx,
                          float* ddy) {
   *ddx = 0, *ddy = 0;
@@ -99,13 +101,13 @@ void gaussianElimination(float a[MAT_SIZE][MAT_SIZE + 1]) {
   }
 }
 
-void quinticPolyFit(float T,
-                    float s0,
-                    float v0,
-                    float a0,
-                    float s1,
-                    float v1,
-                    float a1,
+void quinticPolyFit(const float T,
+                    const float s0,
+                    const float v0,
+                    const float a0,
+                    const float s1,
+                    const float v1,
+                    const float a1,
                     float coeffi[MAT_SIZE]) {
 // fifth degree polynominal fitting, set augmented matrix
 // s = a0 + a1*t + a2*t^2 + a3*t^3 + a4*t^4 + a5*t^5
