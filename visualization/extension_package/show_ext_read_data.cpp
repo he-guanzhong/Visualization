@@ -1,5 +1,6 @@
-#include "visualization/agsm/show_agsm_read_data.h"
-#ifdef AGSM_LOCAL_TEST
+#include "visualization/extension_package/show_ext_read_data.h"
+
+#ifdef AGSM_DEMO_TEST
 
 void ReadAgsmInputData(const int t,
                        MotionInfo* motionInfo,
@@ -52,6 +53,18 @@ void ReadAgsmInputData(const int t,
   agsmLinesInfo->LH1.start = RightLine_data[6][t];
   agsmLinesInfo->LH1.end = RightLine_data[7][t];
   return;
+}
+
+#endif
+
+#ifdef RADAR_DEMO_TEST
+
+void ReadRadarInputData(const int t, RadarObjInfo* radarInfo) {
+  for (int j = 0; j < 32; j++) {
+    radarInfo->iObjectId[j] = iObjectId_data[j][t];
+    radarInfo->fDistX[j] = fDistX_data[j][t];
+    radarInfo->fDistY[j] = fDistY_data[j][t];
+  }
 }
 
 #endif

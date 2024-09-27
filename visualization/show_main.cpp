@@ -185,21 +185,14 @@ void ReadInputData(const int t) {
     tsrInfo.tsr_signs[i].pos_x = tsr_pos_x_data[i][t];
     tsrInfo.tsr_signs[i].pos_y = tsr_pos_y_data[i][t];
   }
-  // Radar info
-#ifdef RADAR_DEMO_DISP
-  for (int j = 0; j < 32; j++) {
-    radarInfo.iObjectId[j] = iObjectId_data[j][t];
-    radarInfo.fDistX[j] = fDistX_data[j][t];
-    radarInfo.fDistY[j] = fDistY_data[j][t];
-  }
-#endif
+
   return;
 }
 
 void Time2Str(const float time, char* str) {
   char szTime_s[8];
-  int tt_m = (int)time / 60;
-  float tt_s = fmodf(time, 60);
+  const int tt_m = (int)time / 60;
+  const float tt_s = fmodf(time, 60);
   if (tt_m) {
     sprintf(str, "%d", tt_m);
     strcat(str, "m ");
@@ -261,16 +254,16 @@ void ShowSpdPlanInterface(const int length,
                           const int offset,
                           const LinesInfo* linesInfo,
                           const MotionInfo* motionInfo) {
-  GraphConfig BEV_cfg = {length / 2, width,  offset,     length / 2,
-                         0,          130.0f, 3.4f * 5.0f};
-  GraphConfig ST_cfg = {length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f,
-                        120.0f};
-  GraphConfig VT_cfg = {length / 2, (int)(width * 0.44), offset,
-                        0,          (int)(width * 0.28), 5.0f,
-                        30.0f};
-  GraphConfig AT_cfg = {length / 2, (int)(width * 0.44), offset,
-                        0,          (int)(width * 0.56), 5.0f,
-                        6.0f};
+  const GraphConfig BEV_cfg = {length / 2, width,  offset,     length / 2,
+                               0,          130.0f, 3.4f * 5.0f};
+  const GraphConfig ST_cfg = {
+      length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f, 120.0f};
+  const GraphConfig VT_cfg = {length / 2, (int)(width * 0.44), offset,
+                              0,          (int)(width * 0.28), 5.0f,
+                              30.0f};
+  const GraphConfig AT_cfg = {length / 2, (int)(width * 0.44), offset,
+                              0,          (int)(width * 0.56), 5.0f,
+                              6.0f};
   char ST_title[10] = "S-T Graph";
   PlotInfo ST_info = {ST_title, s_points, &ctrlPoint, 0,
                       6,        BLUE,     true,       gAlcStCoeff};
@@ -288,8 +281,9 @@ void ShowSpdPlanInterface(const int length,
 }
 
 void DisplayLog(const int length, const int width, const int offset) {
-  if (totalFrame <= 0)
+  if (totalFrame <= 0) {
     return;
+  }
   initgraph(length, width);
   setbkcolor(WHITE);
   setbkmode(TRANSPARENT);
@@ -311,7 +305,7 @@ void DisplayLog(const int length, const int width, const int offset) {
                  (msg.y > 0.25f * width)) {
         playSwitch = !playSwitch;
       } else if (msg.message == WM_LBUTTONDOWN && (msg.y > 0.95f * width)) {
-        float rate = (float)msg.x / (float)length;
+        const float rate = (float)msg.x / (float)length;
         t = rate * totalFrame;
         refleshScreen = true;
       } else if (msg.message == WM_RBUTTONDOWN) {
@@ -324,10 +318,12 @@ void DisplayLog(const int length, const int width, const int offset) {
         refleshScreen = false;
         ShowBasicFrameInfo(&t, &cycle, length, width);
 
-#ifdef AGSM_LOCAL_TEST  // HR
-        ReadAgsmInputData(t, &motionInfo, &agsmLinesInfo, &g_ssmObjType);
-#else
         ReadInputData(t);
+#ifdef AGSM_DEMO_TEST
+        ReadAgsmInputData(t, &motionInfo, &agsmLinesInfo, &g_ssmObjType);
+#endif
+#ifdef RADAR_DEMO_TEST
+        ReadRadarInputData(t, &radarInfo);
 #endif
         ReadOutputData(t);
 
@@ -339,13 +335,14 @@ void DisplayLog(const int length, const int width, const int offset) {
         motionInfo.gapTarS = gGapTarS;
         motionInfo.gapTarV = gGapTarV;
 
-        if (playMode == AGSM) {  // HR
-          GraphConfig BEV_cfg = {length, width, offset, 0, 0, 120.0f, 30.0f};
+        if (playMode == AGSM) {
+          const GraphConfig BEV_cfg = {length, width,  offset, 0,
+                                       0,      120.0f, 30.0f};
           showAGSMGraph(&BEV_cfg, 0, &g_ssmObjType, &agsmLinesInfo,
                         &motionInfo);
         } else if (playMode == RADAR) {
-          GraphConfig BEV_cfg = {length, width,  offset,     0,
-                                 0,      100.0f, 3.4f * 5.0f};
+          const GraphConfig BEV_cfg = {length, width,  offset,     0,
+                                       0,      100.0f, 3.4f * 5.0f};
           showRadarGraph(&BEV_cfg, 0.0f, &radarInfo);
         } else if (playMode == LOOPBACK) {
           const int chartWidth = 200, charOffset = 50;
@@ -548,7 +545,7 @@ void GenerateLocalData() {
   // DummySsmData(&ssmObjs);
   LoadDummySSmData(&ssmObjs);
 
-  float cycle_s = 0.1f;
+  const float cycle_s = 0.1f;
   float obs_pos_x[10] = {0};
   float obs_pos_y[10] = {0};
   float obs_speed_x[10] = {0};
@@ -649,7 +646,7 @@ void DisplayLoopbackCurve(const int length, const int width, const int offset) {
 }
 #endif
 
-void ReleaseWrapper() {
+void ReleaseWrapper(int length, int width, int offset) {
   OPENFILENAME ofn;
   char szFile[260];
   ZeroMemory(&ofn, sizeof(ofn));
@@ -665,7 +662,8 @@ void ReleaseWrapper() {
   }
   //   printf("Selected file: %s\n", ofn.lpstrFile);
   strcpy(csvFileName, ofn.lpstrFile);
-  LoadLog(csvFileName, &totalFrame);  // HR
+  LoadLog(csvFileName, &totalFrame);
+  width = playMode == LOOPBACK ? width + 150 : width;
 
 #ifdef SPEED_PLANNING_H_
   if (playMode == LOOPBACK) {
@@ -677,54 +675,59 @@ void ReleaseWrapper() {
     return;
   }
 #endif
-  int length = 750;
-  int width = playMode == LOOPBACK ? 900 : 750;
-#ifdef RADAR_DEMO_DISP
+
+#ifdef RADAR_DEMO_TEST
   playMode = fDistX_data[0][0] ? RADAR : playMode;
   length = 400;
 #endif
-#ifdef AGSM_LOCAL_TEST
+#ifdef AGSM_DEMO_TEST
   playMode = AGSM;
   length = 400;
 #endif
-  DisplayLog(length, width, 100);
+
+  DisplayLog(length, width, offset);
   return;
 }
 
 int main() {
+  int length = 750;  // numbers of horizontal pixels in display area
+  int width = 750;   // numbers of vertical pixels in display area
+  int offset = 100;  // numbers of blank margin pixels around display area
+
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(2);
+  playMode = PLAYMODE(3);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();
-      DisplayOneStep(750, 750, 100);
+      DisplayOneStep(length, width, offset);
       break;
     case LOG:
     case LOOPBACK:
     case LINECHART:
-      ReleaseWrapper();
+      ReleaseWrapper(length, width, offset);
       break;
     case SIMULATION:
       GenerateLocalData();
-      DisplayLog(750, 750, 100);
+      DisplayLog(length, width, offset);
       break;
     default:
-      ReleaseWrapper();
+      ReleaseWrapper(length, width, offset);
       break;
   };
-  int memoryCost = sizeof(time_data) + sizeof(egoSpd_data) * 5 +
-                   sizeof(alc_path_data) + sizeof(ctrl_point_data) +
-                   sizeof(truncated_col_data) * 3 + sizeof(s_points_data) * 5 +
-                   sizeof(objs_valid_flag_data) + sizeof(objs_lane_index_data) +
-                   sizeof(objs_type_data) + sizeof(objs_pos_x_data) * 6 +
-                   sizeof(tsr_spd_data) * 3 + sizeof(tsr_spd_warn_data) +
-                   sizeof(tsr_valid_flag_data) + sizeof(tsr_type_data) +
-                   2 * sizeof(tsr_pos_x_data) + sizeof(ll_path_data) * 8;
+  const int memoryCost =
+      sizeof(time_data) + sizeof(egoSpd_data) * 5 + sizeof(alc_path_data) +
+      sizeof(ctrl_point_data) + sizeof(truncated_col_data) * 3 +
+      sizeof(s_points_data) * 5 + sizeof(objs_valid_flag_data) +
+      sizeof(objs_lane_index_data) + sizeof(objs_type_data) +
+      sizeof(objs_pos_x_data) * 6 + sizeof(tsr_spd_data) * 3 +
+      sizeof(tsr_spd_warn_data) + sizeof(tsr_valid_flag_data) +
+      sizeof(tsr_type_data) + 2 * sizeof(tsr_pos_x_data) +
+      sizeof(ll_path_data) * 8;
 #else
   // for customers, play mode depends on whether spd plan data exists
   playMode = LOG;
-  ReleaseWrapper();
+  ReleaseWrapper(length, width, offset);
 #endif
   return 0;
 }

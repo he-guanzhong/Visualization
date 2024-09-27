@@ -26,7 +26,7 @@ void coordinateTrans1(Point* point) {
 }
 
 void coordinateTrans2(Point* point) {
-  float tmp = point->x;
+  const float tmp = point->x;
   point->x = s_origin2.x - point->y * s_xScale2;
   point->y = s_origin2.y - tmp * s_yScale2;
 }
@@ -67,17 +67,17 @@ void drawCar(Point* car,
              const int index) {
   // ObjType of ME: 0=UNFILLED, 1=CAR, 2=TRUCK, 3=MOTORBIKE, 4=BICYCLE,
   // 5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL
-  if (carType >= 7)
+  if (carType >= 7) {
     carType = 0;
-
-  float carLen = car_len_tbl[carType];
-  float carWid = car_wid_tbl[carType];
+  }
+  const float carLen = car_len_tbl[carType];
+  const float carWid = car_wid_tbl[carType];
   // display: left-hand system. control: right-hand system
   // vertice order: upper-right -> lower-right-> lower-left -> upper-left
-  float halfLenCos = carLen / 2.0f * cosf(yaw),
-        halfLenSin = carLen / 2.0f * sinf(yaw);
-  float halfWidCos = carWid / 2.0f * cosf(yaw),
-        halfWidSin = carWid / 2.0f * sinf(yaw);
+  const float halfLenCos = carLen / 2.0f * cosf(yaw),
+              halfLenSin = carLen / 2.0f * sinf(yaw);
+  const float halfWidCos = carWid / 2.0f * cosf(yaw),
+              halfWidSin = carWid / 2.0f * sinf(yaw);
   Point vertices[4] = {
       {car->x + halfLenCos - halfWidSin, car->y + halfLenSin + halfWidCos},
       {car->x + halfLenCos + halfWidSin, car->y + halfLenSin - halfWidCos},
@@ -105,7 +105,8 @@ void drawCar(Point* car,
   }
 
   if (index == 0 || index == 1 || index == 10) {
-    int y_offset = carType == 2 ? textheight(str[0]) : textheight(str[0]) / 2;
+    const int y_offset =
+        carType == 2 ? textheight(str[0]) : textheight(str[0]) / 2;
     outtextxy(car->x - textwidth(str[0]), car->y + y_offset, str[0]);
     outtextxy(car->x, car->y + y_offset, str[1]);
   } else if (index <= 5) {
@@ -119,7 +120,7 @@ void drawCar(Point* car,
 }
 
 void drawPolygon(const Point* center, const int num, const float rotateDegree) {
-  int r = 15;
+  const int r = 15;
   int vertex_x = r, vertex_y = 0;
   POINT vertices_show[num];
   for (int i = 0; i < num; i++) {
@@ -134,19 +135,21 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
   // TSR status display
   char tsr_disp[10] = "TSR: ";
   char spd_val[10];
-  int tsr_spd = tsrInfo->tsr_spd;
-  bool tsr_spd_warn = tsrInfo->tsr_spd_warn;
+  const int tsr_spd = tsrInfo->tsr_spd;
+  const bool tsr_spd_warn = tsrInfo->tsr_spd_warn;
   itoa(tsr_spd, spd_val, 10);
   strcat(tsr_disp, spd_val);
   char tsi_disp[10];
-  if (tsrInfo->tsr_tsi[0] == 5)
+  if (tsrInfo->tsr_tsi[0] == 5) {
     strcpy(tsi_disp, "stop");
-  else if (tsrInfo->tsr_tsi[0] == 6)
+  } else if (tsrInfo->tsr_tsi[0] == 6) {
     strcpy(tsi_disp, "yield");
-  else if (tsrInfo->tsr_tsi[1] == 5)
+  } else if (tsrInfo->tsr_tsi[1] == 5) {
     strcpy(tsi_disp, "no entry");
-  if (tsr_spd_warn)
+  }
+  if (tsr_spd_warn) {
     settextcolor(RED);
+  }
   outtextxy(s_infoAreaBoundary, s_origin2.y, tsr_disp);
   settextcolor(BLACK);
   outtextxy(s_infoAreaBoundary, s_origin2.y + textheight(tsr_disp), tsi_disp);
@@ -154,8 +157,9 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
   // TSR original input
   for (int i = 0; i < 3; i++) {
     if (!tsrInfo->tsr_signs[i].valid || tsrInfo->tsr_signs[i].type < 0 ||
-        tsrInfo->tsr_signs[i].type > 210)
+        tsrInfo->tsr_signs[i].type > 210) {
       continue;
+    }
     Point tsr_pos = {tsrInfo->tsr_signs[i].pos_x, tsrInfo->tsr_signs[i].pos_y};
     coordinateTrans2(&tsr_pos);
 
@@ -164,7 +168,7 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
       drawPolygon(&tsr_pos, 3, M_PI / 2);
     } else if (tsrInfo->tsr_signs[i].type == 210) {
       drawPolygon(&tsr_pos, 8, M_PI / 8);
-      char stop_sign[] = "stop";
+      const char stop_sign[] = "stop";
       outtextxy(tsr_pos.x - textwidth(stop_sign) / 2,
                 tsr_pos.y - textheight(stop_sign) / 2, stop_sign);
     } else if (tsrInfo->tsr_signs[i].type == 199) {
@@ -193,8 +197,8 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
     } else if (tsrInfo->tsr_signs[i].type == 79 ||
                tsrInfo->tsr_signs[i].type == 80) {
       strcpy(tsr_sign, "Cnl");
-      int r = textheight(tsr_sign) * 0.75f;
-      int r_x = (double)r / sqrt(2);
+      const int r = textheight(tsr_sign) * 0.75f;
+      const int r_x = (double)r / sqrt(2);
       setlinecolor(BLACK);
       line(tsr_pos.x - r_x, tsr_pos.y + r_x, tsr_pos.x + r_x, tsr_pos.y - r_x);
       circle(tsr_pos.x, tsr_pos.y, r);
@@ -214,9 +218,9 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
   char str_disp_set_spd[5];
   char str_inner_spd_lmt[5];
 
-  int cur_spd = round(motionInfo->egoSpd * 1.03f * 3.6f);
-  int spd_lmt = round(motionInfo->spdLmt);
-  int inner_spd_lmt = round(motionInfo->innerSpdLmt);
+  const int cur_spd = round(motionInfo->egoSpd * 1.03f * 3.6f);
+  const int spd_lmt = round(motionInfo->spdLmt);
+  const int inner_spd_lmt = round(motionInfo->innerSpdLmt);
 
   itoa(cur_spd, str_cur_spd, 10);
   itoa(spd_lmt, str_disp_set_spd, 10);
@@ -308,12 +312,13 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
             scenario_title);
 
   // ACC mode: 3-stand still, 4-stand active, 5-active, 6-override
-  if (motionInfo->accMode <= 5 && motionInfo->accMode >= 3)
+  if (motionInfo->accMode <= 5 && motionInfo->accMode >= 3) {
     settextcolor(GREEN);
-  else if (motionInfo->accMode == 6)
+  } else if (motionInfo->accMode == 6) {
     settextcolor(RED);
-  else
+  } else {
     settextcolor(BLACK);
+  }
 
   outtextxy(s_infoAreaBoundary, s_origin2.y - textheight(spd_title), spd_title);
   if (motionInfo->accMode <= 6 && motionInfo->accMode >= 3) {
@@ -323,10 +328,11 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
 
   char alc_side[8];
   memset(alc_side, '\0', sizeof(alc_side));
-  if (motionInfo->alcBehav.AutoLaneChgSide == 1)
+  if (motionInfo->alcBehav.AutoLaneChgSide == 1) {
     strcpy(alc_side, "ALC_L");
-  else if (motionInfo->alcBehav.AutoLaneChgSide == 2)
+  } else if (motionInfo->alcBehav.AutoLaneChgSide == 2) {
     strcpy(alc_side, "ALC_R");
+  }
   // alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
   // 4-in target line, 5-finished, 6-Back to Ego, 8-takeover, 9-popMsgReq
   char alc_sts[12];
@@ -352,8 +358,8 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
 
   settextcolor(BLACK);
   if (motionInfo->gapIndex < 5 && motionInfo->gapTarV) {
-    float tarS = motionInfo->gapTarS;
-    float tarL = motionInfo->alcBehav.AutoLaneChgSide == 1 ? 3.4f : -3.4f;
+    const float tarS = motionInfo->gapTarS;
+    const float tarL = motionInfo->alcBehav.AutoLaneChgSide == 1 ? 3.4f : -3.4f;
     Point tarPoint = {tarS, tarL};
     coordinateTrans2(&tarPoint);
     solidcircle(tarPoint.x, tarPoint.y, 5);
@@ -363,9 +369,9 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
              " %d", motionInfo->gapIndex);
     snprintf(str_tar2 + strlen(str_tar2), sizeof(str_tar2) - strlen(str_tar2),
              "%.1f m/s", motionInfo->gapTarV);
-    int offset = motionInfo->alcBehav.AutoLaneChgSide == 1
-                     ? -textwidth(str_tar2)
-                     : textwidth(str_tar2) / 4.0f;
+    const int offset = motionInfo->alcBehav.AutoLaneChgSide == 1
+                           ? -textwidth(str_tar2)
+                           : textwidth(str_tar2) / 4.0f;
     outtextxy(tarPoint.x + offset, tarPoint.y - textheight(str_tar1), str_tar1);
     outtextxy(tarPoint.x + offset, tarPoint.y, str_tar2);
   }
@@ -383,9 +389,9 @@ void drawQuinticPolyTraj(const float* coeffs,
   Point last = {0.0f, 0.0f};
   float restLen = lengthS;
   for (float x = startX; x < lengthX && restLen > 0; x += 3.0f) {
-    float y = coeffs[0] + coeffs[1] * x + coeffs[2] * x * x +
-              coeffs[3] * x * x * x + coeffs[4] * x * x * x * x +
-              coeffs[5] * x * x * x * x * x;
+    const float y = coeffs[0] + coeffs[1] * x + coeffs[2] * x * x +
+                    coeffs[3] * x * x * x + coeffs[4] * x * x * x * x +
+                    coeffs[5] * x * x * x * x * x;
     if (restLen > 0) {
       if (last.x != 0.0f) {
         float delta_s = hypotf(x - last.x, y - last.y);
@@ -395,8 +401,9 @@ void drawQuinticPolyTraj(const float* coeffs,
     }
     Point curDrawPoint = {x, y};
     coordinateTrans2(&curDrawPoint);
-    if (lastDrawPoint.x != 0.0f && x < lengthX)
+    if (lastDrawPoint.x != 0.0f && x < lengthX) {
       line(curDrawPoint.x, curDrawPoint.y, lastDrawPoint.x, lastDrawPoint.y);
+    }
     lastDrawPoint = curDrawPoint;
   }
   predictPosn->x = last.x;
@@ -413,15 +420,15 @@ void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
 
   float totalLen = egoPath->Len[0] + egoPath->Len[1] + egoPath->Len[2];
   for (float x = startX; x < totalLen; x += 3.0f) {
-    float y = getPiecewiseCubicPolyY(x, egoPath);
+    const float y = getPiecewiseCubicPolyY(x, egoPath);
     last.x = x, last.y = y;
     Point curDrawPoint = {x, y};
     coordinateTrans2(&curDrawPoint);
-    if (lastDrawPoint.x != startX)
+    if (lastDrawPoint.x != startX) {
       line(curDrawPoint.x, curDrawPoint.y, lastDrawPoint.x, lastDrawPoint.y);
+    }
     lastDrawPoint = curDrawPoint;
   }
-
   predictPosn->x = last.x;
   predictPosn->y = last.y;
 }
@@ -430,9 +437,9 @@ void drawObstacles(const SsmObjType* ssmObjs,
                    const EgoPathVcc* egoPath,
                    const float cur_spd) {
   for (int i = 0; i < ssmObjs->obj_num; i++) {
-    if (!ssmObjs->obj_lists[i].valid_flag)
+    if (!ssmObjs->obj_lists[i].valid_flag) {
       continue;
-
+    }
     const SsmObsType* obs = &ssmObjs->obj_lists[i];
     Point obs_cur = {obs->pos_x, obs->pos_y};
     char str_obs_cur[2][8] = {};
@@ -452,7 +459,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
       if (cur_spd > 30.0f / 3.6f && obs->speed_x > 1.0f &&
           objPosnLgt[j] < 120.0f) {
         objPosnLat[j] = getPiecewiseCubicPolyY(objPosnLgt[j], egoPath);
-        float roadCurveOffset = objPosnLat[j] - objPosnLat[0];
+        const float roadCurveOffset = objPosnLat[j] - objPosnLat[0];
         if ((roadCurveOffset > predLatOffset && predLatOffset >= 0) ||
             (roadCurveOffset < predLatOffset && predLatOffset <= 0))
           predLatOffset = roadCurveOffset;
@@ -463,7 +470,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
     obs_pred = obs_pred_path[5];
     // cipv, considier 0->1s const acc, 1->5s const spd
     if (obs->lane_index == 3 && obs->pos_x > 0) {
-      float const_acc_time = 1.0f;
+      const float const_acc_time = 1.0f;
       obs_pred.x = obs->pos_x +
                    (obs->speed_x + obs->acc_x * const_acc_time) * 5.0f -
                    0.5f * obs->acc_x * const_acc_time * const_acc_time;
@@ -491,7 +498,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
 
 void drawBEVRuler(const float zeroOffsetX) {
   settextcolor(BLACK);
-  float coordinate_x_of_ruler_y = fminf(-6.0f, -zeroOffsetX);
+  const float coordinate_x_of_ruler_y = fminf(-6.0f, -zeroOffsetX);
   Point ruler_x[4] = {
       {-30.0f, -6.0f}, {0.0f, -6.0f}, {50.0f, -6.0f}, {100.0f, -6.0f}};
   Point ruler_y[2] = {{coordinate_x_of_ruler_y, -5.0f},
@@ -528,7 +535,7 @@ void drawBasicGraph(const int len,
   settextcolor(BLACK);
   settextstyle(20, 0, "Calibri");
   // horizontal lines
-  float intervalX = rangeX / 5.0f, intervalY = rangeY / 6.0f;
+  const float intervalX = rangeX / 5.0f, intervalY = rangeY / 6.0f;
   for (int i = 1; i <= 6; i++) {
     Point point1 = {0.0f, i * intervalY};
     Point point2 = {rangeX, i * intervalY};
@@ -561,8 +568,8 @@ void showXYGraph(const GraphConfig* config,
                  const float zeroOffsetY,
                  const PlotInfo* plot) {
   // float zeroOffsetY = 4.0f;  // positive means: 0 moves up
-  float len = config->length - 2 * config->offset;
-  float wid = config->width - 2 * config->offset;
+  const float len = config->length - 2 * config->offset;
+  const float wid = config->width - 2 * config->offset;
 
   // x = horizental, y = vertical
   s_origin1 = {(float)(config->oriX + config->offset),
@@ -580,14 +587,15 @@ void showXYGraph(const GraphConfig* config,
   settextstyle(20, 0, "Calibri", 900, 900, 0, 0, 0, 0);
 
   char titleY[10];
-  if (plot->title[0] == 'A')
+  if (plot->title[0] == 'A') {
     strcpy(titleY, "A (m/s2)");
-  else if (plot->title[0] == 'V')
+  } else if (plot->title[0] == 'V') {
     strcpy(titleY, "V (m/s)");
-  else if (plot->title[0] == 'S')
+  } else if (plot->title[0] == 'S') {
     strcpy(titleY, "S (m)");
-  else
+  } else {
     strcpy(titleY, "y");
+  }
 
   outtextxy(s_origin1.x - 50, s_origin1.y - wid / 2, titleY);
   settextstyle(20, 0, "Calibri", 0, 0, 0, 0, 0, 0);
@@ -629,7 +637,7 @@ void showXYGraph(const GraphConfig* config,
 #endif
   // quintic polynominal curve
   if (plot->showPoly) {
-    for (float i = 0.0f; i < 5; i += 0.2f) {
+    for (float i = 0.0f; i < 5.0f; i += 0.2f) {
       if (plot->title[0] == 'S') {
         curDrawP = {i, plot->quinticPoly[0] + plot->quinticPoly[1] * i +
                            plot->quinticPoly[2] * i * i +
@@ -648,7 +656,9 @@ void showXYGraph(const GraphConfig* config,
       }
       curDrawP.y += zeroOffsetY;
       coordinateTrans1(&curDrawP);
-      line(lastDrawP.x, lastDrawP.y, curDrawP.x, curDrawP.y);
+      if (i > 0) {
+        line(lastDrawP.x, lastDrawP.y, curDrawP.x, curDrawP.y);
+      }
       lastDrawP = curDrawP;
     }
   }
@@ -656,13 +666,14 @@ void showXYGraph(const GraphConfig* config,
   // result points
   setfillcolor(plot->pointColor);
   setlinecolor(plot->pointColor);
-  for (int i = plot->startIndex; i < plot->startIndex + plot->pointNums; i++) {
-    float val = plot->points[i].y;
+  for (int i = plot->startIndex; i < plot->startIndex + plot->pointNums; ++i) {
+    const float val = plot->points[i].y;
     plot->points[i].y += zeroOffsetY;
     coordinateTrans1(&plot->points[i]);
-    if (i > 0)
+    if (i > 0) {
       line(plot->points[i - 1].x, plot->points[i - 1].y, plot->points[i].x,
            plot->points[i].y);
+    }
     if (plot->title[0] == 'A' || plot->title[0] == 'S' ||
         plot->title[0] == 'V') {
       solidcircle(plot->points[i].x, plot->points[i].y, 5);
@@ -672,7 +683,7 @@ void showXYGraph(const GraphConfig* config,
     }
   }
   if (plot->title[0] == 'A') {
-    float val = plot->ctrlPoint->y;
+    const float val = plot->ctrlPoint->y;
     plot->ctrlPoint->y += zeroOffsetY;
     coordinateTrans1(plot->ctrlPoint);
     solidcircle(plot->ctrlPoint->x, plot->ctrlPoint->y, 5);
@@ -684,8 +695,8 @@ void showXYGraph(const GraphConfig* config,
 }
 
 void initBEVGraph(const GraphConfig* config, const float zeroOffsetX) {
-  float len = config->length - 2.0f * config->offset;
-  float wid = config->width - 2.0f * config->offset;
+  const float len = config->length - 2.0f * config->offset;
+  const float wid = config->width - 2.0f * config->offset;
   // vehicle frame: front-left-up, FLU. eg. x-longitudinal, y-lateral
   s_origin2 = {config->oriX + config->length * 0.5f,
                config->oriY + config->offset + wid};
@@ -718,14 +729,14 @@ void showBEVGraph(const GraphConfig* config,
   // lineType: 0-unknown, 1-solid, 2-dash, 32-Dash(inner)_Solid(outer),
   setlinestyle(PS_DASHDOT);
   Point lineEnd;
-  int leftBoundaryColor = (motionInfo->alcBehav.LeftBoundaryType == 2 ||
-                           motionInfo->alcBehav.LeftBoundaryType == 32)
-                              ? GREEN
-                              : RGB(0, 87, 55);
-  int rightBoundaryColor = (motionInfo->alcBehav.RightBoundaryType == 2 ||
-                            motionInfo->alcBehav.RightBoundaryType == 32)
-                               ? GREEN
-                               : RGB(0, 87, 55);
+  const int leftBoundaryColor = (motionInfo->alcBehav.LeftBoundaryType == 2 ||
+                                 motionInfo->alcBehav.LeftBoundaryType == 32)
+                                    ? GREEN
+                                    : RGB(0, 87, 55);
+  const int rightBoundaryColor = (motionInfo->alcBehav.RightBoundaryType == 2 ||
+                                  motionInfo->alcBehav.RightBoundaryType == 32)
+                                     ? GREEN
+                                     : RGB(0, 87, 55);
   drawQuinticPolyTraj(linesInfo->left_coeffs, leftBoundaryColor,
                       linesInfo->left_coeffs[6], linesInfo->left_coeffs[7],
                       linesInfo->left_coeffs[7], &lineEnd);
@@ -744,7 +755,7 @@ void showBEVGraph(const GraphConfig* config,
   drawObstacles(ssmObjs, &linesInfo->ego_coeffs, motionInfo->egoSpd);
 
   // navigation path, ego c7 as end point
-  float naviRange = linesInfo->alc_coeffs[7];
+  const float naviRange = linesInfo->alc_coeffs[7];
   Point predictPosn = {0.0f, 0.0f};
   // ego lane path, c0 ~ c3
   drawPiecewiseCubicPolyTraj(&linesInfo->ego_coeffs, MAGENTA, 0.0f,
@@ -776,42 +787,6 @@ void showBEVGraph(const GraphConfig* config,
   }
   // ego spd info and lane change status
   drawMotionInfo(motionInfo);
-  drawBEVRuler(zeroOffsetX);
-}
-
-void drawRadarObj(const RadarObjInfo* radar_info) {
-  for (int j = 0; j < 32; j++) {
-    if (radar_info->iObjectId[j] == 0)
-      continue;
-
-    Point obj_posn = {radar_info->fDistX[j], radar_info->fDistY[j]};
-    char obj_id[10] = "";
-    snprintf(obj_id + strlen(obj_id), sizeof(obj_id) - strlen(obj_id), "%d", j);
-    coordinateTrans2(&obj_posn);
-
-    setlinecolor(BLACK);
-    setfillcolor(DARKGRAY);
-    solidcircle(obj_posn.x, obj_posn.y, 5);
-    outtextxy(obj_posn.x - textwidth(obj_id) / 2,
-              obj_posn.y + textheight(obj_id) / 2, obj_id);
-  }
-}
-
-void showRadarGraph(const GraphConfig* config,
-                    const float zeroOffsetX,
-                    const RadarObjInfo* radar_info) {
-  initBEVGraph(config, zeroOffsetX);
-
-  drawRadarObj(radar_info);
-
-  // ego car
-  setfillcolor(RED);
-  setlinestyle(PS_SOLID);
-  Point ego = {0.0f, 0.0f};
-  char str_ego[2][8] = {};
-  strcpy(str_ego[0], "ego");
-  drawCar(&ego, str_ego, 1, 0.0f, 10);
-
   drawBEVRuler(zeroOffsetX);
 }
 

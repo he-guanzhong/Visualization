@@ -1,7 +1,8 @@
-#include "visualization/agsm/show_agsm_load_log.h"
-#ifdef AGSM_LOCAL_TEST
+#include "visualization/extension_package/show_ext_load_log.h"
 
-float TimeStamp_data[DATA_NUM];
+#ifdef AGSM_DEMO_TEST
+extern float time_data[DATA_NUM];
+
 float VehSpd_data[DATA_NUM];
 float LeftLine_data[8][DATA_NUM];
 float RightLine_data[8][DATA_NUM];
@@ -115,7 +116,7 @@ void AgsmDataParsing(float** values,
 
   *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
   for (int t = 0; t < *totalFrame; t++) {
-    TimeStamp_data[t] = values[Ts][t];
+    time_data[t] = values[Ts][t];
 
     VehSpd_data[t] = EGO_V ? values[EGO_V][t] : 0;
 
@@ -181,4 +182,63 @@ void AgsmDataParsing(float** values,
   return;
 }
 
+#endif
+
+#ifdef RADAR_DEMO_TEST
+
+extern float time_data[DATA_NUM];
+
+int iObjectId_data[32][DATA_NUM];
+float fDistX_data[32][DATA_NUM];
+float fDistY_data[32][DATA_NUM];
+
+void RadarDataParsing(float** values,
+                      const int numColumns,
+                      char** columns,
+                      const int* valuesCount,
+                      int* totalFrame) {
+  int Ts = 0;
+  int ID[32] = {0}, DIS_X[32] = {0}, DIS_Y[32] = {0};
+  for (int i = 0; i < numColumns; i++) {
+    if (strcmp(columns[i], "t[s]") == 0 ||
+        strcmp(columns[i], "timestamps") == 0)
+      Ts = i;
+
+    for (int j = 0; j < 32; j++) {
+      char obs_title[25] = "iObjectId_";
+      char disX_title[25] = "fDistX_";
+      char disY_title[25] = "fDistY_";
+      snprintf(obs_title + strlen(obs_title),
+               sizeof(obs_title) - strlen(obs_title), "%02d[]", j);
+      snprintf(disX_title + strlen(disX_title),
+               sizeof(disX_title) - strlen(disX_title), "%02d[m]", j);
+      snprintf(disY_title + strlen(disY_title),
+               sizeof(disY_title) - strlen(disY_title), "%02d[m]", j);
+
+      if (strncmp(columns[i], obs_title, 12) == 0) {
+        ID[j] = i;
+      } else if (strncmp(columns[i], disX_title, 9) == 0) {
+        DIS_X[j] = i;
+      } else if (strncmp(columns[i], disY_title, 9) == 0) {
+        DIS_Y[j] = i;
+      }
+    }
+  }
+
+  *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
+  /*   for (int j = 0; j < 32; j++) {
+      printf("ID[%d] = %d\n", j, ID[j]);
+    } */
+  for (int t = 0; t < *totalFrame; t++) {
+    time_data[t] = values[Ts][t];
+    for (int j = 0; j < 32; j++) {
+      if (ID[j] == 0)
+        continue;
+      iObjectId_data[j][t] = values[ID[j]][t];
+      fDistX_data[j][t] = values[DIS_X[j]][t];
+      fDistY_data[j][t] = values[DIS_Y[j]][t];
+    }
+  }
+  return;
+}
 #endif

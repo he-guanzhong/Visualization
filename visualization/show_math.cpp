@@ -56,9 +56,10 @@ void bezierSecDerivative(const float tau,
     return;
   const float t = tau / (float)n;
   for (int i = 0; i < n - 1; i++) {
-    float dx = n * (points[i + 2][0] - 2 * points[i + 1][0] + points[i][0]);
-
-    float dy = n * (points[i + 2][1] - 2 * points[i + 1][1] + points[i][1]);
+    const float dx =
+        n * (points[i + 2][0] - 2 * points[i + 1][0] + points[i][0]);
+    const float dy =
+        n * (points[i + 2][1] - 2 * points[i + 1][1] + points[i][1]);
     *ddx += n * (n - 1) * combination(n - 2, i) * pow(1 - t, n - 2 - i) *
             pow(t, i) * dx;
     *ddy += n * (n - 1) * combination(n - 2, i) * pow(1 - t, n - 2 - i) *

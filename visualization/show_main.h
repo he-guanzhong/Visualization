@@ -7,7 +7,7 @@
 #include "visualization/show_test_cases.h"
 #endif
 
-#include "visualization/agsm/show_agsm_read_data.h"
+#include "visualization/extension_package/show_ext_read_data.h"
 #include "visualization/show_basic_tools.h"
 #include "visualization/show_load_log.h"
 
@@ -61,6 +61,6 @@ void GenerateLocalData();
 void DisplayLoopbackCurve(const int length, const int width, const int offset);
 #endif
 
-void ReleaseWrapper();
+void ReleaseWrapper(int length, int width, int offset);
 
 #endif  // SHOW_MAIN_H_

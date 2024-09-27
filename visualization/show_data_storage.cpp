@@ -53,9 +53,3 @@ float original_data[DATA_NUM];
 float loopback_data[DATA_NUM];
 float tempMeasureVal1_data[DATA_NUM];
 float tempMeasureVal2_data[DATA_NUM];
-
-#ifdef RADAR_DEMO_DISP
-int iObjectId_data[32][DATA_NUM];
-float fDistX_data[32][DATA_NUM];
-float fDistY_data[32][DATA_NUM];
-#endif

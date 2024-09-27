@@ -1,5 +1,6 @@
-#ifndef SHOW_AGSM_TOOLS_H_
-#define SHOW_AGSM_TOOLS_H_
+#ifndef SHOW_EXT_TOOLS_H_
+#define SHOW_EXT_TOOLS_H_
+
 #include "visualization/show_basic_tools.h"
 
 typedef struct {
@@ -26,6 +27,12 @@ typedef struct {
   LaneMkr LH1;
 } AgsmLinesInfo;
 
+typedef struct {
+  int iObjectId[32];
+  float fDistX[32];
+  float fDistY[32];
+} RadarObjInfo;
+
 void drawLaneMkr(const LaneMkr* path, const int color);
 
 void drawConftPath(const ConftPathTyp* path,
@@ -44,4 +51,14 @@ void showAGSMGraph(const GraphConfig* config,
                    const AgsmLinesInfo* agsmlinesInfo,
                    const MotionInfo* motionInfo);
 
-#endif  // SHOW_AGSM_TOOLS_H_
+void drawRadarObj(const RadarObjInfo* radarInfo);
+
+/// @brief Radar graph, x-axis_forward_vertical, y-axis_lateral_horizontal
+/// @param config       basic configuration
+/// @param zeroOffsetX  distance behind ego vehicle to be displayed
+/// @param radarInfo    32 points
+void showRadarGraph(const GraphConfig* config,
+                    const float zeroOffsetX,
+                    const RadarObjInfo* radarInfo);
+
+#endif  // SHOW_EXT_TOOLS_H_

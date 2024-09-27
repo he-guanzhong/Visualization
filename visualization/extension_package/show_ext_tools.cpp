@@ -1,15 +1,17 @@
 
-#include "visualization/agsm/show_agsm_tools.h"
+#include "visualization/extension_package/show_ext_tools.h"
 
 void drawLaneMkr(const LaneMkr* path, const int color) {
   setlinecolor(color);
   Point lastDrawPoint = {0.0f, 0.0f};
   for (float x = path->start; x < path->end; x += 3.0f) {
-    float y = path->c0 + path->c1 * x + path->c2 * x * x + path->c3 * x * x * x;
+    const float y =
+        path->c0 + path->c1 * x + path->c2 * x * x + path->c3 * x * x * x;
     Point curDrawPoint = {x, y};
     coordinateTrans2(&curDrawPoint);
-    if (lastDrawPoint.x != 0.0f)
+    if (lastDrawPoint.x != 0.0f) {
       line(curDrawPoint.x, curDrawPoint.y, lastDrawPoint.x, lastDrawPoint.y);
+    }
     lastDrawPoint = curDrawPoint;
   }
 }
@@ -22,12 +24,12 @@ void drawConftPath(const ConftPathTyp* path,
   float c0_arr[3] = {path->c0, 0, 0}, c1_arr[3] = {path->c1, 0, 0},
         c2_arr[3] = {path->c2, 0, 0},
         c3_arr[3] = {path->c3_array[0], path->c3_array[1], path->c3_array[2]};
-  float totalLen = path->segment_length_array[0] +
-                   path->segment_length_array[1] +
-                   path->segment_length_array[2];
-  float len_arr[3] = {path->segment_length_array[0],
-                      path->segment_length_array[1],
-                      path->segment_length_array[2]};
+  const float totalLen = path->segment_length_array[0] +
+                         path->segment_length_array[1] +
+                         path->segment_length_array[2];
+  const float len_arr[3] = {path->segment_length_array[0],
+                            path->segment_length_array[1],
+                            path->segment_length_array[2]};
   for (int i = 0; i <= 1; i++) {
     c0_arr[i + 1] = c0_arr[i] + c1_arr[i] * len_arr[i] +
                     c2_arr[i] * len_arr[i] * len_arr[i] +
@@ -56,8 +58,9 @@ void drawConftPath(const ConftPathTyp* path,
         c3 * x_prime * x_prime * x_prime;
     Point curDrawPoint = {x, y};
     coordinateTrans2(&curDrawPoint);
-    if (lastDrawPoint.x != startX)
+    if (lastDrawPoint.x != startX) {
       line(curDrawPoint.x, curDrawPoint.y, lastDrawPoint.x, lastDrawPoint.y);
+    }
     lastDrawPoint = curDrawPoint;
   }
 }
@@ -92,5 +95,41 @@ void showAGSMGraph(const GraphConfig* config,
 
   // ego spd info and lane change status
   drawMotionInfo(motionInfo);
+  drawBEVRuler(zeroOffsetX);
+}
+
+void drawRadarObj(const RadarObjInfo* radarInfo) {
+  for (int j = 0; j < 32; j++) {
+    if (radarInfo->iObjectId[j] == 0) {
+      continue;
+    }
+    Point obj_posn = {radarInfo->fDistX[j], radarInfo->fDistY[j]};
+    char obj_id[10] = "";
+    snprintf(obj_id + strlen(obj_id), sizeof(obj_id) - strlen(obj_id), "%d", j);
+    coordinateTrans2(&obj_posn);
+
+    setlinecolor(BLACK);
+    setfillcolor(DARKGRAY);
+    solidcircle(obj_posn.x, obj_posn.y, 5);
+    outtextxy(obj_posn.x - textwidth(obj_id) / 2,
+              obj_posn.y + textheight(obj_id) / 2, obj_id);
+  }
+}
+
+void showRadarGraph(const GraphConfig* config,
+                    const float zeroOffsetX,
+                    const RadarObjInfo* radarInfo) {
+  initBEVGraph(config, zeroOffsetX);
+
+  drawRadarObj(radarInfo);
+
+  // ego car
+  setfillcolor(RED);
+  setlinestyle(PS_SOLID);
+  Point ego = {0.0f, 0.0f};
+  char str_ego[2][8] = {};
+  strcpy(str_ego[0], "ego");
+  drawCar(&ego, str_ego, 1, 0.0f, 10);
+
   drawBEVRuler(zeroOffsetX);
 }

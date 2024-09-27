@@ -74,12 +74,6 @@ typedef struct {
   float rightright_coeffs[8];
 } LinesInfo;
 
-typedef struct {
-  int iObjectId[32];
-  float fDistX[32];
-  float fDistY[32];
-} RadarObjInfo;
-
 void coordinateTrans1(Point* point);
 void coordinateTrans2(Point* point);
 
@@ -142,12 +136,6 @@ void showBEVGraph(const GraphConfig* config,
                   const LinesInfo* linesInfo,
                   const TsrInfo* tsrInfo,
                   const MotionInfo* motionInfo);
-
-void drawRadarObj(const RadarObjInfo* radar_info);
-
-void showRadarGraph(const GraphConfig* config,
-                    const float zeroOffsetX,
-                    const RadarObjInfo* radar_info);
 
 bool inArea(int mx, int my, int x, int y, int w, int h);
 bool button(ExMessage* msg, int x, int y, int w, int h, bool* swt);

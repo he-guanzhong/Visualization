@@ -6,7 +6,15 @@ static inline float readValue(float** values, int col_name, int t) {
   return values[col_name][t];
 }
 
-void LoadLog(const char csvFileName[], int* totalFrame) {
+void LoadLog(const char* const csvFileName, int* totalFrame) {
+  // 检查文件是否在黑名单
+  const char* device_blacklist[2] = {"/dev/tty", "/dev/null"};
+  for (int i = 0; i < 2 && device_blacklist[i] != NULL; ++i) {
+    if (strcmp(csvFileName, device_blacklist[i]) == 0) {
+      return;
+    }
+  }
+
   FILE* file = fopen(csvFileName, "r");
   if (!file) {
     *totalFrame = 0;  // ERROR CODE
@@ -100,7 +108,8 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
   if (fgets(line, MAX_LINE_SIZE * sizeof(char), file)) {
     char* token = strtok(line, ",");
     while (token) {
-      numColumns++;
+      if (++numColumns > MAX_COLUMNS)
+        break;
       columns =
           static_cast<char**>(realloc(columns, numColumns * sizeof(char*)));
       columns[numColumns - 1] = strdup(token);
@@ -112,6 +121,7 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
   while (fgets(line, MAX_LINE_SIZE * sizeof(char), file)) {
     char* token = strtok(line, ",");
     int columnIndex = 0;
+    // char* tokenEndPtr;
     while (token) {
       if (strlen(token) > 0) {
         if (columnIndex < numColumns &&
@@ -132,12 +142,12 @@ void LoadLog(const char csvFileName[], int* totalFrame) {
       }
       printf("\n");
     } */
-#ifdef RADAR_DEMO_DISP
+#ifdef RADAR_DEMO_TEST
   RadarDataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #else
   SpdPlanDataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #endif
-#ifdef AGSM_LOCAL_TEST  // HR
+#ifdef AGSM_DEMO_TEST
   AgsmDataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #endif
 
@@ -699,13 +709,14 @@ void SpdPlanDataParsing(float** values,
     for (int k = 0; k < 8; k++) {
       if (LH_C_0[k] == 0)
         continue;
-      float correct_fac = (k <= 3 ? -1 : 1);
-      if (k <= 3 || k >= 6) {
-        l_path_data[k][t] = values[LH_C_0[k]][t] * correct_fac;
-        r_path_data[k][t] = values[LH_C_1[k]][t] * correct_fac;
-        ll_path_data[k][t] = values[LA_C_0[k]][t] * correct_fac;
-        rr_path_data[k][t] = values[LA_C_1[k]][t] * correct_fac;
+      const float correct_fac = (k <= 3 ? -1 : 1);
+      if (k == 4 || k == 5) {
+        continue;
       }
+      l_path_data[k][t] = values[LH_C_0[k]][t] * correct_fac;
+      r_path_data[k][t] = values[LH_C_1[k]][t] * correct_fac;
+      ll_path_data[k][t] = values[LA_C_0[k]][t] * correct_fac;
+      rr_path_data[k][t] = values[LA_C_1[k]][t] * correct_fac;
     }
 
     // TSR status
@@ -728,55 +739,3 @@ void SpdPlanDataParsing(float** values,
   }
   return;
 }
-
-#ifdef RADAR_DEMO_DISP
-void RadarDataParsing(float** values,
-                      const int numColumns,
-                      char** columns,
-                      const int* valuesCount,
-                      int* totalFrame) {
-  int Ts = 0;
-  int ID[32] = {0}, DIS_X[32] = {0}, DIS_Y[32] = {0};
-  for (int i = 0; i < numColumns; i++) {
-    if (strcmp(columns[i], "t[s]") == 0 ||
-        strcmp(columns[i], "timestamps") == 0)
-      Ts = i;
-
-    for (int j = 0; j < 32; j++) {
-      char obs_title[25] = "iObjectId_";
-      char disX_title[25] = "fDistX_";
-      char disY_title[25] = "fDistY_";
-      snprintf(obs_title + strlen(obs_title),
-               sizeof(obs_title) - strlen(obs_title), "%02d[]", j);
-      snprintf(disX_title + strlen(disX_title),
-               sizeof(disX_title) - strlen(disX_title), "%02d[m]", j);
-      snprintf(disY_title + strlen(disY_title),
-               sizeof(disY_title) - strlen(disY_title), "%02d[m]", j);
-
-      if (strncmp(columns[i], obs_title, 12) == 0) {
-        ID[j] = i;
-      } else if (strncmp(columns[i], disX_title, 9) == 0) {
-        DIS_X[j] = i;
-      } else if (strncmp(columns[i], disY_title, 9) == 0) {
-        DIS_Y[j] = i;
-      }
-    }
-  }
-
-  *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
-  /*   for (int j = 0; j < 32; j++) {
-      printf("ID[%d] = %d\n", j, ID[j]);
-    } */
-  for (int t = 0; t < *totalFrame; t++) {
-    time_data[t] = values[Ts][t];
-    for (int j = 0; j < 32; j++) {
-      if (ID[j] == 0)
-        continue;
-      iObjectId_data[j][t] = values[ID[j]][t];
-      fDistX_data[j][t] = values[DIS_X[j]][t];
-      fDistY_data[j][t] = values[DIS_Y[j]][t];
-    }
-  }
-  return;
-}
-#endif

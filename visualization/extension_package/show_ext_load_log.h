@@ -1,14 +1,15 @@
-#ifndef SHOW_AGSM_LOAD_LOG_
-#define SHOW_AGSM_LOAD_LOG_
+#ifndef SHOW_EXT_LOAD_LOG_
+#define SHOW_EXT_LOAD_LOG_
 
-#ifdef AGSM_LOCAL_TEST
-
+#include <stdio.h>
 #include <string.h>
+
+#ifdef AGSM_DEMO_TEST
+
 #ifndef DATA_NUM
 #define DATA_NUM 20480
 #endif
 
-extern float TimeStamp_data[DATA_NUM];
 extern float VehSpd_data[DATA_NUM];
 extern float LeftLine_data[8][DATA_NUM];
 extern float RightLine_data[8][DATA_NUM];
@@ -44,4 +45,21 @@ void AgsmDataParsing(float** values,
 
 #endif
 
-#endif  // SHOW_AGSM_LOAD_LOG_
+#ifdef RADAR_DEMO_TEST
+
+#ifndef DATA_NUM
+#define DATA_NUM 20480
+#endif
+
+extern int iObjectId_data[32][DATA_NUM];
+extern float fDistX_data[32][DATA_NUM];
+extern float fDistY_data[32][DATA_NUM];
+
+void RadarDataParsing(float** values,
+                      const int numColumns,
+                      char** columns,
+                      const int* valuesCount,
+                      int* totalFrame);
+#endif
+
+#endif  // SHOW_EXT_LOAD_LOG_

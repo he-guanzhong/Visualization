@@ -57,10 +57,4 @@ extern float loopback_data[DATA_NUM];
 extern float tempMeasureVal1_data[DATA_NUM];
 extern float tempMeasureVal2_data[DATA_NUM];
 
-#ifdef RADAR_DEMO_DISP
-extern int iObjectId_data[32][DATA_NUM];
-extern float fDistX_data[32][DATA_NUM];
-extern float fDistY_data[32][DATA_NUM];
-#endif
-
 #endif  // SHOW_DATA_STORAGE_H_
