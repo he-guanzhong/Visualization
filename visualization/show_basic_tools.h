@@ -78,7 +78,7 @@ void coordinateTrans1(Point* point);
 void coordinateTrans2(Point* point);
 
 void strCompletion(char str[2][8], const int index, const int spd);
-float getPiecewiseCubicPolyY(const float x, const EgoPathVcc* egoPath);
+float getPiecewiseCubicPolynomial(const float x, const EgoPathVcc* egoPath);
 
 void drawCar(Point* car,
              const char str[2][8],

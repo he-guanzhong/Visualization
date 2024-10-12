@@ -41,7 +41,7 @@ void strCompletion(char str[2][8], const int index, const int spd) {
   strcat(str[1], " m/s");
 }
 
-float getPiecewiseCubicPolyY(const float x, const EgoPathVcc* egoPath) {
+float getPiecewiseCubicPolynomial(const float x, const EgoPathVcc* egoPath) {
   float x_prime = x;
   float c0 = 0, c1 = 0, c2 = 0, c3 = 0;
   if (x <= egoPath->Len[0]) {
@@ -420,7 +420,7 @@ void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
 
   float totalLen = egoPath->Len[0] + egoPath->Len[1] + egoPath->Len[2];
   for (float x = startX; x < totalLen; x += 3.0f) {
-    const float y = getPiecewiseCubicPolyY(x, egoPath);
+    const float y = getPiecewiseCubicPolynomial(x, egoPath);
     last.x = x, last.y = y;
     Point curDrawPoint = {x, y};
     coordinateTrans2(&curDrawPoint);
@@ -458,7 +458,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
       objPosnLgt[j] = obs->pos_x + obs->speed_x * j;
       if (cur_spd > 30.0f / 3.6f && obs->speed_x > 1.0f &&
           objPosnLgt[j] < 120.0f) {
-        objPosnLat[j] = getPiecewiseCubicPolyY(objPosnLgt[j], egoPath);
+        objPosnLat[j] = getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath);
         const float roadCurveOffset = objPosnLat[j] - objPosnLat[0];
         if ((roadCurveOffset > predLatOffset && predLatOffset >= 0) ||
             (roadCurveOffset < predLatOffset && predLatOffset <= 0))
