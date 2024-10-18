@@ -356,216 +356,311 @@ void SpdPlanDataParsing(float** values,
       P_A[6] = i;
 
     // obstacle, 0 = IV
-    else if (strncmp(columns[i], "VeINP_IVClass[enum]", 13) == 0)
+    else if (strncmp(columns[i], "VeINP_IVClass[enum]", 13) == 0 ||
+             strncmp(columns[i], "VePASP_IVClass[]", 14) == 0)
       IVS_Class[0] = i;
-    else if (strncmp(columns[i], "VfINP_IVLaDis_m[m]", 15) == 0)
+    else if (strncmp(columns[i], "VfINP_IVLaDis_m[m]", 15) == 0 ||
+             strncmp(columns[i], "VfPASP_IVLaDis_m[m]", 16) == 0)
       IVS_LaDis[0] = i;
-    else if (strncmp(columns[i], "VfINP_IVLgDis_m[m]", 15) == 0)
+    else if (strncmp(columns[i], "VfINP_IVLgDis_m[m]", 15) == 0 ||
+             strncmp(columns[i], "VfPASP_IVLgDis_m[]", 16) == 0)
       IVS_LgDis[0] = i;
-    else if (strncmp(columns[i], "VbINP_IVPresent_flg[flg]", 19) == 0)
+    else if (strncmp(columns[i], "VbINP_IVPresent_flg[flg]", 19) == 0 ||
+             strncmp(columns[i], "VbPASP_IVPresent_flg[]", 20) == 0)
       IVS_Present[0] = i;
-    else if (strncmp(columns[i], "VfINP_IVV_mps[mps]", 13) == 0)
+    else if (strncmp(columns[i], "VfINP_IVV_mps[mps]", 13) == 0 ||
+             strncmp(columns[i], "VfPASP_IVV_mps[]", 14) == 0)
       IVS_V[0] = i;
-    else if (strncmp(columns[i], "VfINP_IVLaSpd_mps[]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_IVLaSpd_mps[]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_IVLaSpd_mps[]", 18) == 0)
       IVS_LaV[0] = i;
-    else if (strncmp(columns[i], "VfINP_IVAcc_mpss[]", 16) == 0)
-      IVS_A[0] = i;
-    else if (strncmp(columns[i], "VfINP_IVHeading_rad[]", 19) == 0)
+    else if (strncmp(columns[i], "VfINP_IVHeading_rad[]", 19) == 0 ||
+             strncmp(columns[i], "VfPASP_IVHeading_rad[]", 20) == 0)
       IVS_Yaw[0] = i;
+    else if (strncmp(columns[i], "VfINP_IVAcc_mpss[]", 16) == 0 ||
+             strncmp(columns[i], "VfPASP_IVAcc_mpss[]", 17) == 0)
+      IVS_A[0] = i;
 
     // obstacle, 1 = RIV
-    else if (strncmp(columns[i], "VeINP_RIVClass_enum[enum]", 19) == 0)
+    else if (strncmp(columns[i], "VeINP_RIVClass_enum[enum]", 19) == 0 ||
+             strncmp(columns[i], "VePASP_RIVClass_enum[]", 20) == 0)
       IVS_Class[1] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLaDis_m[m]", 16) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLaDis_m[m]", 16) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVLaDis_m[]", 17) == 0)
       IVS_LaDis[1] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLgDis_m[m]", 16) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLgDis_m[m]", 16) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVLgDis_m[]", 17) == 0)
       IVS_LgDis[1] = i;
-    else if (strncmp(columns[i], "VbINP_RIVPresent_flg[flg]", 20) == 0)
+    else if (strncmp(columns[i], "VbINP_RIVPresent_flg[flg]", 20) == 0 ||
+             strncmp(columns[i], "VbPASP_RIVPresent_flg[]", 21) == 0)
       IVS_Present[1] = i;
-    else if (strncmp(columns[i], "VfINP_RIVV_mps[mps]", 14) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVV_mps[mps]", 14) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVV_mps[]", 15) == 0)
       IVS_V[1] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLaV_mps[mps]", 16) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLaV_mps[mps]", 16) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVLaV_mps[]", 17) == 0)
       IVS_LaV[1] = i;
-    else if (strncmp(columns[i], "VfINP_RIVHeading_rad[]", 20) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVHeading_rad[]", 20) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVHeading_rad[]", 21) == 0)
       IVS_Yaw[1] = i;
 
     // obstacle, 2 = NIVL
-    else if (strncmp(columns[i], "VeINP_NIVLClass_enum[enum]", 20) == 0)
+    else if (strncmp(columns[i], "VeINP_NIVLClass_enum[enum]", 20) == 0 ||
+             strncmp(columns[i], "VePASP_NIVLClass_enum[]", 21) == 0)
       IVS_Class[2] = i;
-    else if (strncmp(columns[i], "VfINP_NIVLLaDis_m[m]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_NIVLLaDis_m[m]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_NIVLLaDis_m[]", 18) == 0)
       IVS_LaDis[2] = i;
-    else if (strncmp(columns[i], "VfINP_NIVLLgDis_m[m]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_NIVLLgDis_m[m]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_NIVLLgDis_m[]", 18) == 0)
       IVS_LgDis[2] = i;
-    else if (strncmp(columns[i], "VbINP_NIVLPresent_flg[flg]", 21) == 0)
+    else if (strncmp(columns[i], "VbINP_NIVLPresent_flg[flg]", 21) == 0 ||
+             strncmp(columns[i], "VbPASP_NIVLPresent_flg[]", 22) == 0)
       IVS_Present[2] = i;
-    else if (strncmp(columns[i], "VfINP_NIVLV_mps[mps]", 15) == 0)
+    else if (strncmp(columns[i], "VfINP_NIVLV_mps[mps]", 15) == 0 ||
+             strncmp(columns[i], "VfPASP_NIVLV_mps[]", 16) == 0)
       IVS_V[2] = i;
-    else if (strncmp(columns[i], "VfINP_NIVLLaV_mps[mps]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_NIVLLaV_mps[mps]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_NIVLLaV_mps[]", 18) == 0)
       IVS_LaV[2] = i;
-    else if (strncmp(columns[i], "VfINP_NIVLHeading_rad[]", 21) == 0)
+    else if (strncmp(columns[i], "VfINP_NIVLHeading_rad[]", 21) == 0 ||
+             strncmp(columns[i], "VfPASP_NIVLHeading_rad[]", 22) == 0)
       IVS_Yaw[2] = i;
 
     // obstacle, 6 = NIVR
-    else if (strncmp(columns[i], "VeINP_NIVRClass_enum[enum]", 20) == 0)
+    else if (strncmp(columns[i], "VeINP_NIVRClass_enum[enum]", 20) == 0 ||
+             strncmp(columns[i], "VePASP_NIVRClass_enum[]", 21) == 0)
       IVS_Class[6] = i;
-    else if (strncmp(columns[i], "VfINP_NIVRLaDis_m[m]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_NIVRLaDis_m[m]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_NIVRLaDis_m[]", 18) == 0)
       IVS_LaDis[6] = i;
-    else if (strncmp(columns[i], "VfINP_NIVRLgDis_m[m]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_NIVRLgDis_m[m]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_NIVRLgDis_m[]", 18) == 0)
       IVS_LgDis[6] = i;
-    else if (strncmp(columns[i], "VbINP_NIVRPresent_flg[flg]", 21) == 0)
+    else if (strncmp(columns[i], "VbINP_NIVRPresent_flg[flg]", 21) == 0 ||
+             strncmp(columns[i], "VbPASP_NIVRPresent_flg[]", 22) == 0)
       IVS_Present[6] = i;
-    else if (strncmp(columns[i], "VfINP_NIVRV_mps[mps]", 15) == 0)
+    else if (strncmp(columns[i], "VfINP_NIVRV_mps[mps]", 15) == 0 ||
+             strncmp(columns[i], "VfPASP_NIVRV_mps[]", 16) == 0)
       IVS_V[6] = i;
-    else if (strncmp(columns[i], "VfINP_NIVRLaV_mps[mps]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_NIVRLaV_mps[mps]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_NIVRLaV_mps[]", 18) == 0)
       IVS_LaV[6] = i;
-    else if (strncmp(columns[i], "VfINP_NIVRHeading_rad[]", 21) == 0)
+    else if (strncmp(columns[i], "VfINP_NIVRHeading_rad[]", 21) == 0 ||
+             strncmp(columns[i], "VfPASP_NIVRHeading_rad[]", 22) == 0)
       IVS_Yaw[6] = i;
 
     // obstacle, 3 = NIIVL
-    else if (strncmp(columns[i], "VeINP_NIIVLClass_enum[enum]", 21) == 0)
+    else if (strncmp(columns[i], "VeINP_NIIVLClass_enum[enum]", 21) == 0 ||
+             strncmp(columns[i], "VePASP_NIIVLClass_enum[]", 22) == 0)
       IVS_Class[3] = i;
-    else if (strncmp(columns[i], "VfINP_NIIVLLaDis_m[m]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_NIIVLLaDis_m[m]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_NIIVLLaDis_m[]", 19) == 0)
       IVS_LaDis[3] = i;
-    else if (strncmp(columns[i], "VfINP_NIIVLLgDis_m[m]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_NIIVLLgDis_m[m]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_NIIVLLgDis_m[]", 19) == 0)
       IVS_LgDis[3] = i;
-    else if (strncmp(columns[i], "VbINP_NIIVLPresent_flg[flg]", 22) == 0)
+    else if (strncmp(columns[i], "VbINP_NIIVLPresent_flg[flg]", 22) == 0 ||
+             strncmp(columns[i], "VbPASP_NIIVLPresent_flg[]", 23) == 0)
       IVS_Present[3] = i;
-    else if (strncmp(columns[i], "VfINP_NIIVLV_mps[mps]", 16) == 0)
+    else if (strncmp(columns[i], "VfINP_NIIVLV_mps[mps]", 16) == 0 ||
+             strncmp(columns[i], "VfPASP_NIIVLV_mps[]", 17) == 0)
       IVS_V[3] = i;
-    else if (strncmp(columns[i], "VfINP_NIIVLLaV_mps[mps]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_NIIVLLaV_mps[mps]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_NIIVLLaV_mps[]", 19) == 0)
       IVS_LaV[3] = i;
-    else if (strncmp(columns[i], "VfINP_NIIVLHeading_rad[]", 22) == 0)
+    else if (strncmp(columns[i], "VfINP_NIIVLHeading_rad[]", 22) == 0 ||
+             strncmp(columns[i], "VfPASP_NIIVLHeading_rad[]", 23) == 0)
       IVS_Yaw[3] = i;
 
     // obstacle, 7 = NIIVR
-    else if (strncmp(columns[i], "VeINP_NIIVRClass_enum[enum]", 21) == 0)
+    else if (strncmp(columns[i], "VeINP_NIIVRClass_enum[enum]", 21) == 0 ||
+             strncmp(columns[i], "VePASP_NIIVRClass_enum[]", 22) == 0)
       IVS_Class[7] = i;
-    else if (strncmp(columns[i], "VfINP_NIIVRLaDis_m[m]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_NIIVRLaDis_m[m]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_NIIVRLaDis_m[]", 19) == 0)
       IVS_LaDis[7] = i;
-    else if (strncmp(columns[i], "VfINP_NIIVRLgDis_m[m]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_NIIVRLgDis_m[m]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_NIIVRLgDis_m[]", 19) == 0)
       IVS_LgDis[7] = i;
-    else if (strncmp(columns[i], "VbINP_NIIVRPresent_flg[flg]", 22) == 0)
+    else if (strncmp(columns[i], "VbINP_NIIVRPresent_flg[flg]", 22) == 0 ||
+             strncmp(columns[i], "VbPASP_NIIVRPresent_flg[]", 23) == 0)
       IVS_Present[7] = i;
-    else if (strncmp(columns[i], "VfINP_NIIVRV_mps[mps]", 16) == 0)
+    else if (strncmp(columns[i], "VfINP_NIIVRV_mps[mps]", 16) == 0 ||
+             strncmp(columns[i], "VfPASP_NIIVRV_mps[]", 17) == 0)
       IVS_V[7] = i;
-    else if (strncmp(columns[i], "VfINP_NIIVRLaV_mps[mps]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_NIIVRLaV_mps[mps]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_NIIVRLaV_mps[]", 19) == 0)
       IVS_LaV[7] = i;
-    else if (strncmp(columns[i], "VfINP_NIIVRHeading_rad[]", 22) == 0)
+    else if (strncmp(columns[i], "VfINP_NIIVRHeading_rad[]", 22) == 0 ||
+             strncmp(columns[i], "VfPASP_NIIVRHeading_rad[]", 23) == 0)
       IVS_Yaw[7] = i;
 
     // obstacle, 4 = RIVL
-    else if (strncmp(columns[i], "VeINP_RIVLClass_enum[enum]", 20) == 0)
+    else if (strncmp(columns[i], "VeINP_RIVLClass_enum[enum]", 20) == 0 ||
+             strncmp(columns[i], "VePASP_RIVLClass_enum[]", 21) == 0)
       IVS_Class[4] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLLaDis_m[m]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLLaDis_m[m]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVLLaDis_m[]", 18) == 0)
       IVS_LaDis[4] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLLgDis_m[m]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLLgDis_m[m]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVLLgDis_m[]", 18) == 0)
       IVS_LgDis[4] = i;
-    else if (strncmp(columns[i], "VbINP_RIVLPresent_flg[flg]", 21) == 0)
+    else if (strncmp(columns[i], "VbINP_RIVLPresent_flg[flg]", 21) == 0 ||
+             strncmp(columns[i], "VbPASP_RIVLPresent_flg[]", 22) == 0)
       IVS_Present[4] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLV_mps[mps]", 15) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLV_mps[mps]", 15) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVLV_mps[]", 16) == 0)
       IVS_V[4] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLLaV_mps[mps]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLLaV_mps[mps]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVLLaV_mps[]", 18) == 0)
       IVS_LaV[4] = i;
-    else if (strncmp(columns[i], "VfINP_RIVLHeading_rad[]", 21) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVLHeading_rad[]", 21) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVLHeading_rad[]", 22) == 0)
       IVS_Yaw[4] = i;
 
     // obstacle, 8 = RIVR
-    else if (strncmp(columns[i], "VeINP_RIVRClass_enum[enum]", 20) == 0)
+    else if (strncmp(columns[i], "VeINP_RIVRClass_enum[enum]", 20) == 0 ||
+             strncmp(columns[i], "VePASP_RIVRClass_enum[]", 21) == 0)
       IVS_Class[8] = i;
-    else if (strncmp(columns[i], "VfINP_RIVRLaDis_m[m]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVRLaDis_m[m]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVRLaDis_m[]", 18) == 0)
       IVS_LaDis[8] = i;
-    else if (strncmp(columns[i], "VfINP_RIVRLgDis_m[m]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVRLgDis_m[m]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVRLgDis_m[]", 18) == 0)
       IVS_LgDis[8] = i;
-    else if (strncmp(columns[i], "VbINP_RIVRPresent_flg[flag]", 21) == 0)
+    else if (strncmp(columns[i], "VbINP_RIVRPresent_flg[flag]", 21) == 0 ||
+             strncmp(columns[i], "VbPASP_RIVRPresent_flg[]", 22) == 0)
       IVS_Present[8] = i;
-    else if (strncmp(columns[i], "VfINP_RIVRV_mps[mps]", 15) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVRV_mps[mps]", 15) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVRV_mps[]", 16) == 0)
       IVS_V[8] = i;
-    else if (strncmp(columns[i], "VfINP_RIVRLaV_mps[mps]", 17) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVRLaV_mps[mps]", 17) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVRLaV_mps[]", 18) == 0)
       IVS_LaV[8] = i;
-    else if (strncmp(columns[i], "VfINP_RIVRHeading_rad[]", 21) == 0)
+    else if (strncmp(columns[i], "VfINP_RIVRHeading_rad[]", 21) == 0 ||
+             strncmp(columns[i], "VfPASP_RIVRHeading_rad[]", 22) == 0)
       IVS_Yaw[8] = i;
 
     // obstacle, 5 = RIIVL
-    else if (strncmp(columns[i], "VeINP_RIIVLClass_enum[enum]", 21) == 0)
+    else if (strncmp(columns[i], "VeINP_RIIVLClass_enum[enum]", 21) == 0 ||
+             strncmp(columns[i], "VePASP_RIIVLClass_enum[]", 22) == 0)
       IVS_Class[5] = i;
-    else if (strncmp(columns[i], "VfINP_RIIVLLaDis_m[m]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_RIIVLLaDis_m[m]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_RIIVLLaDis_m[]", 19) == 0)
       IVS_LaDis[5] = i;
-    else if (strncmp(columns[i], "VfINP_RIIVLLgDis_m[m]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_RIIVLLgDis_m[m]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_RIIVLLgDis_m[]", 19) == 0)
       IVS_LgDis[5] = i;
-    else if (strncmp(columns[i], "VbINP_RIIVLPresent_flg[flag]", 22) == 0)
+    else if (strncmp(columns[i], "VbINP_RIIVLPresent_flg[flag]", 22) == 0 ||
+             strncmp(columns[i], "VbPASP_RIIVLPresent_flg[]", 23) == 0)
       IVS_Present[5] = i;
-    else if (strncmp(columns[i], "VfINP_RIIVLV_mps[mps]", 16) == 0)
+    else if (strncmp(columns[i], "VfINP_RIIVLV_mps[mps]", 16) == 0 ||
+             strncmp(columns[i], "VfPASP_RIIVLV_mps[]", 17) == 0)
       IVS_V[5] = i;
-    else if (strncmp(columns[i], "VfINP_RIIVLLaV_mps[mps]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_RIIVLLaV_mps[mps]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_RIIVLLaV_mps[]", 19) == 0)
       IVS_LaV[5] = i;
-    else if (strncmp(columns[i], "VfINP_RIIVLHeading_rad[]", 22) == 0)
+    else if (strncmp(columns[i], "VfINP_RIIVLHeading_rad[]", 22) == 0 ||
+             strncmp(columns[i], "VfPASP_RIIVLHeading_rad[]", 23) == 0)
       IVS_Yaw[5] = i;
 
     // obstacle, 9 = RIIVR
-    else if (strncmp(columns[i], "VeINP_RIIVRClass_enum[enum]", 21) == 0)
+    else if (strncmp(columns[i], "VeINP_RIIVRClass_enum[enum]", 21) == 0 ||
+             strncmp(columns[i], "VePASP_RIIVRClass_enum[]", 22) == 0)
       IVS_Class[9] = i;
-    else if (strncmp(columns[i], "VfINP_RIIVRLaDis_m[m]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_RIIVRLaDis_m[m]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_RIIVRLaDis_m[]", 19) == 0)
       IVS_LaDis[9] = i;
-    else if (strncmp(columns[i], "VfINP_RIIVRLgDis_m[m]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_RIIVRLgDis_m[m]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_RIIVRLgDis_m[]", 19) == 0)
       IVS_LgDis[9] = i;
-    else if (strncmp(columns[i], "VbINP_RIIVRPresent_flg[flag]", 22) == 0)
+    else if (strncmp(columns[i], "VbINP_RIIVRPresent_flg[flag]", 22) == 0 ||
+             strncmp(columns[i], "VbPASP_RIIVRPresent_flg[]", 23) == 0)
       IVS_Present[9] = i;
-    else if (strncmp(columns[i], "VfINP_RIIVRV_mps[mps]", 16) == 0)
+    else if (strncmp(columns[i], "VfINP_RIIVRV_mps[mps]", 16) == 0 ||
+             strncmp(columns[i], "VfPASP_RIIVRV_mps[]", 17) == 0)
       IVS_V[9] = i;
-    else if (strncmp(columns[i], "VfINP_RIIVRLaV_mps[mps]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_RIIVRLaV_mps[mps]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_RIIVRLaV_mps[]", 19) == 0)
       IVS_LaV[9] = i;
-    else if (strncmp(columns[i], "VfINP_RIIVRHeading_rad[]", 22) == 0)
+    else if (strncmp(columns[i], "VfINP_RIIVRHeading_rad[]", 22) == 0 ||
+             strncmp(columns[i], "VfPASP_RIIVRHeading_rad[]", 23) == 0)
       IVS_Yaw[9] = i;
 
     //  Mobile Eye original lines
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C0_0[m]", 24) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_Line_First_C0_0[m]", 24) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_Line_First_C0_0[]", 25) == 0)
       LH_C_0[0] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C0_1[m]", 24) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_Line_First_C0_1[m]", 24) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_Line_First_C0_1[]", 25) == 0)
       LH_C_1[0] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C1_0[rad]", 24) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_Line_First_C1_0[rad]", 24) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_Line_First_C1_0[]", 25) == 0)
       LH_C_0[1] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C1_1[rad]", 24) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_Line_First_C1_1[rad]", 24) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_Line_First_C1_1[]", 25) == 0)
       LH_C_1[1] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C2_0[]", 24) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_Line_First_C2_0[]", 24) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_Line_First_C2_0[]", 25) == 0)
       LH_C_0[2] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C2_1[]", 24) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_Line_First_C2_1[]", 24) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_Line_First_C2_1[]", 25) == 0)
       LH_C_1[2] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C3_0[]", 24) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_Line_First_C3_0[]", 24) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_Line_First_C3_0[]", 25) == 0)
       LH_C_0[3] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C3_1[]", 24) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_Line_First_C3_1[]", 24) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_Line_First_C3_1[]", 25) == 0)
       LH_C_1[3] = i;
-    else if (strncmp(columns[i], "VfINP_LH_First_VR_Start_0[m]", 25) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_First_VR_Start_0[m]", 25) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_First_VR_Start_0[]", 26) == 0)
       LH_C_0[6] = i;
-    else if (strncmp(columns[i], "VfINP_LH_First_VR_Start_1[m]", 25) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_First_VR_Start_1[m]", 25) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_First_VR_Start_1[]", 26) == 0)
       LH_C_1[6] = i;
-    else if (strncmp(columns[i], "VfINP_LH_First_VR_End_0[m]", 23) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_First_VR_End_0[m]", 23) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_First_VR_End_0[]", 24) == 0)
       LH_C_0[7] = i;
-    else if (strncmp(columns[i], "VfINP_LH_First_VR_End_1[m]", 23) == 0)
+    else if (strncmp(columns[i], "VfINP_LH_First_VR_End_1[m]", 23) == 0 ||
+             strncmp(columns[i], "VfPASP_LH_First_VR_End_1[]", 24) == 0)
       LH_C_1[7] = i;
 
-    else if (strncmp(columns[i], "VfINP_LA_Line_C0_0[m]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_Line_C0_0[m]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_Line_C0_0[]", 19) == 0)
       LA_C_0[0] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C0_1[m]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_Line_C0_1[m]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_Line_C0_1[]", 19) == 0)
       LA_C_1[0] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C1_0[rad]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_Line_C1_0[rad]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_Line_C1_0[]", 19) == 0)
       LA_C_0[1] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C1_1[rad]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_Line_C1_1[rad]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_Line_C1_1[]", 19) == 0)
       LA_C_1[1] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C2_0[]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_Line_C2_0[]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_Line_C2_0[]", 19) == 0)
       LA_C_0[2] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C2_1[]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_Line_C2_1[]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_Line_C2_1[]", 19) == 0)
       LA_C_1[2] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C3_0[]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_Line_C3_0[]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_Line_C3_0[]", 19) == 0)
       LA_C_0[3] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C3_1[]", 18) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_Line_C3_1[]", 18) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_Line_C3_1[]", 19) == 0)
       LA_C_1[3] = i;
-    else if (strncmp(columns[i], "VfINP_LA_View_Range_Start_0[m]", 27) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_View_Range_Start_0[m]", 27) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_View_Range_Start_0[]", 28) == 0)
       LA_C_0[6] = i;
-    else if (strncmp(columns[i], "VfINP_LA_View_Range_Start_1[m]", 27) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_View_Range_Start_1[m]", 27) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_View_Range_Start_1[]", 28) == 0)
       LA_C_1[6] = i;
-    else if (strncmp(columns[i], "VfINP_LA_View_Range_End_0[m]", 25) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_View_Range_End_0[m]", 25) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_View_Range_End_0[]", 26) == 0)
       LA_C_0[7] = i;
-    else if (strncmp(columns[i], "VfINP_LA_View_Range_End_1[m]", 25) == 0)
+    else if (strncmp(columns[i], "VfINP_LA_View_Range_End_1[m]", 25) == 0 ||
+             strncmp(columns[i], "VfPASP_LA_View_Range_End_1[]", 26) == 0)
       LA_C_1[7] = i;
 
     // TSR status
