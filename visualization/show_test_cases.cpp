@@ -174,11 +174,26 @@ void CaseCutIn(SsmObjType* ssmObjs) {
   ssmObjs->obj_lists[2].valid_flag = TRUE;
 }
 
+void CaseRearObs(SsmObjType* ssmObjs) {
+  // 0 = IV, 1 = RIV, 2 = NIVL, 3 = NIIVL, 4 = RIVL, 5 = RIIVL
+  // 6 = NIVR, 7 = NIIVR, 8 = RIVR, 9 = RIIVR
+  ssmObjs->obj_num = 1;
+  ssmObjs->obj_lists[4].pos_x = 1;
+  ssmObjs->obj_lists[4].pos_y = 1.3;
+  ssmObjs->obj_lists[4].acc_x = 0;
+  ssmObjs->obj_lists[4].speed_x = 8;
+  ssmObjs->obj_lists[4].speed_y = 0;
+  ssmObjs->obj_lists[4].type = 0;
+  ssmObjs->obj_lists[4].lane_index = 2;
+  ssmObjs->obj_lists[4].valid_flag = TRUE;
+}
+
 void LoadDummySSmData(SsmObjType* ssmObjs) {
   // CaseLeftChange(ssmObjs);
-  CaseSideCarMoveSlowly(ssmObjs);
+  // CaseSideCarMoveSlowly(ssmObjs);
   // CaseFollow(ssmObjs);
   // CaseCutIn(ssmObjs);
+  CaseRearObs(ssmObjs);
   return;
 }
 

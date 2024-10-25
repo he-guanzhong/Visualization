@@ -130,8 +130,9 @@ typedef struct {
   UInt32 ts_low;
 } SsmHeaderType;
 
-/* ObjType of ME: 0=UNFILLED, 1=CAR, 2=TRUCK, 3=MOTORBIKE, 4=BICYCLE,
-        5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL */
+/* ObjType of ME:
+ * 0=UNFILLED, 1=CAR, 2=TRUCK, 3=MOTORBIKE, 4=BICYCLE,
+ * 5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL */
 #define Rte_TypeDef_SsmObsType
 typedef struct {
   SInt32 id;
@@ -217,7 +218,7 @@ typedef struct {
 #define Rte_TypeDef_StPoint_Array_10
 typedef StPoint StPoint_Array_10[10];
 
-// SpdPlanEnblSts: 1-takeover, 2-minAccel
+/* SpdPlanEnblSts: 1-takeover, 2-minAccel */
 #define Rte_TypeDef_DpSpdPoints
 typedef struct {
   Boolean AlcLatCtrlEnbl;
@@ -242,13 +243,14 @@ typedef struct {
   StPoint_Array_10 Points;
 } DpSpeedPointsTest;
 
+/* SpdPlanTextInfo: 0x9 迫近前车 0xB即将超车 */
 #define Rte_TypeDef_DpSpeedPoints  // hgz
 typedef struct {
   Boolean AlcLatCtrlEnbl;
   Boolean AlcLgtCtrlEnbl;
   UInt8 AlcFindGapSts;
   UInt8 SpdPlanEnblSts;
-  UInt8 SpdPlanTextInfo;  // 0x9 迫近前车 0xB即将超车
+  UInt8 SpdPlanTextInfo;
   UInt16 SpdPlanRollCnt;
   StPoint Point0;
   StPoint Point1;
@@ -296,13 +298,17 @@ typedef struct {
 #define Rte_TypeDef_SsmObjType
 typedef struct {
   UInt8 obj_num;
-  UInt32 ts_high;
-  UInt32 ts_low;
   UInt8 source;
   UInt8 is_normal;
   UInt8 is_fusion;
+  UInt32 ts_high;
+  UInt32 ts_low;
   rt_Array_SsmObsType_12 obj_lists;
 } SsmObjType;
+
+/* Exported Global Signals for Dataset Calibration */
+extern uint8 KbPASP_SpdPlanSwitch;
+extern float32 KfPASP_CtrlPoint_s;
 
 /*
 #define Rte_TypeDef_SsmParamType

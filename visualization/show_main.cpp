@@ -696,7 +696,7 @@ int main() {
 
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(3);
+  playMode = PLAYMODE(2);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();
