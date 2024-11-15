@@ -68,8 +68,8 @@ typedef Float rt_Array_Float_3[3];
 /* AutoLaneChgSts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving, 4-in target
                    line, 5-finished, 6-Back to Ego, 8-takeover, 9-popMsgReq
   AutoLaneChgSide: 0-OFF, 1-left, 2-right
-  BoundaryType: 0-unknown, 1-solid, 2-dash, 32-Dash(inner)_Solid(outer),
-                31-Solid(inner)_Dash(outer) */
+  BoundaryType: 0-unknown, 1-solid, 2-dash,
+  3 - Double Lane(Near Dashed,Far Solid) 9- DECELERATION_Dashed */
 #define Rte_TypeDef_AlcBehavior
 typedef struct {
   UInt8 AutoLaneChgSide;
@@ -78,6 +78,7 @@ typedef struct {
   UInt8 RightBoundaryType;
   UInt8 NaviPilotIsRamp;
   UInt16 NaviPilot1stRampOnDis;
+  UInt16 NaviPilot1stExitDis;
 } AlcBehavior;
 
 #define Rte_TypeDef_AlcPathVcc
@@ -105,6 +106,33 @@ typedef struct {
   Float Width;
   UInt8 Valid;
 } AgsmEnvModelPath;
+
+#define Rte_TypeDef_AgsmEnvModelLine
+typedef struct {
+  Float C0;
+  Float C1;
+  Float C2;
+  Float C3;
+  Float Start;
+  Float End;
+} AgsmEnvModelLine;
+
+#define Rte_TypeDef_AgsmEnvModel
+typedef struct {
+  AgsmEnvModelPath EgoPath;
+  AgsmEnvModelPath TarPath;
+  AgsmEnvModelLine LH0;
+  AgsmEnvModelLine LH1;
+} AgsmEnvModel;
+
+#define Rte_TypeDef_EgoMotionSts
+typedef struct {
+  Float EgoSpd;
+  Float EgoAcc;
+  Float SpdLmt;
+  UInt8 AccMode;
+  UInt8 TauGapSet;
+} EgoMotionSts;
 
 #define Rte_TypeDef_EgoPathVcc
 typedef struct {

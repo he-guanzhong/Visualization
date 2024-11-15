@@ -10,8 +10,8 @@
 // character nums of first row (variable names) shall not exceed MAX_LINE_SIZE
 // colomns nums (variable count) shall not exceed MAX_COLUMNS
 // row nums (total steps) which exceed MAX_VALUES_PER_COLUMN will be ignored
-#define MAX_LINE_SIZE 4096
-#define MAX_COLUMNS 192
+#define MAX_LINE_SIZE 8192
+#define MAX_COLUMNS 200
 #define MAX_VALUES_PER_COLUMN DATA_NUM
 
 void LoadLog(const char* const csvFileName, int* totalFrame);

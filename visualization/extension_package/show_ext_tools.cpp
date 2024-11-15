@@ -74,7 +74,8 @@ void showAGSMGraph(const GraphConfig* config,
 
   // obstacles
   EgoPathVcc default_ego_path = {0};
-  drawObstacles(ssmObjs, &default_ego_path, motionInfo->egoSpd);
+  float LH0[8] = {0}, LH1[8] = {0};
+  drawObstacles(ssmObjs, &default_ego_path, LH0, LH1, motionInfo->egoSpd);
 
   // ego lane path
   drawConftPath(&agsmlinesInfo->conft_path_record, MAGENTA, 0.0f);
@@ -98,9 +99,9 @@ void showAGSMGraph(const GraphConfig* config,
   drawBEVRuler(zeroOffsetX);
 }
 
-void drawRadarObj(const RadarObjInfo* radarInfo) {
-  for (int j = 0; j < 32; j++) {
-    if (radarInfo->iObjectId[j] == 0) {
+void drawRadarObj(const RadarObjInfo* radarInfo, const int color) {
+  for (int j = 0; j < 16; j++) {
+    if (radarInfo->iObjectId[j] == 0 || radarInfo->fExistProb[j] < 0.2f) {
       continue;
     }
     Point obj_posn = {radarInfo->fDistX[j], radarInfo->fDistY[j]};
@@ -109,7 +110,7 @@ void drawRadarObj(const RadarObjInfo* radarInfo) {
     coordinateTrans2(&obj_posn);
 
     setlinecolor(BLACK);
-    setfillcolor(DARKGRAY);
+    setfillcolor(color);
     solidcircle(obj_posn.x, obj_posn.y, 5);
     outtextxy(obj_posn.x - textwidth(obj_id) / 2,
               obj_posn.y + textheight(obj_id) / 2, obj_id);
@@ -118,14 +119,16 @@ void drawRadarObj(const RadarObjInfo* radarInfo) {
 
 void showRadarGraph(const GraphConfig* config,
                     const float zeroOffsetX,
-                    const RadarObjInfo* radarInfo) {
+                    const RadarObjInfo* radarObjsInfo) {
   initBEVGraph(config, zeroOffsetX);
 
-  drawRadarObj(radarInfo);
+  drawRadarObj(&radarObjsInfo[0], RED);
+  drawRadarObj(&radarObjsInfo[1], BLUE);
+  drawRadarObj(&radarObjsInfo[2], MAGENTA);
+  drawRadarObj(&radarObjsInfo[3], GREEN);
 
   // ego car
-  setfillcolor(RED);
-  setlinestyle(PS_SOLID);
+  setfillcolor(LIGHTGRAY);
   Point ego = {0.0f, 0.0f};
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");

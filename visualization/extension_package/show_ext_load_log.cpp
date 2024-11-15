@@ -188,9 +188,25 @@ void AgsmDataParsing(float** values,
 
 extern float time_data[DATA_NUM];
 
-int iObjectId_data[32][DATA_NUM];
-float fDistX_data[32][DATA_NUM];
-float fDistY_data[32][DATA_NUM];
+int iFL_ObjectId_data[OBJ_NUM][DATA_NUM];
+float fFL_ExistProb_data[OBJ_NUM][DATA_NUM];
+float fFL_DistX_data[OBJ_NUM][DATA_NUM];
+float fFL_DistY_data[OBJ_NUM][DATA_NUM];
+
+int iFR_ObjectId_data[OBJ_NUM][DATA_NUM];
+float fFR_ExistProb_data[OBJ_NUM][DATA_NUM];
+float fFR_DistX_data[OBJ_NUM][DATA_NUM];
+float fFR_DistY_data[OBJ_NUM][DATA_NUM];
+
+int iRL_ObjectId_data[OBJ_NUM][DATA_NUM];
+float fRL_ExistProb_data[OBJ_NUM][DATA_NUM];
+float fRL_DistX_data[OBJ_NUM][DATA_NUM];
+float fRL_DistY_data[OBJ_NUM][DATA_NUM];
+
+int iRR_ObjectId_data[OBJ_NUM][DATA_NUM];
+float fRR_ExistProb_data[OBJ_NUM][DATA_NUM];
+float fRR_DistX_data[OBJ_NUM][DATA_NUM];
+float fRR_DistY_data[OBJ_NUM][DATA_NUM];
 
 void RadarDataParsing(float** values,
                       const int numColumns,
@@ -198,45 +214,175 @@ void RadarDataParsing(float** values,
                       const int* valuesCount,
                       int* totalFrame) {
   int Ts = 0;
-  int ID[32] = {0}, DIS_X[32] = {0}, DIS_Y[32] = {0};
+  int FL_ID[OBJ_NUM] = {0}, FL_EXI_PB[OBJ_NUM] = {0}, FL_DIS_X[OBJ_NUM] = {0},
+      FL_DIS_Y[OBJ_NUM] = {0};
+  int FR_ID[OBJ_NUM] = {0}, FR_EXI_PB[OBJ_NUM] = {0}, FR_DIS_X[OBJ_NUM] = {0},
+      FR_DIS_Y[OBJ_NUM] = {0};
+  int RL_ID[OBJ_NUM] = {0}, RL_EXI_PB[OBJ_NUM] = {0}, RL_DIS_X[OBJ_NUM] = {0},
+      RL_DIS_Y[OBJ_NUM] = {0};
+  int RR_ID[OBJ_NUM] = {0}, RR_EXI_PB[OBJ_NUM] = {0}, RR_DIS_X[OBJ_NUM] = {0},
+      RR_DIS_Y[OBJ_NUM] = {0};
   for (int i = 0; i < numColumns; i++) {
-    if (strcmp(columns[i], "t[s]") == 0 ||
-        strcmp(columns[i], "timestamps") == 0)
+    if (strcmp(columns[i], "timestamps") == 0)
       Ts = i;
 
-    for (int j = 0; j < 32; j++) {
-      char obs_title[25] = "iObjectId_";
-      char disX_title[25] = "fDistX_";
-      char disY_title[25] = "fDistY_";
+    for (int j = 0; j < OBJ_NUM; j++) {
+      char obs_title[70] = "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
+      char exiP_title[80] =
+          "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
+      char disX_title[70] =
+          "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
+      char disY_title[70] =
+          "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
       snprintf(obs_title + strlen(obs_title),
-               sizeof(obs_title) - strlen(obs_title), "%02d[]", j);
+               sizeof(obs_title) - strlen(obs_title), "%d_.ID_u8", j);
+      snprintf(exiP_title + strlen(exiP_title),
+               sizeof(exiP_title) - strlen(exiP_title),
+               "%d_.existance_probability_f32", j);
       snprintf(disX_title + strlen(disX_title),
-               sizeof(disX_title) - strlen(disX_title), "%02d[m]", j);
+               sizeof(disX_title) - strlen(disX_title), "%d_.x_pos_f32", j);
       snprintf(disY_title + strlen(disY_title),
-               sizeof(disY_title) - strlen(disY_title), "%02d[m]", j);
+               sizeof(disY_title) - strlen(disY_title), "%d_.y_pos_f32", j);
 
-      if (strncmp(columns[i], obs_title, 12) == 0) {
-        ID[j] = i;
-      } else if (strncmp(columns[i], disX_title, 9) == 0) {
-        DIS_X[j] = i;
-      } else if (strncmp(columns[i], disY_title, 9) == 0) {
-        DIS_Y[j] = i;
+      if (strcmp(columns[i], obs_title) == 0) {
+        FL_ID[j] = i;
+      } else if (strcmp(columns[i], exiP_title) == 0) {
+        FL_EXI_PB[j] = i;
+      } else if (strcmp(columns[i], disX_title) == 0) {
+        FL_DIS_X[j] = i;
+      } else if (strcmp(columns[i], disY_title) == 0) {
+        FL_DIS_Y[j] = i;
+      }
+    }
+
+    for (int j = 0; j < OBJ_NUM; j++) {
+      char obs_title[70] =
+          "AswIf_SRRDataFrontRight.SyncTrack_s.radar_track_s._";
+      char exiP_title[80] =
+          "AswIf_SRRDataFrontRight.SyncTrack_s.radar_track_s._";
+      char disX_title[70] =
+          "AswIf_SRRDataFrontRight.SyncTrack_s.radar_track_s._";
+      char disY_title[70] =
+          "AswIf_SRRDataFrontRight.SyncTrack_s.radar_track_s._";
+      snprintf(obs_title + strlen(obs_title),
+               sizeof(obs_title) - strlen(obs_title), "%d_.ID_u8", j);
+      snprintf(exiP_title + strlen(exiP_title),
+               sizeof(exiP_title) - strlen(exiP_title),
+               "%d_.existance_probability_f32", j);
+      snprintf(disX_title + strlen(disX_title),
+               sizeof(disX_title) - strlen(disX_title), "%d_.x_pos_f32", j);
+      snprintf(disY_title + strlen(disY_title),
+               sizeof(disY_title) - strlen(disY_title), "%d_.y_pos_f32", j);
+
+      if (strcmp(columns[i], obs_title) == 0) {
+        FR_ID[j] = i;
+      } else if (strcmp(columns[i], exiP_title) == 0) {
+        FR_EXI_PB[j] = i;
+      } else if (strcmp(columns[i], disX_title) == 0) {
+        FR_DIS_X[j] = i;
+      } else if (strcmp(columns[i], disY_title) == 0) {
+        FR_DIS_Y[j] = i;
+      }
+    }
+
+    for (int j = 0; j < OBJ_NUM; j++) {
+      char obs_title[70] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
+      char exiP_title[80] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
+      char disX_title[70] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
+      char disY_title[70] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
+      snprintf(obs_title + strlen(obs_title),
+               sizeof(obs_title) - strlen(obs_title), "%d_.ID_u8", j);
+      snprintf(exiP_title + strlen(exiP_title),
+               sizeof(exiP_title) - strlen(exiP_title),
+               "%d_.existance_probability_f32", j);
+      snprintf(disX_title + strlen(disX_title),
+               sizeof(disX_title) - strlen(disX_title), "%d_.x_pos_f32", j);
+      snprintf(disY_title + strlen(disY_title),
+               sizeof(disY_title) - strlen(disY_title), "%d_.y_pos_f32", j);
+
+      if (strcmp(columns[i], obs_title) == 0) {
+        RL_ID[j] = i;
+      } else if (strcmp(columns[i], exiP_title) == 0) {
+        RL_EXI_PB[j] = i;
+      } else if (strcmp(columns[i], disX_title) == 0) {
+        RL_DIS_X[j] = i;
+      } else if (strcmp(columns[i], disY_title) == 0) {
+        RL_DIS_Y[j] = i;
+      }
+    }
+
+    for (int j = 0; j < OBJ_NUM; j++) {
+      char obs_title[70] = "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
+      char exiP_title[80] =
+          "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
+      char disX_title[70] =
+          "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
+      char disY_title[70] =
+          "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
+      snprintf(obs_title + strlen(obs_title),
+               sizeof(obs_title) - strlen(obs_title), "%d_.ID_u8", j);
+      snprintf(exiP_title + strlen(exiP_title),
+               sizeof(exiP_title) - strlen(exiP_title),
+               "%d_.existance_probability_f32", j);
+      snprintf(disX_title + strlen(disX_title),
+               sizeof(disX_title) - strlen(disX_title), "%d_.x_pos_f32", j);
+      snprintf(disY_title + strlen(disY_title),
+               sizeof(disY_title) - strlen(disY_title), "%d_.y_pos_f32", j);
+
+      if (strcmp(columns[i], obs_title) == 0) {
+        RR_ID[j] = i;
+      } else if (strcmp(columns[i], exiP_title) == 0) {
+        RR_EXI_PB[j] = i;
+      } else if (strcmp(columns[i], disX_title) == 0) {
+        RR_DIS_X[j] = i;
+      } else if (strcmp(columns[i], disY_title) == 0) {
+        RR_DIS_Y[j] = i;
       }
     }
   }
 
   *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
-  /*   for (int j = 0; j < 32; j++) {
-      printf("ID[%d] = %d\n", j, ID[j]);
+  /*   for (int j = 0; j < OBJ_NUM; j++) {
+      printf("RL_ID[%d] = %d\n", j, RL_ID[j]);
     } */
   for (int t = 0; t < *totalFrame; t++) {
     time_data[t] = values[Ts][t];
-    for (int j = 0; j < 32; j++) {
-      if (ID[j] == 0)
+
+    for (int j = 0; j < OBJ_NUM; j++) {
+      if (FL_ID[j] == 0)
         continue;
-      iObjectId_data[j][t] = values[ID[j]][t];
-      fDistX_data[j][t] = values[DIS_X[j]][t];
-      fDistY_data[j][t] = values[DIS_Y[j]][t];
+
+      iFL_ObjectId_data[j][t] = values[FL_ID[j]][t];
+      fFL_ExistProb_data[j][t] = values[FL_EXI_PB[j]][t];
+      fFL_DistX_data[j][t] = values[FL_DIS_X[j]][t];
+      fFL_DistY_data[j][t] = values[FL_DIS_Y[j]][t];
+    }
+
+    for (int j = 0; j < OBJ_NUM; j++) {
+      if (FR_ID[j] == 0)
+        continue;
+      iFR_ObjectId_data[j][t] = values[FR_ID[j]][t];
+      fFR_ExistProb_data[j][t] = values[FR_EXI_PB[j]][t];
+      fFR_DistX_data[j][t] = values[FR_DIS_X[j]][t];
+      fFR_DistY_data[j][t] = values[FR_DIS_Y[j]][t];
+    }
+
+    for (int j = 0; j < OBJ_NUM; j++) {
+      if (RL_ID[j] == 0)
+        continue;
+      iRL_ObjectId_data[j][t] = values[RL_ID[j]][t];
+      fRL_ExistProb_data[j][t] = values[RL_EXI_PB[j]][t];
+      fRL_DistX_data[j][t] = values[RL_DIS_X[j]][t];
+      fRL_DistY_data[j][t] = values[RL_DIS_Y[j]][t];
+    }
+
+    for (int j = 0; j < OBJ_NUM; j++) {
+      if (RR_ID[j] == 0)
+        continue;
+      iRR_ObjectId_data[j][t] = values[RR_ID[j]][t];
+      fRR_ExistProb_data[j][t] = values[RR_EXI_PB[j]][t];
+      fRR_DistX_data[j][t] = values[RR_DIS_X[j]][t];
+      fRR_DistY_data[j][t] = values[RR_DIS_Y[j]][t];
     }
   }
   return;

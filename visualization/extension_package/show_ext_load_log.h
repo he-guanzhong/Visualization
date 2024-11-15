@@ -51,9 +51,27 @@ void AgsmDataParsing(float** values,
 #define DATA_NUM 20480
 #endif
 
-extern int iObjectId_data[32][DATA_NUM];
-extern float fDistX_data[32][DATA_NUM];
-extern float fDistY_data[32][DATA_NUM];
+#define OBJ_NUM 16
+
+extern int iFL_ObjectId_data[OBJ_NUM][DATA_NUM];
+extern float fFL_ExistProb_data[OBJ_NUM][DATA_NUM];
+extern float fFL_DistX_data[OBJ_NUM][DATA_NUM];
+extern float fFL_DistY_data[OBJ_NUM][DATA_NUM];
+
+extern int iFR_ObjectId_data[OBJ_NUM][DATA_NUM];
+extern float fFR_ExistProb_data[OBJ_NUM][DATA_NUM];
+extern float fFR_DistX_data[OBJ_NUM][DATA_NUM];
+extern float fFR_DistY_data[OBJ_NUM][DATA_NUM];
+
+extern int iRL_ObjectId_data[OBJ_NUM][DATA_NUM];
+extern float fRL_ExistProb_data[OBJ_NUM][DATA_NUM];
+extern float fRL_DistX_data[OBJ_NUM][DATA_NUM];
+extern float fRL_DistY_data[OBJ_NUM][DATA_NUM];
+
+extern int iRR_ObjectId_data[OBJ_NUM][DATA_NUM];
+extern float fRR_ExistProb_data[OBJ_NUM][DATA_NUM];
+extern float fRR_DistX_data[OBJ_NUM][DATA_NUM];
+extern float fRR_DistY_data[OBJ_NUM][DATA_NUM];
 
 void RadarDataParsing(float** values,
                       const int numColumns,

@@ -177,7 +177,8 @@ void SpdPlanDataParsing(float** values,
   int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, ENBL_STS = 0, TRUC_CL = 0,
       ACC_MODE = 0, IN_SPDLMT = 0, SPC_FLG = 0, SCE_FLG = 0;
   int EGO_PATH[9] = {0};
-  int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, ALC_RMP_D = 0;
+  int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, ALC_RMP = 0,
+      ALC_RMP_D = 0;
   int ALC_GAP = 0, ALC_TARS = 0, ALC_TARV = 0, ALC_ST[6] = {0};
   int ALC_C[8] = {0};
   int P_T[7] = {0}, P_S[7] = {0}, P_V[7] = {0}, P_A[7] = {0};
@@ -197,6 +198,9 @@ void SpdPlanDataParsing(float** values,
   // ME road lines. Lane Host(LH), Lane Adjacent(LA) Coefficient
   // 8 coeffs, [0,5] for c0~c5(real), 6 = start, 7 = end.
   int LH_C_0[8] = {0}, LH_C_1[8] = {0}, LA_C_0[8] = {0}, LA_C_1[8] = {0};
+
+  // DP lines
+  int EGO_DP[4] = {0}, TAR_DP[4] = {0};
 
   // assign col name from measurements
   for (int i = 0; i < numColumns; i++) {
@@ -224,6 +228,8 @@ void SpdPlanDataParsing(float** values,
       ALC_LBT = i;
     else if (strncmp(columns[i], "VePASP_RightBoundaryType[]", 24) == 0)
       ALC_RBT = i;
+    else if (strncmp(columns[i], "VePASP_NaviPilotIsRamp[]", 22) == 0)
+      ALC_RMP = i;
     else if (strncmp(columns[i], "VuPASP_NaviPilot1stRampOnDis_m[]", 30) == 0)
       ALC_RMP_D = i;
 
@@ -698,6 +704,23 @@ void SpdPlanDataParsing(float** values,
       TSR_LaDis[2] = i;
     else if (strncmp(columns[i], "VfINP_TSRSignLgDist2Proc_m[]", 26) == 0)
       TSR_LgDis[2] = i;
+
+    else if (strncmp(columns[i], "VfREM_EHEgoDP_C0_L4C[]", 20) == 0)
+      EGO_DP[0] = i;
+    else if (strncmp(columns[i], "VfREM_EHEgoDP_C1_L4C[]", 20) == 0)
+      EGO_DP[1] = i;
+    else if (strncmp(columns[i], "VfREM_EHEgoDP_C2_L4C[]", 20) == 0)
+      EGO_DP[2] = i;
+    else if (strncmp(columns[i], "VfREM_EHEgoDP_C3_L4C[]", 20) == 0)
+      EGO_DP[3] = i;
+    else if (strncmp(columns[i], "VfREM_EHTarDP_C0_L4C[]", 20) == 0)
+      TAR_DP[0] = i;
+    else if (strncmp(columns[i], "VfREM_EHTarDP_C1_L4C[]", 20) == 0)
+      TAR_DP[1] = i;
+    else if (strncmp(columns[i], "VfREM_EHTarDP_C2_L4C[]", 20) == 0)
+      TAR_DP[2] = i;
+    else if (strncmp(columns[i], "VfREM_EHTarDP_C3_L4C[]", 20) == 0)
+      TAR_DP[3] = i;
   }
   // log total time. ATTENTION: NaN strings occupy last 8 rows of csv
   *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
@@ -735,7 +758,8 @@ void SpdPlanDataParsing(float** values,
       alcBehav_data[1][t] = values[ALC_STS][t];
       alcBehav_data[2][t] = values[ALC_LBT][t];
       alcBehav_data[3][t] = values[ALC_RBT][t];
-      alcBehav_data[4][t] = values[ALC_RMP_D][t];
+      alcBehav_data[4][t] = ALC_RMP ? values[ALC_RMP][t] : 0;
+      alcBehav_data[5][t] = ALC_RMP_D ? values[ALC_RMP_D][t] : 0;
     }
 
     // alc path and speed plan points
@@ -781,8 +805,7 @@ void SpdPlanDataParsing(float** values,
         objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
       } else {
         pos_x_compensation = 2.5f;
-        // objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 :
-        // 0;
+        objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
       }
       objs_valid_flag_data[k][t] = values[IVS_Present[k]][t];
       objs_type_data[k][t] = IVS_Class[k] ? values[IVS_Class[k]][t] : 0;
@@ -830,6 +853,13 @@ void SpdPlanDataParsing(float** values,
       tsr_type_data[k][t] = values[TSR_Type[k]][t];
       tsr_pos_x_data[k][t] = values[TSR_LgDis[k]][t];
       tsr_pos_y_data[k][t] = values[TSR_LaDis[k]][t] * -1;
+    }
+
+    for (int k = 0; k < 4; k++) {
+      if (EGO_DP[k] == 0)
+        continue;
+      ego_dp_data[k][t] = values[EGO_DP[k]][t];
+      tar_dp_data[k][t] = values[TAR_DP[k]][t];
     }
   }
   return;

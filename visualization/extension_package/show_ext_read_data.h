@@ -12,7 +12,7 @@ void ReadAgsmInputData(const int t,
 #endif
 
 #ifdef RADAR_DEMO_TEST
-void ReadRadarInputData(const int t, RadarObjInfo* radarInfo);
+void ReadRadarInputData(const int t, RadarObjInfo* radarObjsInfo);
 #endif
 
 #endif  // SHOW_EXT_READ_DATA_H_

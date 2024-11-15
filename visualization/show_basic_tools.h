@@ -72,12 +72,15 @@ typedef struct {
   float leftleft_coeffs[8];
   float right_coeffs[8];
   float rightright_coeffs[8];
+  float ego_dp[8];
+  float tar_dp[8];
 } LinesInfo;
 
 void coordinateTrans1(Point* point);
 void coordinateTrans2(Point* point);
 
 void strCompletion(char str[2][8], const int index, const int spd);
+float getCubicPolynomial(const float x, const AgsmEnvModelLine* LH);
 float getPiecewiseCubicPolynomial(const float x, const EgoPathVcc* egoPath);
 
 void drawCar(Point* car,
@@ -110,6 +113,8 @@ void drawBasicGraph(const int len,
 
 void drawObstacles(const SsmObjType* ssmObjs,
                    const EgoPathVcc* egoPath,
+                   const float* LH0,
+                   const float* LH1,
                    const float cur_spd);
 void drawBEVRuler(const float zeroOffsetX);
 

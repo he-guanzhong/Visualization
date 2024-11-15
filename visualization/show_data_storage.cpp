@@ -6,7 +6,7 @@ float egoAcc_data[DATA_NUM];
 float spdLmt_data[DATA_NUM];
 float alc_path_data[8][DATA_NUM];
 float ego_path_data[9][DATA_NUM];
-int alcBehav_data[5][DATA_NUM];
+int alcBehav_data[6][DATA_NUM];
 int accMode_data[DATA_NUM];
 
 int spdPlanEnblSts_data[DATA_NUM];
@@ -48,6 +48,9 @@ float ll_path_data[8][DATA_NUM];
 float l_path_data[8][DATA_NUM];
 float r_path_data[8][DATA_NUM];
 float rr_path_data[8][DATA_NUM];
+
+float ego_dp_data[4][DATA_NUM];
+float tar_dp_data[4][DATA_NUM];
 
 float original_data[DATA_NUM];
 float loopback_data[DATA_NUM];

@@ -9,7 +9,7 @@ extern float egoAcc_data[DATA_NUM];
 extern float spdLmt_data[DATA_NUM];
 extern float alc_path_data[8][DATA_NUM];
 extern float ego_path_data[9][DATA_NUM];
-extern int alcBehav_data[5][DATA_NUM];
+extern int alcBehav_data[6][DATA_NUM];
 extern int accMode_data[DATA_NUM];
 
 extern int spdPlanEnblSts_data[DATA_NUM];
@@ -57,4 +57,6 @@ extern float loopback_data[DATA_NUM];
 extern float tempMeasureVal1_data[DATA_NUM];
 extern float tempMeasureVal2_data[DATA_NUM];
 
+extern float ego_dp_data[4][DATA_NUM];
+extern float tar_dp_data[4][DATA_NUM];
 #endif  // SHOW_DATA_STORAGE_H_

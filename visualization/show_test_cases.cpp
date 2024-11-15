@@ -16,38 +16,38 @@ void CaseLeftChange(SsmObjType* ssmObjs) {
   ssmObjs->obj_lists[2].pos_x = 10;
   ssmObjs->obj_lists[2].pos_y = 3.4f;
   ssmObjs->obj_lists[2].acc_x = 0.0f;
-  ssmObjs->obj_lists[2].speed_x = 20.0f;
+  ssmObjs->obj_lists[2].speed_x = 23.0f;
   ssmObjs->obj_lists[2].speed_y = 0;
   ssmObjs->obj_lists[2].type = 1;
   ssmObjs->obj_lists[2].lane_index = 2;
-  ssmObjs->obj_lists[2].valid_flag = TRUE;
+  ssmObjs->obj_lists[2].valid_flag = FALSE;
 
-  ssmObjs->obj_lists[3].pos_x = 45;
+  ssmObjs->obj_lists[3].pos_x = 60;
   ssmObjs->obj_lists[3].pos_y = 3.4f;
   ssmObjs->obj_lists[3].acc_x = 0.0f;
-  ssmObjs->obj_lists[3].speed_x = 20.0f;
+  ssmObjs->obj_lists[3].speed_x = 23.0f;
   ssmObjs->obj_lists[3].speed_y = 0;
   ssmObjs->obj_lists[3].type = 1;
   ssmObjs->obj_lists[3].lane_index = 2;
-  ssmObjs->obj_lists[3].valid_flag = TRUE;
+  ssmObjs->obj_lists[3].valid_flag = FALSE;
 
-  ssmObjs->obj_lists[4].pos_x = -0;
+  ssmObjs->obj_lists[4].pos_x = -10;
   ssmObjs->obj_lists[4].pos_y = 3.4f;
   ssmObjs->obj_lists[4].acc_x = 0.0f;
-  ssmObjs->obj_lists[4].speed_x = 20.0f;
+  ssmObjs->obj_lists[4].speed_x = 23.0f;
   ssmObjs->obj_lists[4].speed_y = 0.0f;
-  ssmObjs->obj_lists[4].type = 1;
+  ssmObjs->obj_lists[4].type = 0;
   ssmObjs->obj_lists[4].lane_index = 2;
   ssmObjs->obj_lists[4].valid_flag = TRUE;
 
   ssmObjs->obj_lists[5].pos_x = -20;
   ssmObjs->obj_lists[5].pos_y = 3.4f;
   ssmObjs->obj_lists[5].acc_x = 0.0f;
-  ssmObjs->obj_lists[5].speed_x = 20.0f;
+  ssmObjs->obj_lists[5].speed_x = 25.0f;
   ssmObjs->obj_lists[5].speed_y = 0.0f;
-  ssmObjs->obj_lists[5].type = 1;
+  ssmObjs->obj_lists[5].type = 0;
   ssmObjs->obj_lists[5].lane_index = 2;
-  ssmObjs->obj_lists[5].valid_flag = TRUE;
+  ssmObjs->obj_lists[5].valid_flag = FALSE;
 }
 
 void CaseSideCarMoveSlowly(SsmObjType* ssmObjs) {
@@ -153,11 +153,20 @@ void CaseFollow(SsmObjType* ssmObjs) {
   ssmObjs->obj_lists[0].pos_x = 30;
   ssmObjs->obj_lists[0].pos_y = 0;
   ssmObjs->obj_lists[0].acc_x = 0;
-  ssmObjs->obj_lists[0].speed_x = 15;
+  ssmObjs->obj_lists[0].speed_x = 20;
   ssmObjs->obj_lists[0].speed_y = 0.0f;
   ssmObjs->obj_lists[0].type = 1;
   ssmObjs->obj_lists[0].lane_index = 3;
   ssmObjs->obj_lists[0].valid_flag = TRUE;
+
+  ssmObjs->obj_lists[2].pos_x = 30;
+  ssmObjs->obj_lists[2].pos_y = 0;
+  ssmObjs->obj_lists[2].acc_x = 0;
+  ssmObjs->obj_lists[2].speed_x = 20;
+  ssmObjs->obj_lists[2].speed_y = 0.0f;
+  ssmObjs->obj_lists[2].type = 1;
+  ssmObjs->obj_lists[2].lane_index = 2;
+  ssmObjs->obj_lists[2].valid_flag = FALSE;
 }
 
 void CaseCutIn(SsmObjType* ssmObjs) {
@@ -190,10 +199,10 @@ void CaseRearObs(SsmObjType* ssmObjs) {
 
 void LoadDummySSmData(SsmObjType* ssmObjs) {
   // CaseLeftChange(ssmObjs);
-  // CaseSideCarMoveSlowly(ssmObjs);
-  // CaseFollow(ssmObjs);
+  //  CaseSideCarMoveSlowly(ssmObjs);
+  CaseFollow(ssmObjs);
   // CaseCutIn(ssmObjs);
-  CaseRearObs(ssmObjs);
+  // CaseRearObs(ssmObjs);
   return;
 }
 
@@ -202,10 +211,10 @@ void LoadDummyMotionData(float* egoSpd,
                          float* spdLmt,
                          int* accMode,
                          AlcBehavior* alcBehav) {
-  *egoSpd = 8.0f, *egoAcc = 0, *spdLmt = 40.0f;
+  *egoSpd = 22.0f, *egoAcc = 0, *spdLmt = 80.0f;
   *accMode = 5;
-  alcBehav->AutoLaneChgSide = 1;
-  alcBehav->AutoLaneChgSts = 1;
+  alcBehav->AutoLaneChgSide = 0;
+  alcBehav->AutoLaneChgSts = 2;
   alcBehav->LeftBoundaryType = 2;
   alcBehav->RightBoundaryType = 2;
   return;

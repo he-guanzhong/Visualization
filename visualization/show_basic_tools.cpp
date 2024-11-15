@@ -2,6 +2,7 @@
 
 #define CURVE_FITTING_TYPE 2
 bool show_predict_swt = false;
+bool show_dp_line = false;
 // float fit_coeffi[6] = {0};
 
 // Draw graph origins
@@ -39,6 +40,10 @@ void strCompletion(char str[2][8], const int index, const int spd) {
   itoa(spd, szSpd, 10);
   strcpy(str[1], szSpd);
   strcat(str[1], " m/s");
+}
+
+float getCubicPolynomial(const float x, const float* LH) {
+  return LH[0] + LH[1] * x + LH[2] * x * x + LH[3] * x * x * x;
 }
 
 float getPiecewiseCubicPolynomial(const float x, const EgoPathVcc* egoPath) {
@@ -137,7 +142,11 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
   char spd_val[10];
   const int tsr_spd = tsrInfo->tsr_spd;
   const bool tsr_spd_warn = tsrInfo->tsr_spd_warn;
-  itoa(tsr_spd, spd_val, 10);
+  if (tsr_spd == 166) {
+    strcpy(spd_val, "Cnl");
+  } else {
+    itoa(tsr_spd, spd_val, 10);
+  }
   strcat(tsr_disp, spd_val);
   char tsi_disp[10];
   if (tsrInfo->tsr_tsi[0] == 5) {
@@ -218,7 +227,7 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
   char str_disp_set_spd[5];
   char str_inner_spd_lmt[5];
 
-  const int cur_spd = round(motionInfo->egoSpd * 1.03f * 3.6f);
+  const int cur_spd = round(motionInfo->egoSpd * 1.04f * 3.6f);
   const int spd_lmt = round(motionInfo->spdLmt);
   const int inner_spd_lmt = round(motionInfo->innerSpdLmt);
 
@@ -243,6 +252,10 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     case 13:
       strcat(spec_case_title, "cut");
       break;
+    case 4:
+    case 14:
+      strcat(spec_case_title, "r2m");
+      break;
     default:
       break;
   }
@@ -257,7 +270,7 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
       break;
     case 9:
     case 19:
-      strcat(scenario_title, "ramp");
+      strcat(scenario_title, "r2m");
       break;
     case 5:
       strcat(scenario_title, "dec");
@@ -272,10 +285,10 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
       strcat(scenario_title, "hldN");
       break;
     case 7:
-      strcat(scenario_title, "acc");
+      strcat(scenario_title, "rmp");
       break;
     case 17:
-      strcat(scenario_title, "accN");
+      strcat(scenario_title, "rmpN");
       break;
     case 1:
       strcat(scenario_title, "gA");
@@ -435,7 +448,11 @@ void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
 
 void drawObstacles(const SsmObjType* ssmObjs,
                    const EgoPathVcc* egoPath,
+                   const float* LH0,
+                   const float* LH1,
                    const float cur_spd) {
+  const float objSpdLatConf = 0.5f;
+  float obs_speed_y_cor = 0;
   for (int i = 0; i < ssmObjs->obj_num; i++) {
     if (!ssmObjs->obj_lists[i].valid_flag) {
       continue;
@@ -452,16 +469,24 @@ void drawObstacles(const SsmObjType* ssmObjs,
     Point obs_pred, obs_pred_path[6];
     float objPosnLgt[6], objPosnLat[6];
 
+    obs_speed_y_cor = obs->speed_y * objSpdLatConf;
     for (int j = 0; j < 6; j++) {
       obs_pred_path[j].x = obs->pos_x + obs->speed_x * j;
-      float predLatOffset = obs->speed_y * j;
+      float predLatOffset = obs_speed_y_cor * j;
       objPosnLgt[j] = obs->pos_x + obs->speed_x * j;
       if (cur_spd > 30.0f / 3.6f && obs->speed_x > 1.0f &&
-          objPosnLgt[j] < 120.0f) {
-        objPosnLat[j] = getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath);
+          objPosnLgt[j] < 130.0f) {
+        if (i == 4 || i == 5) {
+          objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH0);
+        } else if (i == 8 || i == 9) {
+          objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH1);
+        } else {
+          objPosnLat[j] = getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath);
+        }
         const float roadCurveOffset = objPosnLat[j] - objPosnLat[0];
         if ((roadCurveOffset > predLatOffset && predLatOffset >= 0) ||
-            (roadCurveOffset < predLatOffset && predLatOffset <= 0))
+            (roadCurveOffset < predLatOffset && predLatOffset <= 0) ||
+            fabsf(roadCurveOffset) > fabsf(predLatOffset))
           predLatOffset = roadCurveOffset;
       }
       obs_pred_path[j].y = obs->pos_y + predLatOffset;
@@ -726,15 +751,18 @@ void showBEVGraph(const GraphConfig* config,
   drawTsrSign(tsrInfo);
 
   // road lines
-  // lineType: 0-unknown, 1-solid, 2-dash, 32-Dash(inner)_Solid(outer),
+  // lineType: 0-unknown, 1-solid, 2-dash, 3-Double Lane(Near Dashed,Far Solid)
+  // 9- DECELERATION_Dashed
   setlinestyle(PS_DASHDOT);
   Point lineEnd;
-  const int leftBoundaryColor = (motionInfo->alcBehav.LeftBoundaryType == 2 ||
-                                 motionInfo->alcBehav.LeftBoundaryType == 32)
+  const int leftBoundaryColor = (2 == motionInfo->alcBehav.LeftBoundaryType ||
+                                 3 == motionInfo->alcBehav.LeftBoundaryType ||
+                                 9 == motionInfo->alcBehav.LeftBoundaryType)
                                     ? GREEN
                                     : RGB(0, 87, 55);
-  const int rightBoundaryColor = (motionInfo->alcBehav.RightBoundaryType == 2 ||
-                                  motionInfo->alcBehav.RightBoundaryType == 32)
+  const int rightBoundaryColor = (2 == motionInfo->alcBehav.RightBoundaryType ||
+                                  3 == motionInfo->alcBehav.RightBoundaryType ||
+                                  9 == motionInfo->alcBehav.RightBoundaryType)
                                      ? GREEN
                                      : RGB(0, 87, 55);
   drawQuinticPolyTraj(linesInfo->left_coeffs, leftBoundaryColor,
@@ -752,15 +780,29 @@ void showBEVGraph(const GraphConfig* config,
                       linesInfo->rightright_coeffs[7], &lineEnd);
 
   // obstacles
-  drawObstacles(ssmObjs, &linesInfo->ego_coeffs, motionInfo->egoSpd);
+  drawObstacles(ssmObjs, &linesInfo->ego_coeffs, linesInfo->left_coeffs,
+                linesInfo->right_coeffs, motionInfo->egoSpd);
 
   // navigation path, ego c7 as end point
   const float naviRange = linesInfo->alc_coeffs[7];
   Point predictPosn = {0.0f, 0.0f};
+
+  if (show_dp_line) {
+    if (linesInfo->ego_dp[0]) {
+      setlinestyle(PS_SOLID, 3);
+      drawQuinticPolyTraj(linesInfo->ego_dp, BLUE, linesInfo->ego_dp[6],
+                          linesInfo->ego_dp[7], linesInfo->ego_dp[7], &lineEnd);
+    }
+    if (linesInfo->tar_dp[0]) {
+      setlinestyle(PS_SOLID, 3);
+      drawQuinticPolyTraj(linesInfo->tar_dp, BROWN, linesInfo->tar_dp[6],
+                          linesInfo->tar_dp[7], linesInfo->tar_dp[7], &lineEnd);
+    }
+  }
   // ego lane path, c0 ~ c3
+  setlinestyle(PS_DASHDOT, 1);
   drawPiecewiseCubicPolyTraj(&linesInfo->ego_coeffs, MAGENTA, 0.0f,
                              &predictPosn);
-
   drawQuinticPolyTraj(linesInfo->alc_coeffs, LIGHTRED, naviRange,
                       fmaxf(50.0f, naviRange), fmaxf(50.0f, naviRange),
                       &predictPosn);
@@ -768,7 +810,13 @@ void showBEVGraph(const GraphConfig* config,
                       &predictPosn);
 
   // ego car
-  setfillcolor(RED);
+  if (motionInfo->alcBehav.AutoLaneChgSts >= 2 &&
+      motionInfo->alcBehav.AutoLaneChgSts <= 9) {
+    setfillcolor(RED);
+  } else {
+    setfillcolor(LIGHTRED);
+  }
+  setlinecolor(RED);
   setlinestyle(PS_SOLID);
   Point ego = {0.0f, 0};
   char str_ego[2][8] = {};

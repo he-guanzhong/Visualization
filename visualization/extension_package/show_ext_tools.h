@@ -28,9 +28,10 @@ typedef struct {
 } AgsmLinesInfo;
 
 typedef struct {
-  int iObjectId[32];
-  float fDistX[32];
-  float fDistY[32];
+  int iObjectId[16];
+  float fExistProb[16];
+  float fDistX[16];
+  float fDistY[16];
 } RadarObjInfo;
 
 void drawLaneMkr(const LaneMkr* path, const int color);
@@ -51,14 +52,14 @@ void showAGSMGraph(const GraphConfig* config,
                    const AgsmLinesInfo* agsmlinesInfo,
                    const MotionInfo* motionInfo);
 
-void drawRadarObj(const RadarObjInfo* radarInfo);
+void drawRadarObj(const RadarObjInfo* radarInfo, const int color);
 
 /// @brief Radar graph, x-axis_forward_vertical, y-axis_lateral_horizontal
 /// @param config       basic configuration
 /// @param zeroOffsetX  distance behind ego vehicle to be displayed
-/// @param radarInfo    32 points
+/// @param radarObjsInfo    32 points
 void showRadarGraph(const GraphConfig* config,
                     const float zeroOffsetX,
-                    const RadarObjInfo* radarInfo);
+                    const RadarObjInfo* radarObjsInfo);
 
 #endif  // SHOW_EXT_TOOLS_H_

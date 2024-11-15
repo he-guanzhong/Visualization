@@ -46,7 +46,7 @@ void DisplayLog(const int length, const int width, const int offset);
 
 #ifdef SPEED_PLANNING_H_
 void ExecuteSpdPlan(const AlcPathVcc* alcPathVcc,
-                    const AgsmEnvModelPath* agsmEnvModelPath,
+                    const AgsmEnvModel* agsmEnvModel,
                     const SsmObjType* ssmObjs);
 void PrintOutputInfo(const DpSpeedPoints* output);
 

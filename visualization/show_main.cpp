@@ -45,9 +45,11 @@ LinesInfo linesInfo = {
     .left_coeffs = {3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100},
     .leftleft_coeffs = {3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100},
     .right_coeffs = {-3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100},
-    .rightright_coeffs = {-3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100}};
+    .rightright_coeffs = {-3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100},
+    .ego_dp = {0, 0, 0, 0, 0, 0, 0, 0},
+    .tar_dp = {0, 0, 0, 0, 0, 0, 0, 0}};
 TsrInfo tsrInfo;
-RadarObjInfo radarInfo;
+RadarObjInfo radarObjsInfo[4];
 AgsmLinesInfo agsmLinesInfo;
 
 // temporary storage of log data
@@ -120,7 +122,8 @@ void ReadInputData(const int t) {
   motionInfo.alcBehav.AutoLaneChgSts = alcBehav_data[1][t];
   motionInfo.alcBehav.LeftBoundaryType = alcBehav_data[2][t];
   motionInfo.alcBehav.RightBoundaryType = alcBehav_data[3][t];
-  motionInfo.alcBehav.NaviPilot1stRampOnDis = alcBehav_data[4][t];
+  motionInfo.alcBehav.NaviPilotIsRamp = alcBehav_data[4][t];
+  motionInfo.alcBehav.NaviPilot1stRampOnDis = alcBehav_data[5][t];
 
   // obstacles
   g_ssmObjType.obj_num = 10;
@@ -173,6 +176,13 @@ void ReadInputData(const int t) {
     linesInfo.leftleft_coeffs[i] = ll_path_data[i][t];
     linesInfo.rightright_coeffs[i] = rr_path_data[i][t];
   }
+  // dp lines
+  for (int i = 0; i < 4; i++) {
+    linesInfo.ego_dp[i] = ego_dp_data[i][t];
+    linesInfo.tar_dp[i] = tar_dp_data[i][t];
+  }
+  linesInfo.ego_dp[6] = linesInfo.tar_dp[6] = -5;
+  linesInfo.ego_dp[7] = linesInfo.tar_dp[7] = 40;
 
   // TSR info
   tsrInfo.tsr_spd = tsr_spd_data[t];
@@ -323,7 +333,7 @@ void DisplayLog(const int length, const int width, const int offset) {
         ReadAgsmInputData(t, &motionInfo, &agsmLinesInfo, &g_ssmObjType);
 #endif
 #ifdef RADAR_DEMO_TEST
-        ReadRadarInputData(t, &radarInfo);
+        ReadRadarInputData(t, radarObjsInfo);
 #endif
         ReadOutputData(t);
 
@@ -343,7 +353,7 @@ void DisplayLog(const int length, const int width, const int offset) {
         } else if (playMode == RADAR) {
           const GraphConfig BEV_cfg = {length, width,  offset,     0,
                                        0,      100.0f, 3.4f * 5.0f};
-          showRadarGraph(&BEV_cfg, 0.0f, &radarInfo);
+          showRadarGraph(&BEV_cfg, 30.0f, radarObjsInfo);
         } else if (playMode == LOOPBACK) {
           const int chartWidth = 200, charOffset = 50;
           ShowSpdPlanInterface(length, width - chartWidth + charOffset, offset,
@@ -410,16 +420,19 @@ void DisplayLineChart(const int length,
 
 #ifdef SPEED_PLANNING_H_
 void ExecuteSpdPlan(const AlcPathVcc* alcPathVcc,
-                    const AgsmEnvModelPath* agsmEnvModelPath,
+                    const AgsmEnvModel* agsmEnvModel,
                     const SsmObjType* ssmObjs) {
   DpSpeedPoints output;
-  SpeedPlanProcessor(motionInfo.egoSpd, motionInfo.egoAcc, motionInfo.spdLmt,
-                     &motionInfo.alcBehav, alcPathVcc, agsmEnvModelPath,
-                     &ssmObjs->obj_lists[0], &ssmObjs->obj_lists[1],
-                     &ssmObjs->obj_lists[2], &ssmObjs->obj_lists[3],
-                     &ssmObjs->obj_lists[4], &ssmObjs->obj_lists[5],
-                     &ssmObjs->obj_lists[6], &ssmObjs->obj_lists[7],
-                     &ssmObjs->obj_lists[8], &ssmObjs->obj_lists[9], &output);
+  uint8 tauGapSet = 4;
+  EgoMotionSts egoMotionSts = {motionInfo.egoSpd, motionInfo.egoAcc,
+                               motionInfo.spdLmt, (uint8)motionInfo.accMode,
+                               tauGapSet};
+  SpeedPlanProcessor(
+      &egoMotionSts, &motionInfo.alcBehav, alcPathVcc, agsmEnvModel,
+      &ssmObjs->obj_lists[0], &ssmObjs->obj_lists[1], &ssmObjs->obj_lists[2],
+      &ssmObjs->obj_lists[3], &ssmObjs->obj_lists[4], &ssmObjs->obj_lists[5],
+      &ssmObjs->obj_lists[6], &ssmObjs->obj_lists[7], &ssmObjs->obj_lists[8],
+      &ssmObjs->obj_lists[9], &output);
 
   s_points[0] = {output.Point0.t, output.Point0.s};
   s_points[1] = {output.Point1.t, output.Point1.s};
@@ -475,11 +488,11 @@ void PrintOutputInfo(const DpSpeedPoints* output) {
 void CalcOneStep() {
   SsmObjType ssmObjs;
   AlcPathVcc alcPathVcc;
-  AgsmEnvModelPath agsmEnvModelPath;
+  AgsmEnvModel agsmEnvModel;
   LoadDummyPathData(linesInfo.alc_coeffs, &linesInfo.ego_coeffs,
                     linesInfo.left_coeffs, linesInfo.leftleft_coeffs,
                     linesInfo.right_coeffs, linesInfo.rightright_coeffs,
-                    &alcPathVcc, &agsmEnvModelPath);
+                    &alcPathVcc, &agsmEnvModel.EgoPath);
   memset(&ssmObjs, 0, sizeof(ssmObjs));
   if (playMode == ONESTEP) {
     LoadDummyMotionData(&motionInfo.egoSpd, &motionInfo.egoAcc,
@@ -490,7 +503,7 @@ void CalcOneStep() {
   } else {
     ssmObjs = g_ssmObjType;
   }
-  ExecuteSpdPlan(&alcPathVcc, &agsmEnvModelPath, &ssmObjs);
+  ExecuteSpdPlan(&alcPathVcc, &agsmEnvModel, &ssmObjs);
 
   linesInfo.alc_coeffs[7] = fmaxf(s_points[4].y, s_points[5].y);
 
@@ -531,11 +544,11 @@ void LoopbackCalculation() {
 
 void GenerateLocalData() {
   AlcPathVcc alcPathVcc;
-  AgsmEnvModelPath agsmEnvModelPath;
+  AgsmEnvModel agsmEnvModel;
   LoadDummyPathData(linesInfo.alc_coeffs, &linesInfo.ego_coeffs,
                     linesInfo.left_coeffs, linesInfo.leftleft_coeffs,
                     linesInfo.right_coeffs, linesInfo.rightright_coeffs,
-                    &alcPathVcc, &agsmEnvModelPath);
+                    &alcPathVcc, &agsmEnvModel.EgoPath);
   LoadDummyMotionData(&motionInfo.egoSpd, &motionInfo.egoAcc,
                       &motionInfo.spdLmt, &motionInfo.accMode,
                       &motionInfo.alcBehav);
@@ -567,7 +580,8 @@ void GenerateLocalData() {
     alcBehav_data[1][t] = motionInfo.alcBehav.AutoLaneChgSts;
     alcBehav_data[2][t] = motionInfo.alcBehav.LeftBoundaryType;
     alcBehav_data[3][t] = motionInfo.alcBehav.RightBoundaryType;
-    alcBehav_data[4][t] = motionInfo.alcBehav.NaviPilot1stRampOnDis;
+    alcBehav_data[4][t] = motionInfo.alcBehav.NaviPilotIsRamp;
+    alcBehav_data[5][t] = motionInfo.alcBehav.NaviPilot1stRampOnDis;
     accMode_data[t] = motionInfo.accMode;
 
     for (int k = 0; k < 10; k++) {
@@ -619,7 +633,7 @@ void GenerateLocalData() {
     ego_path_data[7][t] = linesInfo.ego_coeffs.Len[1];
     ego_path_data[8][t] = linesInfo.ego_coeffs.Len[2];
 
-    ExecuteSpdPlan(&alcPathVcc, &agsmEnvModelPath, &ssmObjs);
+    ExecuteSpdPlan(&alcPathVcc, &agsmEnvModel, &ssmObjs);
 
     // assume inertia delay 0.5s
     accResponseDelay[accDelay_pos] = ctrlPoint.y;
@@ -677,7 +691,7 @@ void ReleaseWrapper(int length, int width, int offset) {
 #endif
 
 #ifdef RADAR_DEMO_TEST
-  playMode = fDistX_data[0][0] ? RADAR : playMode;
+  playMode = fRL_DistX_data[0][0] ? RADAR : playMode;
   length = 400;
 #endif
 #ifdef AGSM_DEMO_TEST
@@ -693,10 +707,14 @@ int main() {
   int length = 750;  // numbers of horizontal pixels in display area
   int width = 750;   // numbers of vertical pixels in display area
   int offset = 100;  // numbers of blank margin pixels around display area
+  float scale_ratio = 1.0f;
+  length *= scale_ratio;
+  width *= scale_ratio;
+  offset *= scale_ratio;
 
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(2);
+  playMode = PLAYMODE(4);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();
