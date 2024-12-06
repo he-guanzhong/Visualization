@@ -32,7 +32,7 @@ float gTempMeasureVal2;
 // Key display information
 MotionInfo motionInfo;
 Point s_points[6], v_points[6], a_points[6];
-Point ctrlPoint;
+Point s_ctrlPoint, v_ctrlPoint, a_ctrlPoint;
 int spdPlanEnblSts;
 // go straight
 // ego_coeff[9]: c0~c2, c31~c32, len1~len2
@@ -67,7 +67,10 @@ void ReadOutputData(const int t) {
     v_points[i].x = t_points_data[i][t];
     a_points[i].x = t_points_data[i][t];
   }
-  ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[1][t]};
+  s_ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[1][t]};
+  v_ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[2][t]};
+  a_ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[3][t]};
+
   spdPlanEnblSts = spdPlanEnblSts_data[t];
   g_truncated_col = truncated_col_data[t];
 
@@ -94,8 +97,11 @@ void WriteOutputData(const int t) {
     a_points_data[k][t] = a_points[k].y;
     t_points_data[k][t] = s_points[k].x;
   }
-  ctrl_point_data[0][t] = ctrlPoint.x;
-  ctrl_point_data[1][t] = ctrlPoint.y;
+  ctrl_point_data[0][t] = a_ctrlPoint.x;
+  ctrl_point_data[1][t] = s_ctrlPoint.y;
+  ctrl_point_data[2][t] = v_ctrlPoint.y;
+  ctrl_point_data[3][t] = a_ctrlPoint.y;
+
   spdPlanEnblSts_data[t] = spdPlanEnblSts;
   truncated_col_data[t] = g_truncated_col;
 
@@ -118,12 +124,15 @@ void ReadInputData(const int t) {
   motionInfo.egoAcc = egoAcc_data[t];
   motionInfo.spdLmt = spdLmt_data[t];
   motionInfo.accMode = accMode_data[t];
+  motionInfo.tauGap = tauGap_data[t];
   motionInfo.alcBehav.AutoLaneChgSide = alcBehav_data[0][t];
   motionInfo.alcBehav.AutoLaneChgSts = alcBehav_data[1][t];
   motionInfo.alcBehav.LeftBoundaryType = alcBehav_data[2][t];
   motionInfo.alcBehav.RightBoundaryType = alcBehav_data[3][t];
-  motionInfo.alcBehav.NaviPilotIsRamp = alcBehav_data[4][t];
-  motionInfo.alcBehav.NaviPilot1stRampOnDis = alcBehav_data[5][t];
+  motionInfo.alcBehav.NOAStatus = alcBehav_data[4][t];
+  motionInfo.alcBehav.NaviPilotIsRamp = alcBehav_data[5][t];
+  motionInfo.alcBehav.NaviPilot1stRampOnDis = alcBehav_data[6][t];
+  motionInfo.alcBehav.NaviPilot1stExitDis = alcBehav_data[7][t];
 
   // obstacles
   g_ssmObjType.obj_num = 10;
@@ -137,6 +146,7 @@ void ReadInputData(const int t) {
     g_ssmObjType.obj_lists[i].speed_y = objs_speed_y_data[i][t];
     g_ssmObjType.obj_lists[i].acc_x = objs_acc_x_data[i][t];
     g_ssmObjType.obj_lists[i].pos_yaw = objs_pos_yaw_data[i][t];
+    g_ssmObjType.obj_lists[i].cut_in_flag = objs_cut_in_data[i][t];
   }
 
   // ego path, cubic polynominal
@@ -159,12 +169,12 @@ void ReadInputData(const int t) {
             linesInfo.ego_coeffs.Len[i] * linesInfo.ego_coeffs.Len[i];
     linesInfo.ego_coeffs.C1[i + 1] =
         linesInfo.ego_coeffs.C1[i] +
-        2 * linesInfo.ego_coeffs.C2[i] * linesInfo.ego_coeffs.Len[i] +
-        3 * linesInfo.ego_coeffs.C3[i] * linesInfo.ego_coeffs.Len[i] *
+        2.0f * linesInfo.ego_coeffs.C2[i] * linesInfo.ego_coeffs.Len[i] +
+        3.0f * linesInfo.ego_coeffs.C3[i] * linesInfo.ego_coeffs.Len[i] *
             linesInfo.ego_coeffs.Len[i];
     linesInfo.ego_coeffs.C2[i + 1] =
-        (2 * linesInfo.ego_coeffs.C2[i] +
-         6 * linesInfo.ego_coeffs.C3[i] * linesInfo.ego_coeffs.Len[i]) /
+        (2.0f * linesInfo.ego_coeffs.C2[i] +
+         6.0f * linesInfo.ego_coeffs.C3[i] * linesInfo.ego_coeffs.Len[i]) /
         2.0f;
   }
 
@@ -199,24 +209,32 @@ void ReadInputData(const int t) {
   return;
 }
 
-void Time2Str(const float time, char* str) {
-  char szTime_s[8];
+void ConvertMotionInfo() {
+  motionInfo.enblSts = spdPlanEnblSts;
+  motionInfo.egoPredSpd = fmaxf(v_points[4].y, v_points[5].y);
+  motionInfo.innerSpdLmt = gInnerSpdLmt_kph;
+  motionInfo.specCaseFlg = gSpecialCaseFlg;
+  motionInfo.scenarioFlg = gScenarioFlg;
+  motionInfo.gapIndex = gGapIndex;
+  motionInfo.gapTarS = gGapTarS;
+  motionInfo.gapTarV = gGapTarV;
+  return;
+}
+
+void Time2Str(const float time, char* str, const int strSize) {
   const int tt_m = (int)time / 60;
   const float tt_s = fmodf(time, 60);
+  const int len = strlen(str);
   if (tt_m) {
-    sprintf(str, "%d", tt_m);
-    strcat(str, "m ");
-    sprintf(szTime_s, "%.2f", tt_s);
-    strcat(szTime_s, "s");
-    strcat(str, szTime_s);
+    snprintf(str + len, strSize - len, "%dm %.2fs ", tt_m, tt_s);
   } else {
-    sprintf(str, "%.2f", tt_s);
-    strcat(str, "s");
+    snprintf(str + len, strSize - len, "%.2fs ", tt_s);
   }
+  return;
 }
 
 void ShowOutputKeyInfo(const int posY) {
-  char szPlanSts[10];
+  char szPlanSts[10] = "";
   char szTmpMeas1[20] = "Meas1: ", szTmpMeas2[20] = "Meas2: ";
   itoa(g_truncated_col, szPlanSts, 10);
   const char* str2 = spdPlanEnblSts ? " Enable" : " Fail  ";
@@ -234,26 +252,26 @@ void ShowBasicFrameInfo(int* t, int* cycle, const int length, const int width) {
   // time
   *t = (*t == totalFrame - 1 ? 1 : ++(*t));
   *cycle = (time_data[*t] - time_data[*t - 1]) * 1000;
-  char szCycle[12];
-  Time2Str(time_data[*t], szCycle);
-  char szT[] = " time = ";
-  strcat(szT, szCycle);
-  outtextxy(0, 0, szT);
-  // introduction
-  const char** szIntro = (const char**)malloc(sizeof(const char*) * 2);
-  szIntro[0] = "Left click:   Play / Pause ";
-  szIntro[1] = "Right click: Exit ";
+  char szCurTime[30] = " time = ";
+  Time2Str(time_data[*t], szCurTime, sizeof(szCurTime));
+  outtextxy(0, 0, szCurTime);
+
+  const char** szManual = (const char**)malloc(sizeof(const char*) * 2);
+  szManual[0] = "Left click:   Play / Pause ";
+  szManual[1] = "Right click: Exit ";
   for (int i = 0; i < 2; i++) {
-    outtextxy(length - textwidth(szIntro[0]), i * textheight(szIntro[i]),
-              szIntro[i]);
+    outtextxy(length - textwidth(szManual[0]), i * textheight(szManual[i]),
+              szManual[i]);
   }
-  free(szIntro);
+  free(szManual);
+  szManual = nullptr;
   outtextxy(0, width - 5 - textheight(csvFileName), csvFileName);
+
   // progress bar
   setfillcolor(GREEN);
   solidrectangle(0, width - 5, (float)(*t) / (float)totalFrame * length, width);
-  char szTotalTime[13];
-  Time2Str(time_data[totalFrame - 1], szTotalTime);
+  char szTotalTime[12] = "";
+  Time2Str(time_data[totalFrame - 1], szTotalTime, sizeof(szTotalTime));
 
   outtextxy(length - textwidth(szTotalTime),
             width - 5 - textheight(szTotalTime), szTotalTime);
@@ -265,7 +283,7 @@ void ShowSpdPlanInterface(const int length,
                           const LinesInfo* linesInfo,
                           const MotionInfo* motionInfo) {
   const GraphConfig BEV_cfg = {length / 2, width,  offset,     length / 2,
-                               0,          130.0f, 3.4f * 5.0f};
+                               0,          140.0f, 3.4f * 5.0f};
   const GraphConfig ST_cfg = {
       length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f, 120.0f};
   const GraphConfig VT_cfg = {length / 2, (int)(width * 0.44), offset,
@@ -274,15 +292,15 @@ void ShowSpdPlanInterface(const int length,
   const GraphConfig AT_cfg = {length / 2, (int)(width * 0.44), offset,
                               0,          (int)(width * 0.56), 5.0f,
                               6.0f};
-  char ST_title[10] = "S-T Graph";
-  PlotInfo ST_info = {ST_title, s_points, &ctrlPoint, 0,
-                      6,        BLUE,     true,       gAlcStCoeff};
-  char VT_title[10] = "V-T";
-  PlotInfo VT_info = {VT_title, v_points, &ctrlPoint, 0,
-                      6,        BLUE,     true,       gAlcStCoeff};
-  char AT_title[10] = "A-T";
-  PlotInfo AT_info = {AT_title, a_points, &ctrlPoint, 0,
-                      6,        RED,      true,       gAlcStCoeff};
+  char ST_title[] = "S-T Graph";
+  PlotInfo ST_info = {ST_title, s_points, &s_ctrlPoint, 0,
+                      6,        BLUE,     true,         gAlcStCoeff};
+  char VT_title[] = "V-T";
+  PlotInfo VT_info = {VT_title, v_points, &v_ctrlPoint, 0,
+                      6,        BLUE,     true,         gAlcStCoeff};
+  char AT_title[] = "A-T";
+  PlotInfo AT_info = {AT_title, a_points, &a_ctrlPoint, 0,
+                      6,        RED,      true,         gAlcStCoeff};
   showBEVGraph(&BEV_cfg, 30.0f, &g_ssmObjType, linesInfo, &tsrInfo, motionInfo);
   showXYGraph(&ST_cfg, 0.0f, &ST_info);
   showXYGraph(&VT_cfg, 0.0f, &VT_info);
@@ -337,13 +355,7 @@ void DisplayLog(const int length, const int width, const int offset) {
 #endif
         ReadOutputData(t);
 
-        motionInfo.egoPredSpd = fmaxf(v_points[4].y, v_points[5].y);
-        motionInfo.innerSpdLmt = gInnerSpdLmt_kph;
-        motionInfo.specCaseFlg = gSpecialCaseFlg;
-        motionInfo.scenarioFlg = gScenarioFlg;
-        motionInfo.gapIndex = gGapIndex;
-        motionInfo.gapTarS = gGapTarS;
-        motionInfo.gapTarV = gGapTarV;
+        ConvertMotionInfo();
 
         if (playMode == AGSM) {
           const GraphConfig BEV_cfg = {length, width,  offset, 0,
@@ -408,11 +420,11 @@ void DisplayLineChart(const int length,
       oriX,   oriY,  original_arr[frameNums - 1].x - original_arr[0].x,
       6.0f};
   char title1[25] = "Origin(BLUE), New(RED)";
-  PlotInfo plot_info1 = {title1,    original_arr, &ctrlPoint, 0,
-                         frameNums, BLUE,         false,      gAlcStCoeff};
+  PlotInfo plot_info1 = {title1,    original_arr, &a_ctrlPoint, 0,
+                         frameNums, BLUE,         false,        gAlcStCoeff};
   char title2[1] = "";
-  PlotInfo plot_info2 = {title2,    loopback_arr, &ctrlPoint, 0,
-                         frameNums, RED,          false,      gAlcStCoeff};
+  PlotInfo plot_info2 = {title2,    loopback_arr, &a_ctrlPoint, 0,
+                         frameNums, RED,          false,        gAlcStCoeff};
   showXYGraph(&XY_cfg, 4.0f, &plot_info1);
   showXYGraph(&XY_cfg, 4.0f, &plot_info2);
   return;
@@ -423,16 +435,16 @@ void ExecuteSpdPlan(const AlcPathVcc* alcPathVcc,
                     const AgsmEnvModel* agsmEnvModel,
                     const SsmObjType* ssmObjs) {
   DpSpeedPoints output;
-  uint8 tauGapSet = 4;
   EgoMotionSts egoMotionSts = {motionInfo.egoSpd, motionInfo.egoAcc,
                                motionInfo.spdLmt, (uint8)motionInfo.accMode,
-                               tauGapSet};
+                               (uint8)motionInfo.tauGap};
+  RemEhMerge remEhMerge;
   SpeedPlanProcessor(
       &egoMotionSts, &motionInfo.alcBehav, alcPathVcc, agsmEnvModel,
-      &ssmObjs->obj_lists[0], &ssmObjs->obj_lists[1], &ssmObjs->obj_lists[2],
-      &ssmObjs->obj_lists[3], &ssmObjs->obj_lists[4], &ssmObjs->obj_lists[5],
-      &ssmObjs->obj_lists[6], &ssmObjs->obj_lists[7], &ssmObjs->obj_lists[8],
-      &ssmObjs->obj_lists[9], &output);
+      &remEhMerge, &ssmObjs->obj_lists[0], &ssmObjs->obj_lists[1],
+      &ssmObjs->obj_lists[2], &ssmObjs->obj_lists[3], &ssmObjs->obj_lists[4],
+      &ssmObjs->obj_lists[5], &ssmObjs->obj_lists[6], &ssmObjs->obj_lists[7],
+      &ssmObjs->obj_lists[8], &ssmObjs->obj_lists[9], &output);
 
   s_points[0] = {output.Point0.t, output.Point0.s};
   s_points[1] = {output.Point1.t, output.Point1.s};
@@ -453,7 +465,9 @@ void ExecuteSpdPlan(const AlcPathVcc* alcPathVcc,
   a_points[4] = {output.Point4.t, output.Point4.a};
   a_points[5] = {output.Point5.t, output.Point5.a};
 
-  ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.a};
+  s_ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.s};
+  v_ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.v};
+  a_ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.a};
   spdPlanEnblSts = output.SpdPlanEnblSts;
   return;
 }
@@ -474,15 +488,6 @@ void PrintOutputInfo(const DpSpeedPoints* output) {
   printf("Ctrl 3: t = %.3f, s = %.3f, v = %.3f, a = %.3f \n",
          output->PointCtrl3.t, output->PointCtrl3.s, output->PointCtrl3.v,
          output->PointCtrl3.a);
-  /* float time = 5;
- float dst_v =
-     (ssmObjs.obj_lists[2].speed_x + ssmObjs.obj_lists[3].speed_x) / 2.0f;
- float dst_a = 0;
- float dst_s =
-     (ssmObjs.obj_lists[2].pos_x + ssmObjs.obj_lists[3].pos_x) / 2.0f +
-     dst_v * time;
-    quinticPolyFit(time, s_points[0].y, v_points[0].y, a_points[0].y,
-    dst_s, dst_v, dst_a, gAlcStCoeff); */
 }
 
 void CalcOneStep() {
@@ -492,12 +497,12 @@ void CalcOneStep() {
   LoadDummyPathData(linesInfo.alc_coeffs, &linesInfo.ego_coeffs,
                     linesInfo.left_coeffs, linesInfo.leftleft_coeffs,
                     linesInfo.right_coeffs, linesInfo.rightright_coeffs,
-                    &alcPathVcc, &agsmEnvModel.EgoPath);
+                    &alcPathVcc, &agsmEnvModel);
   memset(&ssmObjs, 0, sizeof(ssmObjs));
   if (playMode == ONESTEP) {
     LoadDummyMotionData(&motionInfo.egoSpd, &motionInfo.egoAcc,
                         &motionInfo.spdLmt, &motionInfo.accMode,
-                        &motionInfo.alcBehav);
+                        &motionInfo.tauGap, &motionInfo.alcBehav);
     LoadDummySSmData(&ssmObjs);
     show_predict_swt = true;
   } else {
@@ -519,13 +524,7 @@ void DisplayOneStep(const int length, const int width, const int offset) {
   setbkmode(TRANSPARENT);
   cleardevice();
 
-  motionInfo.egoPredSpd = fmaxf(v_points[4].y, v_points[5].y);
-  motionInfo.innerSpdLmt = gInnerSpdLmt_kph;
-  motionInfo.specCaseFlg = gSpecialCaseFlg;
-  motionInfo.scenarioFlg = gScenarioFlg;
-  motionInfo.gapIndex = gGapIndex;
-  motionInfo.gapTarS = gGapTarS;
-  motionInfo.gapTarV = gGapTarV;
+  ConvertMotionInfo();
   ShowSpdPlanInterface(length, width, offset, &linesInfo, &motionInfo);
 
   system("pause");
@@ -548,14 +547,13 @@ void GenerateLocalData() {
   LoadDummyPathData(linesInfo.alc_coeffs, &linesInfo.ego_coeffs,
                     linesInfo.left_coeffs, linesInfo.leftleft_coeffs,
                     linesInfo.right_coeffs, linesInfo.rightright_coeffs,
-                    &alcPathVcc, &agsmEnvModel.EgoPath);
+                    &alcPathVcc, &agsmEnvModel);
   LoadDummyMotionData(&motionInfo.egoSpd, &motionInfo.egoAcc,
                       &motionInfo.spdLmt, &motionInfo.accMode,
-                      &motionInfo.alcBehav);
+                      &motionInfo.tauGap, &motionInfo.alcBehav);
 
   SsmObjType ssmObjs;
   memset(&ssmObjs, 0, sizeof(ssmObjs));
-  // DummySsmData(&ssmObjs);
   LoadDummySSmData(&ssmObjs);
 
   const float cycle_s = 0.1f;
@@ -580,9 +578,13 @@ void GenerateLocalData() {
     alcBehav_data[1][t] = motionInfo.alcBehav.AutoLaneChgSts;
     alcBehav_data[2][t] = motionInfo.alcBehav.LeftBoundaryType;
     alcBehav_data[3][t] = motionInfo.alcBehav.RightBoundaryType;
-    alcBehav_data[4][t] = motionInfo.alcBehav.NaviPilotIsRamp;
-    alcBehav_data[5][t] = motionInfo.alcBehav.NaviPilot1stRampOnDis;
+    alcBehav_data[4][t] = motionInfo.alcBehav.NOAStatus;
+    alcBehav_data[5][t] = motionInfo.alcBehav.NaviPilotIsRamp;
+    alcBehav_data[6][t] = motionInfo.alcBehav.NaviPilot1stRampOnDis;
+    alcBehav_data[7][t] = motionInfo.alcBehav.NaviPilot1stExitDis;
+
     accMode_data[t] = motionInfo.accMode;
+    tauGap_data[t] = motionInfo.tauGap;
 
     for (int k = 0; k < 10; k++) {
       if (t == 0) {  // initial obs pos
@@ -605,6 +607,7 @@ void GenerateLocalData() {
       objs_speed_y_data[k][t] = obs_speed_y[k];
       objs_acc_x_data[k][t] = ssmObjs.obj_lists[k].acc_x;
       objs_pos_yaw_data[k][t] = ssmObjs.obj_lists[k].pos_yaw;
+      objs_cut_in_data[k][t] = ssmObjs.obj_lists[k].cut_in_flag;
     }
     // simulate auto lane change
     /*       if (objs_pos_x_data[2][t] > 20 && alcBehav_data[0][t] == 1 &&
@@ -636,7 +639,9 @@ void GenerateLocalData() {
     ExecuteSpdPlan(&alcPathVcc, &agsmEnvModel, &ssmObjs);
 
     // assume inertia delay 0.5s
-    accResponseDelay[accDelay_pos] = ctrlPoint.y;
+    const float spd_pid_kp = 0.0f;
+    float spd_pid_offset = (v_ctrlPoint.y - motionInfo.egoSpd) * spd_pid_kp;
+    accResponseDelay[accDelay_pos] = a_ctrlPoint.y + spd_pid_offset;
     accDelay_pos = accDelay_pos >= 4 ? 0 : accDelay_pos + 1;
 
     WriteOutputData(t);
@@ -681,9 +686,9 @@ void ReleaseWrapper(int length, int width, int offset) {
 
 #ifdef SPEED_PLANNING_H_
   if (playMode == LOOPBACK) {
-    memcpy(original_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
+    memcpy(original_data, ctrl_point_data[3], sizeof(ctrl_point_data[3]));
     LoopbackCalculation();
-    memcpy(loopback_data, ctrl_point_data[1], sizeof(ctrl_point_data[1]));
+    memcpy(loopback_data, ctrl_point_data[3], sizeof(ctrl_point_data[3]));
   } else if (playMode == LINECHART) {
     DisplayLoopbackCurve(1000, 400, 50);
     return;
@@ -707,14 +712,14 @@ int main() {
   int length = 750;  // numbers of horizontal pixels in display area
   int width = 750;   // numbers of vertical pixels in display area
   int offset = 100;  // numbers of blank margin pixels around display area
-  float scale_ratio = 1.0f;
+  float scale_ratio = 1.0f;  // Recommend: 0.85 for laptop, 1.0 for monitor
   length *= scale_ratio;
   width *= scale_ratio;
   offset *= scale_ratio;
 
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(4);
+  playMode = PLAYMODE(3);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();

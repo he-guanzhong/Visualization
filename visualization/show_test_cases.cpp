@@ -150,10 +150,10 @@ void CaseFollow(SsmObjType* ssmObjs) {
   // 0 = IV, 1 = RIV, 2 = NIVL, 3 = NIIVL, 4 = RIVL, 5 = RIIVL
   // 6 = NIVR, 7 = NIIVR, 8 = RIVR, 9 = RIIVR
   ssmObjs->obj_num = 1;
-  ssmObjs->obj_lists[0].pos_x = 30;
+  ssmObjs->obj_lists[0].pos_x = 120;
   ssmObjs->obj_lists[0].pos_y = 0;
   ssmObjs->obj_lists[0].acc_x = 0;
-  ssmObjs->obj_lists[0].speed_x = 20;
+  ssmObjs->obj_lists[0].speed_x = 1.0f;
   ssmObjs->obj_lists[0].speed_y = 0.0f;
   ssmObjs->obj_lists[0].type = 1;
   ssmObjs->obj_lists[0].lane_index = 3;
@@ -199,8 +199,8 @@ void CaseRearObs(SsmObjType* ssmObjs) {
 
 void LoadDummySSmData(SsmObjType* ssmObjs) {
   // CaseLeftChange(ssmObjs);
-  //  CaseSideCarMoveSlowly(ssmObjs);
-  CaseFollow(ssmObjs);
+  // CaseSideCarMoveSlowly(ssmObjs);
+  // CaseFollow(ssmObjs);
   // CaseCutIn(ssmObjs);
   // CaseRearObs(ssmObjs);
   return;
@@ -210,9 +210,11 @@ void LoadDummyMotionData(float* egoSpd,
                          float* egoAcc,
                          float* spdLmt,
                          int* accMode,
+                         int* tauGap,
                          AlcBehavior* alcBehav) {
-  *egoSpd = 22.0f, *egoAcc = 0, *spdLmt = 80.0f;
+  *egoSpd = 25.0f, *egoAcc = 0.0f, *spdLmt = 90.0f;
   *accMode = 5;
+  *tauGap = 1;
   alcBehav->AutoLaneChgSide = 0;
   alcBehav->AutoLaneChgSts = 2;
   alcBehav->LeftBoundaryType = 2;
@@ -227,7 +229,7 @@ void LoadDummyPathData(float* alc_coeffs,
                        float* right,
                        float* rightright,
                        AlcPathVcc* alcPathVcc,
-                       AgsmEnvModelPath* agsmEnvModelPath) {
+                       AgsmEnvModel* agsmEnvModel) {
   // left corner
   /*   alc_coeffs[0] = 0, alc_coeffs[1] = 0.01f, alc_coeffs[2] = 1.81E-05f,
     alc_coeffs[3] = 1.1E-05f;
@@ -240,16 +242,29 @@ void LoadDummyPathData(float* alc_coeffs,
 
   *alcPathVcc = {alc_coeffs[0], alc_coeffs[1], alc_coeffs[2], alc_coeffs[3],
                  alc_coeffs[4], alc_coeffs[5], alc_coeffs[7]};
-  agsmEnvModelPath->C0 = ego_coeffs->C0[0];
-  agsmEnvModelPath->C1 = ego_coeffs->C1[0];
-  agsmEnvModelPath->C2 = ego_coeffs->C2[0];
-  agsmEnvModelPath->C3_1 = ego_coeffs->C3[0];
-  agsmEnvModelPath->C3_2 = ego_coeffs->C3[1];
-  agsmEnvModelPath->C3_3 = ego_coeffs->C3[2];
-  agsmEnvModelPath->Length1 = ego_coeffs->Len[0];
-  agsmEnvModelPath->Length2 = ego_coeffs->Len[1];
-  agsmEnvModelPath->Length3 = ego_coeffs->Len[2];
-  agsmEnvModelPath->Width = ego_coeffs->Width;
-  agsmEnvModelPath->Valid = ego_coeffs->Valid;
+  agsmEnvModel->EgoPath.C0 = ego_coeffs->C0[0];
+  agsmEnvModel->EgoPath.C1 = ego_coeffs->C1[0];
+  agsmEnvModel->EgoPath.C2 = ego_coeffs->C2[0];
+  agsmEnvModel->EgoPath.C3_1 = ego_coeffs->C3[0];
+  agsmEnvModel->EgoPath.C3_2 = ego_coeffs->C3[1];
+  agsmEnvModel->EgoPath.C3_3 = ego_coeffs->C3[2];
+  agsmEnvModel->EgoPath.Length1 = ego_coeffs->Len[0];
+  agsmEnvModel->EgoPath.Length2 = ego_coeffs->Len[1];
+  agsmEnvModel->EgoPath.Length3 = ego_coeffs->Len[2];
+  agsmEnvModel->EgoPath.Width = ego_coeffs->Width;
+  agsmEnvModel->EgoPath.Valid = ego_coeffs->Valid;
+
+  agsmEnvModel->LH0.C0 = left[0];
+  agsmEnvModel->LH0.C1 = left[1];
+  agsmEnvModel->LH0.C2 = left[2];
+  agsmEnvModel->LH0.C3 = left[3];
+  agsmEnvModel->LH0.Start = left[6];
+  agsmEnvModel->LH0.End = left[7];
+  agsmEnvModel->LH1.C0 = right[0];
+  agsmEnvModel->LH1.C1 = right[1];
+  agsmEnvModel->LH1.C2 = right[2];
+  agsmEnvModel->LH1.C3 = right[3];
+  agsmEnvModel->LH1.Start = right[6];
+  agsmEnvModel->LH1.End = right[7];
   return;
 }

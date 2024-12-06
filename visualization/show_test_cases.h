@@ -14,6 +14,7 @@ void LoadDummyMotionData(float* egoSpd,
                          float* egoAcc,
                          float* spdLmt,
                          int* accMode,
+                         int* tauGap,
                          AlcBehavior* alcBehav);
 
 void LoadDummyPathData(float* alc_coeffs,
@@ -23,6 +24,6 @@ void LoadDummyPathData(float* alc_coeffs,
                        float* right,
                        float* rightright,
                        AlcPathVcc* alcPathVcc,
-                       AgsmEnvModelPath* agsmEnvModelPath);
+                       AgsmEnvModel* agsmEnvModel);
 
 #endif  // SHOW_TEST_CASES_H_

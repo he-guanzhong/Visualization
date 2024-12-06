@@ -6,8 +6,9 @@ float egoAcc_data[DATA_NUM];
 float spdLmt_data[DATA_NUM];
 float alc_path_data[8][DATA_NUM];
 float ego_path_data[9][DATA_NUM];
-int alcBehav_data[6][DATA_NUM];
+int alcBehav_data[8][DATA_NUM];
 int accMode_data[DATA_NUM];
+int tauGap_data[DATA_NUM];
 
 int spdPlanEnblSts_data[DATA_NUM];
 int truncated_col_data[DATA_NUM];
@@ -19,7 +20,7 @@ float alcGapTarS_data[DATA_NUM];
 float alcGapTarV_data[DATA_NUM];
 float alcStCoeff_data[6][DATA_NUM];
 
-float ctrl_point_data[2][DATA_NUM];
+float ctrl_point_data[4][DATA_NUM];
 float s_points_data[6][DATA_NUM];
 float v_points_data[6][DATA_NUM];
 float a_points_data[6][DATA_NUM];
@@ -34,6 +35,7 @@ float objs_speed_x_data[10][DATA_NUM];
 float objs_speed_y_data[10][DATA_NUM];
 float objs_acc_x_data[10][DATA_NUM];
 float objs_pos_yaw_data[10][DATA_NUM];
+int objs_cut_in_data[10][DATA_NUM];
 
 int tsr_spd_data[DATA_NUM];
 bool tsr_spd_warn_data[DATA_NUM];

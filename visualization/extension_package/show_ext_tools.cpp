@@ -106,7 +106,7 @@ void drawRadarObj(const RadarObjInfo* radarInfo, const int color) {
     }
     Point obj_posn = {radarInfo->fDistX[j], radarInfo->fDistY[j]};
     char obj_id[10] = "";
-    snprintf(obj_id + strlen(obj_id), sizeof(obj_id) - strlen(obj_id), "%d", j);
+    snprintf(obj_id, sizeof(obj_id), "%d", j);
     coordinateTrans2(&obj_posn);
 
     setlinecolor(BLACK);

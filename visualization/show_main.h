@@ -25,7 +25,9 @@ void ReadInputData(const int t);
 void ReadOutputData(const int t);
 void WriteOutputData(const int t);
 
-void Time2Str(const float time, char* str);
+void ConvertMotionInfo();
+void Time2Str(const float time, char* str, const int strSize);
+
 void ShowOutputKeyInfo(const int posY);
 void ShowBasicFrameInfo(int* t, int* cycle, const int length, const int width);
 void ShowSpdPlanInterface(const int length,

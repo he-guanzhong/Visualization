@@ -234,15 +234,19 @@ void RadarDataParsing(float** values,
           "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
       char disY_title[70] =
           "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
-      snprintf(obs_title + strlen(obs_title),
-               sizeof(obs_title) - strlen(obs_title), "%d_.ID_u8", j);
-      snprintf(exiP_title + strlen(exiP_title),
-               sizeof(exiP_title) - strlen(exiP_title),
+      const int obs_len = strlen(obs_title);
+      const int ext_len = strlen(exiP_title);
+      const int disx_len = strlen(disX_title);
+      const int dixy_len = strlen(disY_title);
+
+      snprintf(obs_title + obs_len, sizeof(obs_title) - obs_len, "%d_.ID_u8",
+               j);
+      snprintf(exiP_title + ext_len, sizeof(exiP_title) - ext_len,
                "%d_.existance_probability_f32", j);
-      snprintf(disX_title + strlen(disX_title),
-               sizeof(disX_title) - strlen(disX_title), "%d_.x_pos_f32", j);
-      snprintf(disY_title + strlen(disY_title),
-               sizeof(disY_title) - strlen(disY_title), "%d_.y_pos_f32", j);
+      snprintf(disX_title + disx_len, sizeof(disX_title) - disx_len,
+               "%d_.x_pos_f32", j);
+      snprintf(disY_title + dixy_len, sizeof(disY_title) - dixy_len,
+               "%d_.y_pos_f32", j);
 
       if (strcmp(columns[i], obs_title) == 0) {
         FL_ID[j] = i;
@@ -264,15 +268,18 @@ void RadarDataParsing(float** values,
           "AswIf_SRRDataFrontRight.SyncTrack_s.radar_track_s._";
       char disY_title[70] =
           "AswIf_SRRDataFrontRight.SyncTrack_s.radar_track_s._";
-      snprintf(obs_title + strlen(obs_title),
-               sizeof(obs_title) - strlen(obs_title), "%d_.ID_u8", j);
-      snprintf(exiP_title + strlen(exiP_title),
-               sizeof(exiP_title) - strlen(exiP_title),
+      const int obs_len = strlen(obs_title);
+      const int ext_len = strlen(exiP_title);
+      const int disx_len = strlen(disX_title);
+      const int dixy_len = strlen(disY_title);
+      snprintf(obs_title + obs_len, sizeof(obs_title) - obs_len, "%d_.ID_u8",
+               j);
+      snprintf(exiP_title + ext_len, sizeof(exiP_title) - ext_len,
                "%d_.existance_probability_f32", j);
-      snprintf(disX_title + strlen(disX_title),
-               sizeof(disX_title) - strlen(disX_title), "%d_.x_pos_f32", j);
-      snprintf(disY_title + strlen(disY_title),
-               sizeof(disY_title) - strlen(disY_title), "%d_.y_pos_f32", j);
+      snprintf(disX_title + disx_len, sizeof(disX_title) - disx_len,
+               "%d_.x_pos_f32", j);
+      snprintf(disY_title + dixy_len, sizeof(disY_title) - dixy_len,
+               "%d_.y_pos_f32", j);
 
       if (strcmp(columns[i], obs_title) == 0) {
         FR_ID[j] = i;
@@ -290,15 +297,18 @@ void RadarDataParsing(float** values,
       char exiP_title[80] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
       char disX_title[70] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
       char disY_title[70] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
-      snprintf(obs_title + strlen(obs_title),
-               sizeof(obs_title) - strlen(obs_title), "%d_.ID_u8", j);
-      snprintf(exiP_title + strlen(exiP_title),
-               sizeof(exiP_title) - strlen(exiP_title),
+      const int obs_len = strlen(obs_title);
+      const int ext_len = strlen(exiP_title);
+      const int disx_len = strlen(disX_title);
+      const int dixy_len = strlen(disY_title);
+      snprintf(obs_title + obs_len, sizeof(obs_title) - obs_len, "%d_.ID_u8",
+               j);
+      snprintf(exiP_title + ext_len, sizeof(exiP_title) - ext_len,
                "%d_.existance_probability_f32", j);
-      snprintf(disX_title + strlen(disX_title),
-               sizeof(disX_title) - strlen(disX_title), "%d_.x_pos_f32", j);
-      snprintf(disY_title + strlen(disY_title),
-               sizeof(disY_title) - strlen(disY_title), "%d_.y_pos_f32", j);
+      snprintf(disX_title + disx_len, sizeof(disX_title) - disx_len,
+               "%d_.x_pos_f32", j);
+      snprintf(disY_title + dixy_len, sizeof(disY_title) - dixy_len,
+               "%d_.y_pos_f32", j);
 
       if (strcmp(columns[i], obs_title) == 0) {
         RL_ID[j] = i;
@@ -319,15 +329,18 @@ void RadarDataParsing(float** values,
           "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
       char disY_title[70] =
           "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
-      snprintf(obs_title + strlen(obs_title),
-               sizeof(obs_title) - strlen(obs_title), "%d_.ID_u8", j);
-      snprintf(exiP_title + strlen(exiP_title),
-               sizeof(exiP_title) - strlen(exiP_title),
+      const int obs_len = strlen(obs_title);
+      const int ext_len = strlen(exiP_title);
+      const int disx_len = strlen(disX_title);
+      const int dixy_len = strlen(disY_title);
+      snprintf(obs_title + obs_len, sizeof(obs_title) - obs_len, "%d_.ID_u8",
+               j);
+      snprintf(exiP_title + ext_len, sizeof(exiP_title) - ext_len,
                "%d_.existance_probability_f32", j);
-      snprintf(disX_title + strlen(disX_title),
-               sizeof(disX_title) - strlen(disX_title), "%d_.x_pos_f32", j);
-      snprintf(disY_title + strlen(disY_title),
-               sizeof(disY_title) - strlen(disY_title), "%d_.y_pos_f32", j);
+      snprintf(disX_title + disx_len, sizeof(disX_title) - disx_len,
+               "%d_.x_pos_f32", j);
+      snprintf(disY_title + dixy_len, sizeof(disY_title) - dixy_len,
+               "%d_.y_pos_f32", j);
 
       if (strcmp(columns[i], obs_title) == 0) {
         RR_ID[j] = i;

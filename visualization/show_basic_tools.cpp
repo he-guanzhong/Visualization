@@ -12,10 +12,10 @@ static Point s_origin2 = {0.0f, 0.0f};
 static float s_xScale2 = 0, s_yScale2 = 0;
 static int s_infoAreaBoundary;
 
-const static float car_len_tbl[7] = {
-    2.2f + 0.4f, 5.0f + 0.4f, 10.0f + 0.4f, 2.5f, 2.5f, 1.0f, 2.0f};
-const static float car_wid_tbl[7] = {
-    1.0f + 0.4f, 1.5f + 0.4f, 1.6f + 0.4f, 0.6f, 0.6f, 1.0f, 2.0f};
+const static float car_len_tbl[10] = {2.6f, 5.4f, 10.4f, 2.5f, 2.5f,
+                                      1.0f, 2.0f, 2.0f,  2.0f, 2.5f};
+const static float car_wid_tbl[10] = {1.4f, 1.9f, 2.0f, 0.6f, 0.6f,
+                                      1.0f, 2.0f, 2.0f, 2.0f, 0.6f};
 const static int tsr_spd_table1[14] = {10, 20, 30,  40,  50,  60,  70,
                                        80, 90, 100, 110, 120, 130, 140};
 const static int tsr_spd_table2[15] = {5,  15, 25,  35,  45,  55,  65, 75,
@@ -34,16 +34,13 @@ void coordinateTrans2(Point* point) {
 
 void strCompletion(char str[2][8], const int index, const int spd) {
   const char* obsName[11] = {"IV ",  "RIV ",  "NIVL", "NIIVL", "RIVL", "RIIVL",
-                             "NIVR", "NIIVR", "RIVR", "RIIVR", "ego "};
+                             "NIVR", "NIIVR", "RIVR", "RIIVR", "Ego "};
   strcpy(str[0], obsName[index]);
-  char szSpd[3];
-  itoa(spd, szSpd, 10);
-  strcpy(str[1], szSpd);
-  strcat(str[1], " m/s");
+  snprintf(&str[1][0], 8, "%d m/s", spd);
 }
 
-float getCubicPolynomial(const float x, const float* LH) {
-  return LH[0] + LH[1] * x + LH[2] * x * x + LH[3] * x * x * x;
+float getCubicPolynomial(const float x, const float* line) {
+  return line[0] + line[1] * x + line[2] * x * x + line[3] * x * x * x;
 }
 
 float getPiecewiseCubicPolynomial(const float x, const EgoPathVcc* egoPath) {
@@ -71,8 +68,8 @@ void drawCar(Point* car,
              const float yaw,
              const int index) {
   // ObjType of ME: 0=UNFILLED, 1=CAR, 2=TRUCK, 3=MOTORBIKE, 4=BICYCLE,
-  // 5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL
-  if (carType >= 7) {
+  // 5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL, 9=TWO_WHEELER
+  if (carType >= 10) {
     carType = 0;
   }
   const float carLen = car_len_tbl[carType];
@@ -99,7 +96,7 @@ void drawCar(Point* car,
 
   fillpolygon(vertices_show, 4);
 
-  if (carType >= 3 && carType <= 6) {  // motorbike/pedestrian outline
+  if (carType >= 3 && carType <= 9) {  // motorbike/pedestrian outline
     rectangle(car->x - car_wid_tbl[1] / 2.0f * s_xScale2,
               car->y - car_len_tbl[1] / 2.0f * s_yScale2,
               car->x + car_wid_tbl[1] / 2.0f * s_xScale2,
@@ -138,7 +135,7 @@ void drawPolygon(const Point* center, const int num, const float rotateDegree) {
 
 void drawTsrSign(const TsrInfo* tsrInfo) {
   // TSR status display
-  char tsr_disp[10] = "TSR: ";
+  char tsr_disp[] = "TSR: ";
   char spd_val[10];
   const int tsr_spd = tsrInfo->tsr_spd;
   const bool tsr_spd_warn = tsrInfo->tsr_spd_warn;
@@ -216,27 +213,25 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
 }
 
 void drawMotionInfo(const MotionInfo* motionInfo) {
-  // set spd display
+  // set spd display, only 5 characters in title is acceptable
   char spd_title[10] = "Spd: ";
   char set_title[10] = "SET: ";
+  char tau_title[10] = "Thw: ";
   char inner_set_title[10] = "Inn: ";
   char spec_case_title[10] = "Spc: ";
   char scenario_title[10] = "Sce: ";
-
-  char str_cur_spd[5];
-  char str_disp_set_spd[5];
-  char str_inner_spd_lmt[5];
 
   const int cur_spd = round(motionInfo->egoSpd * 1.04f * 3.6f);
   const int spd_lmt = round(motionInfo->spdLmt);
   const int inner_spd_lmt = round(motionInfo->innerSpdLmt);
 
-  itoa(cur_spd, str_cur_spd, 10);
-  itoa(spd_lmt, str_disp_set_spd, 10);
-  itoa(inner_spd_lmt, str_inner_spd_lmt, 10);
-  strcat(spd_title, str_cur_spd);
-  strcat(set_title, str_disp_set_spd);
-  strcat(inner_set_title, str_inner_spd_lmt);
+  const int tle_len = strlen(spd_title);
+  snprintf(spd_title + tle_len, sizeof(spd_title) - tle_len, "%d", cur_spd);
+  snprintf(set_title + tle_len, sizeof(set_title) - tle_len, "%d", spd_lmt);
+  snprintf(inner_set_title + tle_len, sizeof(inner_set_title) - tle_len, "%d",
+           inner_spd_lmt);
+  snprintf(tau_title + tle_len, sizeof(tau_title) - tle_len, "%d",
+           motionInfo->tauGap);
 
   // spd plan inner value
   switch (motionInfo->specCaseFlg) {
@@ -256,6 +251,10 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     case 14:
       strcat(spec_case_title, "r2m");
       break;
+    case 5:
+    case 15:
+      strcat(spec_case_title, "cutP");
+      break;
     default:
       break;
   }
@@ -273,16 +272,16 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
       strcat(scenario_title, "r2m");
       break;
     case 5:
-      strcat(scenario_title, "dec");
+      strcat(scenario_title, "r2m");
       break;
     case 15:
-      strcat(scenario_title, "decN");
+      strcat(scenario_title, "r2mN");
       break;
     case 6:
-      strcat(scenario_title, "hold");
+      strcat(scenario_title, "m2r");
       break;
     case 16:
-      strcat(scenario_title, "hldN");
+      strcat(scenario_title, "m2rN");
       break;
     case 7:
       strcat(scenario_title, "rmp");
@@ -333,14 +332,15 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     settextcolor(BLACK);
   }
 
+  outtextxy(s_infoAreaBoundary, s_origin2.y - textheight(spd_title) * 3,
+            tau_title);
   outtextxy(s_infoAreaBoundary, s_origin2.y - textheight(spd_title), spd_title);
   if (motionInfo->accMode <= 6 && motionInfo->accMode >= 3) {
     outtextxy(s_infoAreaBoundary, s_origin2.y - 2 * textheight(spd_title),
               set_title);
   }
 
-  char alc_side[8];
-  memset(alc_side, '\0', sizeof(alc_side));
+  char alc_side[8] = "";
   if (motionInfo->alcBehav.AutoLaneChgSide == 1) {
     strcpy(alc_side, "ALC_L");
   } else if (motionInfo->alcBehav.AutoLaneChgSide == 2) {
@@ -348,14 +348,15 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
   }
   // alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
   // 4-in target line, 5-finished, 6-Back to Ego, 8-takeover, 9-popMsgReq
-  char alc_sts[12];
-  memset(alc_sts, '\0', sizeof(alc_sts));
+  char alc_sts[12] = "";
   if (motionInfo->alcBehav.AutoLaneChgSts == 2)
     strcpy(alc_sts, "Hold");
   else if (motionInfo->alcBehav.AutoLaneChgSts == 3)
     strcpy(alc_sts, "Chg1");
   else if (motionInfo->alcBehav.AutoLaneChgSts == 4)
     strcpy(alc_sts, "Chg2");
+  else if (motionInfo->alcBehav.AutoLaneChgSts == 5)
+    strcpy(alc_sts, "Fini");
   else if (motionInfo->alcBehav.AutoLaneChgSts == 6)
     strcpy(alc_sts, "Back");
   else if (motionInfo->alcBehav.AutoLaneChgSts == 8)
@@ -377,7 +378,7 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     coordinateTrans2(&tarPoint);
     solidcircle(tarPoint.x, tarPoint.y, 5);
     char str_tar1[10] = "Gap:";
-    char str_tar2[10] = {0};
+    char str_tar2[10] = "";
     snprintf(str_tar1 + strlen(str_tar1), sizeof(str_tar1) - strlen(str_tar1),
              " %d", motionInfo->gapIndex);
     snprintf(str_tar2 + strlen(str_tar2), sizeof(str_tar2) - strlen(str_tar2),
@@ -451,7 +452,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
                    const float* LH0,
                    const float* LH1,
                    const float cur_spd) {
-  const float objSpdLatConf = 0.5f;
+  const float objSpdLatConf = 0.7f;
   float obs_speed_y_cor = 0;
   for (int i = 0; i < ssmObjs->obj_num; i++) {
     if (!ssmObjs->obj_lists[i].valid_flag) {
@@ -475,7 +476,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
       float predLatOffset = obs_speed_y_cor * j;
       objPosnLgt[j] = obs->pos_x + obs->speed_x * j;
       if (cur_spd > 30.0f / 3.6f && obs->speed_x > 1.0f &&
-          objPosnLgt[j] < 130.0f) {
+          objPosnLgt[j] < 150.0f) {
         if (i == 4 || i == 5) {
           objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH0);
         } else if (i == 8 || i == 9) {
@@ -528,19 +529,15 @@ void drawBEVRuler(const float zeroOffsetX) {
       {-30.0f, -6.0f}, {0.0f, -6.0f}, {50.0f, -6.0f}, {100.0f, -6.0f}};
   Point ruler_y[2] = {{coordinate_x_of_ruler_y, -5.0f},
                       {coordinate_x_of_ruler_y, 5.0f}};
-  char str[7];
+  char str[7] = "";
   for (int i = 0; i < 4; ++i) {
-    str[0] = '\0';
-    itoa(ruler_x[i].x, str, 10);
-    strcat(str, " m");
+    snprintf(str, sizeof(str), "%d m", (int)ruler_x[i].x);
     coordinateTrans2(&ruler_x[i]);
     line(ruler_x[i].x, ruler_x[i].y, ruler_x[i].x - 10, ruler_x[i].y);
     outtextxy(ruler_x[i].x, ruler_x[i].y - textheight(str) / 2, str);
   }
   for (int i = 0; i < 2; i++) {
-    str[0] = '\0';
-    itoa(ruler_y[i].y, str, 10);
-    strcat(str, " m");
+    snprintf(str, sizeof(str), "%d m", (int)ruler_y[i].y);
     coordinateTrans2(&ruler_y[i]);
     line(ruler_y[i].x, ruler_y[i].y, ruler_y[i].x, ruler_y[i].y + 10);
     outtextxy(ruler_y[i].x - textwidth(str) / 2, ruler_y[i].y + 10, str);
@@ -750,9 +747,9 @@ void showBEVGraph(const GraphConfig* config,
   // tsr info
   drawTsrSign(tsrInfo);
 
-  // road lines
-  // lineType: 0-unknown, 1-solid, 2-dash, 3-Double Lane(Near Dashed,Far Solid)
-  // 9- DECELERATION_Dashed
+  /* road line type:
+    0-unknown, 1-solid, 2-dash, 3-Double Lane(Near Dashed,FarSolid)
+    9- DECELERATION_Dashed */
   setlinestyle(PS_DASHDOT);
   Point lineEnd;
   const int leftBoundaryColor = (2 == motionInfo->alcBehav.LeftBoundaryType ||
@@ -810,11 +807,12 @@ void showBEVGraph(const GraphConfig* config,
                       &predictPosn);
 
   // ego car
-  if (motionInfo->alcBehav.AutoLaneChgSts >= 2 &&
-      motionInfo->alcBehav.AutoLaneChgSts <= 9) {
-    setfillcolor(RED);
-  } else {
+  if (1 == motionInfo->enblSts) {
     setfillcolor(LIGHTRED);
+  } else if (2 == motionInfo->enblSts) {
+    setfillcolor(MAGENTA);
+  } else {
+    setfillcolor(RED);
   }
   setlinecolor(RED);
   setlinestyle(PS_SOLID);

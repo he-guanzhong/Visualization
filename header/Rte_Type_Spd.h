@@ -69,13 +69,15 @@ typedef Float rt_Array_Float_3[3];
                    line, 5-finished, 6-Back to Ego, 8-takeover, 9-popMsgReq
   AutoLaneChgSide: 0-OFF, 1-left, 2-right
   BoundaryType: 0-unknown, 1-solid, 2-dash,
-  3 - Double Lane(Near Dashed,Far Solid) 9- DECELERATION_Dashed */
+  3 - Double Lane(Near Dashed,Far Solid) 9- DECELERATION_Dashed
+  NOAStatus: 4- Activated */
 #define Rte_TypeDef_AlcBehavior
 typedef struct {
   UInt8 AutoLaneChgSide;
   UInt8 AutoLaneChgSts;
   UInt8 LeftBoundaryType;
   UInt8 RightBoundaryType;
+  UInt8 NOAStatus;
   UInt8 NaviPilotIsRamp;
   UInt16 NaviPilot1stRampOnDis;
   UInt16 NaviPilot1stExitDis;
@@ -123,6 +125,8 @@ typedef struct {
   AgsmEnvModelPath TarPath;
   AgsmEnvModelLine LH0;
   AgsmEnvModelLine LH1;
+  AgsmEnvModelLine LA0;
+  AgsmEnvModelLine LA1;
 } AgsmEnvModel;
 
 #define Rte_TypeDef_EgoMotionSts
@@ -133,6 +137,15 @@ typedef struct {
   UInt8 AccMode;
   UInt8 TauGapSet;
 } EgoMotionSts;
+
+#define Rte_TypeDef_RemEhMerge
+typedef struct {
+  Float NearestMergedist;
+  UInt8 NearestMergeptDirForEgo;
+  SInt8 Merge_DP_ID;
+  UInt8 TotalLaneNumL4C;
+  UInt8 EgoPosAtWhichLane;
+} RemEhMerge;
 
 #define Rte_TypeDef_EgoPathVcc
 typedef struct {

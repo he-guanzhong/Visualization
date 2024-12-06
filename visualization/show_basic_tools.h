@@ -55,6 +55,8 @@ typedef struct {
   float egoAcc;
   float spdLmt;
   int accMode;
+  int tauGap;
+  int enblSts;
   float egoPredSpd;
   float innerSpdLmt;
   int specCaseFlg;
@@ -80,7 +82,7 @@ void coordinateTrans1(Point* point);
 void coordinateTrans2(Point* point);
 
 void strCompletion(char str[2][8], const int index, const int spd);
-float getCubicPolynomial(const float x, const AgsmEnvModelLine* LH);
+float getCubicPolynomial(const float x, const float* line);
 float getPiecewiseCubicPolynomial(const float x, const EgoPathVcc* egoPath);
 
 void drawCar(Point* car,
