@@ -587,7 +587,7 @@ void GenerateLocalData() {
     tauGap_data[t] = motionInfo.tauGap;
 
     for (int k = 0; k < 10; k++) {
-      if (t == 0) {  // initial obs pos
+      if (0 == t) {  // initial obs pos
         obs_pos_x[k] = ssmObjs.obj_lists[k].pos_x;
         obs_pos_y[k] = ssmObjs.obj_lists[k].pos_y;
         obs_speed_x[k] = ssmObjs.obj_lists[k].speed_x;
@@ -719,7 +719,7 @@ int main() {
 
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(3);
+  playMode = PLAYMODE(2);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();

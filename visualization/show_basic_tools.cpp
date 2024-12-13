@@ -145,7 +145,7 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
     itoa(tsr_spd, spd_val, 10);
   }
   strcat(tsr_disp, spd_val);
-  char tsi_disp[10];
+  char tsi_disp[10] = "";
   if (tsrInfo->tsr_tsi[0] == 5) {
     strcpy(tsi_disp, "stop");
   } else if (tsrInfo->tsr_tsi[0] == 6) {
@@ -269,7 +269,7 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
       break;
     case 9:
     case 19:
-      strcat(scenario_title, "r2m");
+      strcat(scenario_title, "dec");
       break;
     case 5:
       strcat(scenario_title, "r2m");
