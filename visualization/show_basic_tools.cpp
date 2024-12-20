@@ -145,7 +145,7 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
     itoa(tsr_spd, spd_val, 10);
   }
   strcat(tsr_disp, spd_val);
-  char tsi_disp[10] = "";
+  char tsi_disp[10];
   if (tsrInfo->tsr_tsi[0] == 5) {
     strcpy(tsi_disp, "stop");
   } else if (tsrInfo->tsr_tsi[0] == 6) {
@@ -186,7 +186,7 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
     }
 
     // TSR Speed limit: 10~140, 5~145, cancel sign
-    char tsr_sign[4];
+    char tsr_sign[4] = "";
     if (tsrInfo->tsr_signs[i].type <= 13) {
       itoa(tsr_spd_table1[tsrInfo->tsr_signs[i].type], tsr_sign, 10);
       outtextxy(tsr_pos.x - textwidth(tsr_sign) / 2,
@@ -379,10 +379,12 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     solidcircle(tarPoint.x, tarPoint.y, 5);
     char str_tar1[10] = "Gap:";
     char str_tar2[10] = "";
-    snprintf(str_tar1 + strlen(str_tar1), sizeof(str_tar1) - strlen(str_tar1),
-             " %d", motionInfo->gapIndex);
-    snprintf(str_tar2 + strlen(str_tar2), sizeof(str_tar2) - strlen(str_tar2),
-             "%.1f m/s", motionInfo->gapTarV);
+    const int tar1_len = strlen(str_tar1);
+    const int tar2_len = strlen(str_tar2);
+    snprintf(str_tar1 + tar1_len, sizeof(str_tar1) - tar1_len, " %d",
+             motionInfo->gapIndex);
+    snprintf(str_tar2 + tar2_len, sizeof(str_tar2) - tar2_len, "%.1f m/s",
+             motionInfo->gapTarV);
     const int offset = motionInfo->alcBehav.AutoLaneChgSide == 1
                            ? -textwidth(str_tar2)
                            : textwidth(str_tar2) / 4.0f;
@@ -452,7 +454,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
                    const float* LH0,
                    const float* LH1,
                    const float cur_spd) {
-  const float objSpdLatConf = 0.7f;
+  const float objSpdLatConf = 0.8f;
   float obs_speed_y_cor = 0;
   for (int i = 0; i < ssmObjs->obj_num; i++) {
     if (!ssmObjs->obj_lists[i].valid_flag) {
@@ -608,7 +610,7 @@ void showXYGraph(const GraphConfig* config,
             s_origin1.y - wid - textheight(plot->title), plot->title);
   settextstyle(20, 0, "Calibri", 900, 900, 0, 0, 0, 0);
 
-  char titleY[10];
+  char titleY[10] = "";
   if (plot->title[0] == 'A') {
     strcpy(titleY, "A (m/s2)");
   } else if (plot->title[0] == 'V') {
@@ -634,8 +636,8 @@ void showXYGraph(const GraphConfig* config,
   if (title[0] == 'S') {
     memset(drawP, 0, sizeof(drawP));
     for (int i = 0; i <= 5; i++) {
-      drawP[i][0] = points[i].x;
-      drawP[i][1] = points[i].y;
+      drawP[i][0] = plot->points[i].x;
+      drawP[i][1] = plot->points[i].y;
     }
   }
 

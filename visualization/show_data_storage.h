@@ -1,6 +1,7 @@
 #ifndef SHOW_DATA_STORAGE_H_
 #define SHOW_DATA_STORAGE_H_
 
+// csv row nums (total steps) exceeding DATA_NUM will result in errors
 #define DATA_NUM 20480
 
 extern float time_data[DATA_NUM];

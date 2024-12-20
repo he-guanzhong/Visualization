@@ -118,14 +118,15 @@ void drawObstacles(const SsmObjType* ssmObjs,
                    const float* LH0,
                    const float* LH1,
                    const float cur_spd);
+
 void drawBEVRuler(const float zeroOffsetX);
 
 void initBEVGraph(const GraphConfig* config, const float zeroOffsetX);
 
-/// @brief  show basic x-y graph
+/// @brief  Show basic x-y graph
 /// @param config         basic graph configuration
 /// @param zeroOffsetY    vertical distance from origin to lower-left corner
-/// @param plot
+/// @param plot           scatter plot data to be displayed
 void showXYGraph(const GraphConfig* config,
                  const float zeroOffsetY,
                  const PlotInfo* plot);
@@ -135,7 +136,7 @@ void showXYGraph(const GraphConfig* config,
 /// @param zeroOffsetX    distance behind ego vehicle to be displayed
 /// @param ssmObjs        obstacles info
 /// @param linesInfo      lane lines info
-/// @param tsrInfo        environment TSR info and ego TSR status
+/// @param tsrInfo        environmental TSR info and ego TSR status
 /// @param motionInfo     ego vehicle motion status
 void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,

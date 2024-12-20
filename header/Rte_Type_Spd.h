@@ -173,7 +173,7 @@ typedef struct {
 
 /* ObjType of ME:
  * 0=UNFILLED, 1=CAR, 2=TRUCK, 3=MOTORBIKE, 4=BICYCLE,
- * 5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL 8=UNCERTAIN_VCL */
+ * 5=PEDESTRIAN, 6=GENERAL_OBJECT, 7=ANIMAL,8=UNCERTAIN_VCL, 9=TWO_WHEELER */
 #define Rte_TypeDef_SsmObsType
 typedef struct {
   SInt32 id;
