@@ -56,5 +56,4 @@ float tar_dp_data[4][DATA_NUM];
 
 float original_data[DATA_NUM];
 float loopback_data[DATA_NUM];
-float tempMeasureVal1_data[DATA_NUM];
-float tempMeasureVal2_data[DATA_NUM];
+float tempMeasureVal_data[4][DATA_NUM];

@@ -13,8 +13,7 @@ extern uint8 gGapIndex;
 extern float gGapTarS;
 extern float gGapTarV;
 extern float gAlcStCoeff[6];
-extern float gTempMeasureVal1;
-extern float gTempMeasureVal2;
+extern float gTempMeasureVal[4];
 #else
 SsmObjType g_ssmObjType;
 uint8 g_truncated_col;
@@ -25,8 +24,7 @@ uint8 gGapIndex;
 float gGapTarS;
 float gGapTarV;
 float gAlcStCoeff[6];
-float gTempMeasureVal1;
-float gTempMeasureVal2;
+float gTempMeasureVal[4];
 #endif
 
 // Key display information
@@ -81,8 +79,10 @@ void ReadOutputData(const int t) {
   gGapTarS = alcGapTarS_data[t];
   gGapTarV = alcGapTarV_data[t];
 
-  gTempMeasureVal1 = tempMeasureVal1_data[t];
-  gTempMeasureVal2 = tempMeasureVal2_data[t];
+  for (int i = 0; i < 4; ++i) {
+    gTempMeasureVal[i] = tempMeasureVal_data[i][t];
+  }
+
   for (int k = 0; k < 6; k++) {
     gAlcStCoeff[k] = alcStCoeff_data[k][t];
   }
@@ -112,8 +112,9 @@ void WriteOutputData(const int t) {
   alcGapTarS_data[t] = gGapTarS;
   alcGapTarV_data[t] = gGapTarV;
 
-  tempMeasureVal1_data[t] = gTempMeasureVal1;
-  tempMeasureVal2_data[t] = gTempMeasureVal2;
+  for (int i = 0; i < 4; ++i) {
+    tempMeasureVal_data[i][t] = gTempMeasureVal[i];
+  }
   for (int k = 0; k < 6; k++) {
     alcStCoeff_data[k][t] = gAlcStCoeff[k];
   }
@@ -235,17 +236,19 @@ void Time2Str(const float time, char* str, const int strSize) {
 
 void ShowOutputKeyInfo(const int posY) {
   char szPlanSts[10] = "";
-  char szTmpMeas1[20] = "Meas1: ", szTmpMeas2[20] = "Meas2: ";
+  char szTmpMeas[4][20] = {"Meas1: ", "Meas2: ", "Meas3: ", "Meas4: "};
   itoa(g_truncated_col, szPlanSts, 10);
   const char* str2 = spdPlanEnblSts ? " Enable" : " Fail  ";
   strcat(szPlanSts, str2);
-  snprintf(szTmpMeas1 + strlen(szTmpMeas1),
-           sizeof(szTmpMeas1) - strlen(szTmpMeas1), "%.3f", gTempMeasureVal1);
-  snprintf(szTmpMeas2 + strlen(szTmpMeas2),
-           sizeof(szTmpMeas2) - strlen(szTmpMeas2), "%.3f", gTempMeasureVal2);
-  outtextxy(0, posY - textheight(szPlanSts) * 3, szPlanSts);
-  outtextxy(0, posY - textheight(szPlanSts) * 2, szTmpMeas1);
-  outtextxy(0, posY - textheight(szPlanSts), szTmpMeas2);
+  const int posYzero = posY - textheight(szPlanSts) * 4;
+  outtextxy(0, posYzero, szPlanSts);
+  for (int i = 0; i < 4; ++i) {
+    snprintf(szTmpMeas[i] + strlen(szTmpMeas[i]),
+             sizeof(szTmpMeas[i]) - strlen(szTmpMeas[i]), "%.3f",
+             gTempMeasureVal[i]);
+    outtextxy(0, posYzero + textheight(szPlanSts) * (i + 1), szTmpMeas[i]);
+  }
+  return;
 }
 
 void ShowBasicFrameInfo(int* t, int* cycle, const int length, const int width) {

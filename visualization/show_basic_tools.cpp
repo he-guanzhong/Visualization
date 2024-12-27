@@ -3,6 +3,8 @@
 #define CURVE_FITTING_TYPE 2
 bool show_predict_swt = false;
 bool show_dp_line = false;
+bool show_noa_scenario = false;
+
 // float fit_coeffi[6] = {0};
 
 // Draw graph origins
@@ -145,7 +147,7 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
     itoa(tsr_spd, spd_val, 10);
   }
   strcat(tsr_disp, spd_val);
-  char tsi_disp[10];
+  char tsi_disp[10] = "";
   if (tsrInfo->tsr_tsi[0] == 5) {
     strcpy(tsi_disp, "stop");
   } else if (tsrInfo->tsr_tsi[0] == 6) {
@@ -454,7 +456,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
                    const float* LH0,
                    const float* LH1,
                    const float cur_spd) {
-  const float objSpdLatConf = 0.8f;
+  const float objSpdLatConf = 0.7f;
   float obs_speed_y_cor = 0;
   for (int i = 0; i < ssmObjs->obj_num; i++) {
     if (!ssmObjs->obj_lists[i].valid_flag) {
@@ -472,7 +474,11 @@ void drawObstacles(const SsmObjType* ssmObjs,
     Point obs_pred, obs_pred_path[6];
     float objPosnLgt[6], objPosnLat[6];
 
-    obs_speed_y_cor = obs->speed_y * objSpdLatConf;
+    if (i == 0 || i == 2 || i == 3 || i == 6 || i == 7) {
+      obs_speed_y_cor = obs->speed_y * objSpdLatConf;
+    } else {
+      obs_speed_y_cor = 0;
+    }
     for (int j = 0; j < 6; j++) {
       obs_pred_path[j].x = obs->pos_x + obs->speed_x * j;
       float predLatOffset = obs_speed_y_cor * j;

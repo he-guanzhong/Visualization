@@ -1,6 +1,6 @@
 #include "visualization/show_load_log.h"
 
-#define RAW_LINE 1
+#define RAW_LINE 0
 
 static inline float readValue(float** values, int col_name, int t) {
   if (values[col_name][t] == 0 && t > 0)
