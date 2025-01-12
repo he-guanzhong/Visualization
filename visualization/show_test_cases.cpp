@@ -150,10 +150,10 @@ void CaseFollow(SsmObjType* ssmObjs) {
   // 0 = IV, 1 = RIV, 2 = NIVL, 3 = NIIVL, 4 = RIVL, 5 = RIIVL
   // 6 = NIVR, 7 = NIIVR, 8 = RIVR, 9 = RIIVR
   ssmObjs->obj_num = 1;
-  ssmObjs->obj_lists[0].pos_x = 120;
+  ssmObjs->obj_lists[0].pos_x = 70;
   ssmObjs->obj_lists[0].pos_y = 0;
   ssmObjs->obj_lists[0].acc_x = 0;
-  ssmObjs->obj_lists[0].speed_x = 1.0f;
+  ssmObjs->obj_lists[0].speed_x = 37.5f;
   ssmObjs->obj_lists[0].speed_y = 0.0f;
   ssmObjs->obj_lists[0].type = 1;
   ssmObjs->obj_lists[0].lane_index = 3;
@@ -212,7 +212,7 @@ void LoadDummyMotionData(float* egoSpd,
                          int* accMode,
                          int* tauGap,
                          AlcBehavior* alcBehav) {
-  *egoSpd = 25.0f, *egoAcc = 0.0f, *spdLmt = 90.0f;
+  *egoSpd = 25.0f, *egoAcc = 0.0f, *spdLmt = 100.0f;
   *accMode = 5;
   *tauGap = 1;
   alcBehav->AutoLaneChgSide = 0;

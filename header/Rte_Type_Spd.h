@@ -136,6 +136,10 @@ typedef struct {
   Float SpdLmt;
   UInt8 AccMode;
   UInt8 TauGapSet;
+  Float AccCurveSpdLmt;
+  Float AccDisRef;
+  Float AccFollowAccel;
+  Float AccCruiseAccel;
 } EgoMotionSts;
 
 #define Rte_TypeDef_RemEhMerge

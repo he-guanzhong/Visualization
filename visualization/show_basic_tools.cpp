@@ -251,7 +251,7 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
       break;
     case 4:
     case 14:
-      strcat(spec_case_title, "r2m");
+      strcat(spec_case_title, "mrgd");
       break;
     case 5:
     case 15:
@@ -456,7 +456,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
                    const float* LH0,
                    const float* LH1,
                    const float cur_spd) {
-  const float objSpdLatConf = 0.7f;
+  const float objSpdLatConf = 0.9f;
   float obs_speed_y_cor = 0;
   for (int i = 0; i < ssmObjs->obj_num; i++) {
     if (!ssmObjs->obj_lists[i].valid_flag) {
@@ -849,7 +849,7 @@ void showBEVGraph(const GraphConfig* config,
 bool inArea(int mx, int my, int x, int y, int w, int h) {
   return (mx > x && mx < x + w && my > y && my < y + h);
 }
-bool button(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
+bool buttonShowPred(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
   bool ans =
       msg->message == WM_LBUTTONDOWN && inArea(msg->x, msg->y, x, y, w, h);
   if (ans) {
@@ -868,10 +868,38 @@ bool button(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
             text);
   return ans;
 }
-bool functionButton(ExMessage msg) {
-  // while (1) {
-  return button(&msg, s_infoAreaBoundary - 2, 50, 60, 30, &show_predict_swt);
 
+bool buttonPrev(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
+  bool ans =
+      msg->message == WM_LBUTTONDOWN && inArea(msg->x, msg->y, x, y, w, h);
+  if (ans) {
+    *swt = !(*swt);
+    Sleep(100);
+  }
+  const char* text = "Prev";
+  if (inArea(msg->x, msg->y, x, y, w, h))
+    setfillcolor(CYAN);
+  else
+    setfillcolor(RGB(255, 255, 255));
+  setlinecolor(BLACK);
+  fillroundrect(x, y, x + w, y + h, 5, 5);
+  settextcolor(BLACK);
+  outtextxy(x + (w - textwidth(text)) / 2, y + (h - textheight(text)) / 2,
+            text);
+  return ans;
+}
+
+int functionButton(ExMessage msg) {
+  // while (1) {
+  if (buttonShowPred(&msg, s_infoAreaBoundary - 2, 50, 60, 30,
+                     &show_predict_swt)) {
+    return 1;
+  } else if (buttonPrev(&msg, s_infoAreaBoundary - 2, 80, 60, 30,
+                        &show_predict_swt)) {
+    return 2;
+  } else {
+    return 0;
+  }
   // BeginBatchDraw();
   //  cleardevice();
 

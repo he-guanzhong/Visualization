@@ -146,8 +146,9 @@ void showBEVGraph(const GraphConfig* config,
                   const MotionInfo* motionInfo);
 
 bool inArea(int mx, int my, int x, int y, int w, int h);
-bool button(ExMessage* msg, int x, int y, int w, int h, bool* swt);
-bool functionButton(ExMessage msg);
+bool buttonShowPred(ExMessage* msg, int x, int y, int w, int h, bool* swt);
+bool buttonPrev(ExMessage* msg, int x, int y, int w, int h, bool* swt);
+int functionButton(ExMessage msg);
 void keyboardTest();
 
 #endif  // SHOW_BASIC_TOOLS_H_

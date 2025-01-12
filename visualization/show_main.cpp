@@ -330,7 +330,10 @@ void DisplayLog(const int length, const int width, const int offset) {
   while (1) {
     // mouse clicks to change play status
     if (peekmessage(&msg, EX_MOUSE)) {
-      if (functionButton(msg)) {
+      if (1 == functionButton(msg)) {
+        refleshScreen = true;
+      } else if (2 == functionButton(msg)) {
+        t = t > 1 ? t - 2 : 0;
         refleshScreen = true;
       } else if (msg.message == WM_LBUTTONDOWN && (msg.y < 0.95f * width) &&
                  (msg.y > 0.25f * width)) {
@@ -722,7 +725,7 @@ int main() {
 
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(2);
+  playMode = PLAYMODE(3);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();
