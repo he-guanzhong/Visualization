@@ -228,12 +228,13 @@ void RadarDataParsing(float** values,
 
     for (int j = 0; j < OBJ_NUM; j++) {
       char obs_title[70] = "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
-      char exiP_title[80] =
+      char exiP_title[85] =
           "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
       char disX_title[70] =
           "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
       char disY_title[70] =
           "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
+
       const int obs_len = strlen(obs_title);
       const int ext_len = strlen(exiP_title);
       const int disx_len = strlen(disX_title);
@@ -262,7 +263,7 @@ void RadarDataParsing(float** values,
     for (int j = 0; j < OBJ_NUM; j++) {
       char obs_title[70] =
           "AswIf_SRRDataFrontRight.SyncTrack_s.radar_track_s._";
-      char exiP_title[80] =
+      char exiP_title[85] =
           "AswIf_SRRDataFrontRight.SyncTrack_s.radar_track_s._";
       char disX_title[70] =
           "AswIf_SRRDataFrontRight.SyncTrack_s.radar_track_s._";
@@ -294,7 +295,7 @@ void RadarDataParsing(float** values,
 
     for (int j = 0; j < OBJ_NUM; j++) {
       char obs_title[70] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
-      char exiP_title[80] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
+      char exiP_title[85] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
       char disX_title[70] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
       char disY_title[70] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
       const int obs_len = strlen(obs_title);
@@ -323,7 +324,7 @@ void RadarDataParsing(float** values,
 
     for (int j = 0; j < OBJ_NUM; j++) {
       char obs_title[70] = "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
-      char exiP_title[80] =
+      char exiP_title[85] =
           "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
       char disX_title[70] =
           "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
@@ -356,7 +357,8 @@ void RadarDataParsing(float** values,
 
   *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
   /*   for (int j = 0; j < OBJ_NUM; j++) {
-      printf("RL_ID[%d] = %d\n", j, RL_ID[j]);
+      printf("FL_ID[%d] = %d\t %d, %d, %d\n", j, FL_ID[j], FR_ID[j], RL_ID[j],
+             RR_ID[j]);
     } */
   for (int t = 0; t < *totalFrame; t++) {
     time_data[t] = values[Ts][t];
@@ -364,7 +366,6 @@ void RadarDataParsing(float** values,
     for (int j = 0; j < OBJ_NUM; j++) {
       if (FL_ID[j] == 0)
         continue;
-
       iFL_ObjectId_data[j][t] = values[FL_ID[j]][t];
       fFL_ExistProb_data[j][t] = values[FL_EXI_PB[j]][t];
       fFL_DistX_data[j][t] = values[FL_DIS_X[j]][t];

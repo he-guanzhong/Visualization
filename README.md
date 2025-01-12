@@ -3,7 +3,7 @@
 - [中文](#中文)
 - [Français](#français)
 
-<img src="build/example_img.png" width="400">  
+<img src="build/example1_img.png" height="400">   <img src="build/example3_img.png" height="400">  
 
 ## English
 ### Discription

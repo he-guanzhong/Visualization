@@ -47,11 +47,16 @@ void AgsmDataParsing(float** values,
 
 #ifdef RADAR_DEMO_TEST
 
+/* Note:Please change the marco define as follows
+  #define MAX_LINE_SIZE 22000
+  #define MAX_COLUMNS 350
+*/
+
 #ifndef DATA_NUM
 #define DATA_NUM 20480
 #endif
 
-#define OBJ_NUM 16
+#define OBJ_NUM 20
 
 extern int iFL_ObjectId_data[OBJ_NUM][DATA_NUM];
 extern float fFL_ExistProb_data[OBJ_NUM][DATA_NUM];

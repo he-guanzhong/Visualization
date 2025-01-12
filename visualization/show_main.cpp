@@ -330,7 +330,7 @@ void DisplayLog(const int length, const int width, const int offset) {
   while (1) {
     // mouse clicks to change play status
     if (peekmessage(&msg, EX_MOUSE)) {
-      if (1 == functionButton(msg)) {
+      if (1 == functionButton(msg) || 3 == functionButton(msg)) {
         refleshScreen = true;
       } else if (2 == functionButton(msg)) {
         t = t > 1 ? t - 2 : 0;
@@ -702,7 +702,7 @@ void ReleaseWrapper(int length, int width, int offset) {
 #endif
 
 #ifdef RADAR_DEMO_TEST
-  playMode = fRL_DistX_data[0][0] ? RADAR : playMode;
+  playMode = fFL_DistX_data[0][0] ? RADAR : playMode;
   length = 400;
 #endif
 #ifdef AGSM_DEMO_TEST
@@ -725,7 +725,7 @@ int main() {
 
 #ifdef SPEED_PLANNING_H_
   // for speed planner, 3 functions: replay, loopback and simulation
-  playMode = PLAYMODE(3);
+  playMode = PLAYMODE(2);
   switch (playMode) {
     case ONESTEP:
       CalcOneStep();

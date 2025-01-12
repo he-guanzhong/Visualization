@@ -869,14 +869,14 @@ bool buttonShowPred(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
   return ans;
 }
 
-bool buttonPrev(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
+bool buttonOneStep(ExMessage* msg,
+                   int x,
+                   int y,
+                   int w,
+                   int h,
+                   const char* text) {
   bool ans =
       msg->message == WM_LBUTTONDOWN && inArea(msg->x, msg->y, x, y, w, h);
-  if (ans) {
-    *swt = !(*swt);
-    Sleep(100);
-  }
-  const char* text = "Prev";
   if (inArea(msg->x, msg->y, x, y, w, h))
     setfillcolor(CYAN);
   else
@@ -894,9 +894,10 @@ int functionButton(ExMessage msg) {
   if (buttonShowPred(&msg, s_infoAreaBoundary - 2, 50, 60, 30,
                      &show_predict_swt)) {
     return 1;
-  } else if (buttonPrev(&msg, s_infoAreaBoundary - 2, 80, 60, 30,
-                        &show_predict_swt)) {
+  } else if (buttonOneStep(&msg, s_infoAreaBoundary - 2, 80, 60, 30, "Prev")) {
     return 2;
+  } else if (buttonOneStep(&msg, s_infoAreaBoundary - 2, 110, 60, 30, "Next")) {
+    return 3;
   } else {
     return 0;
   }

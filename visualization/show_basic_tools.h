@@ -147,7 +147,12 @@ void showBEVGraph(const GraphConfig* config,
 
 bool inArea(int mx, int my, int x, int y, int w, int h);
 bool buttonShowPred(ExMessage* msg, int x, int y, int w, int h, bool* swt);
-bool buttonPrev(ExMessage* msg, int x, int y, int w, int h, bool* swt);
+bool buttonOneStep(ExMessage* msg,
+                   int x,
+                   int y,
+                   int w,
+                   int h,
+                   const char* text);
 int functionButton(ExMessage msg);
 void keyboardTest();
 

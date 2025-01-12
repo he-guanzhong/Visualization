@@ -40,7 +40,7 @@ void drawConftPath(const ConftPathTyp* path,
                    const int color,
                    const float startX);
 
-/// @brief AGSM graph, x-axis_forward_vertical, y-axis_lateral_horizontal
+/// @brief AGSM graph. x-axis_forward_vertical, y-axis_lateral_horizontal
 /// @param config         basic configuration
 /// @param zeroOffsetX    distance behind ego vehicle to be displayed
 /// @param ssmObjs        obstacles info
@@ -52,9 +52,11 @@ void showAGSMGraph(const GraphConfig* config,
                    const AgsmLinesInfo* agsmlinesInfo,
                    const MotionInfo* motionInfo);
 
-void drawRadarObj(const RadarObjInfo* radarInfo, const int color);
+void drawRadarObj(const RadarObjInfo* radarInfo,
+                  const int dir,
+                  const int color);
 
-/// @brief Radar graph, x-axis_forward_vertical, y-axis_lateral_horizontal
+/// @brief Radar graph. x-axis_forward_vertical, y-axis_lateral_horizontal
 /// @param config       basic configuration
 /// @param zeroOffsetX  distance behind ego vehicle to be displayed
 /// @param radarObjsInfo    32 points

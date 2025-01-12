@@ -14,6 +14,7 @@ void drawLaneMkr(const LaneMkr* path, const int color) {
     }
     lastDrawPoint = curDrawPoint;
   }
+  return;
 }
 
 void drawConftPath(const ConftPathTyp* path,
@@ -63,6 +64,7 @@ void drawConftPath(const ConftPathTyp* path,
     }
     lastDrawPoint = curDrawPoint;
   }
+  return;
 }
 
 void showAGSMGraph(const GraphConfig* config,
@@ -97,24 +99,51 @@ void showAGSMGraph(const GraphConfig* config,
   // ego spd info and lane change status
   drawMotionInfo(motionInfo);
   drawBEVRuler(zeroOffsetX);
+  return;
 }
 
-void drawRadarObj(const RadarObjInfo* radarInfo, const int color) {
-  for (int j = 0; j < 16; j++) {
-    if (radarInfo->iObjectId[j] == 0 || radarInfo->fExistProb[j] < 0.2f) {
+void drawRadarObj(const RadarObjInfo* radarInfo,
+                  const int dir,
+                  const int color) {
+  for (int j = 0; j < 20; j++) {
+    if (radarInfo->iObjectId[j] == 0 || radarInfo->fExistProb[j] < 0.1f) {
       continue;
     }
     Point obj_posn = {radarInfo->fDistX[j], radarInfo->fDistY[j]};
     char obj_id[10] = "";
-    snprintf(obj_id, sizeof(obj_id), "%d", j);
+    switch (dir) {
+      case 0:
+        strcpy(obj_id, "FL");
+        break;
+      case 1:
+        strcpy(obj_id, "FR");
+        break;
+      case 2:
+        strcpy(obj_id, "RL");
+        break;
+      case 3:
+        strcpy(obj_id, "RR");
+        break;
+      default:
+        break;
+    }
+    const int obj_len = strlen(obj_id);
+    snprintf(obj_id + obj_len, sizeof(obj_id) - obj_len, "%d", j);
     coordinateTrans2(&obj_posn);
 
     setlinecolor(BLACK);
     setfillcolor(color);
     solidcircle(obj_posn.x, obj_posn.y, 5);
-    outtextxy(obj_posn.x - textwidth(obj_id) / 2,
-              obj_posn.y + textheight(obj_id) / 2, obj_id);
+    const int off_disp = 10;
+    if (0 == dir || 2 == dir) {
+      outtextxy(obj_posn.x - off_disp - textwidth(obj_id),
+                obj_posn.y - textheight(obj_id) / 2, obj_id);
+    } else {
+      outtextxy(obj_posn.x + off_disp, obj_posn.y - textheight(obj_id) / 2,
+                obj_id);
+    }
   }
+  return;
 }
 
 void showRadarGraph(const GraphConfig* config,
@@ -122,10 +151,10 @@ void showRadarGraph(const GraphConfig* config,
                     const RadarObjInfo* radarObjsInfo) {
   initBEVGraph(config, zeroOffsetX);
 
-  drawRadarObj(&radarObjsInfo[0], RED);
-  drawRadarObj(&radarObjsInfo[1], BLUE);
-  drawRadarObj(&radarObjsInfo[2], MAGENTA);
-  drawRadarObj(&radarObjsInfo[3], GREEN);
+  drawRadarObj(&radarObjsInfo[0], 0, RED);
+  drawRadarObj(&radarObjsInfo[1], 1, BLUE);
+  drawRadarObj(&radarObjsInfo[2], 2, MAGENTA);
+  drawRadarObj(&radarObjsInfo[3], 3, GREEN);
 
   // ego car
   setfillcolor(LIGHTGRAY);
@@ -135,4 +164,5 @@ void showRadarGraph(const GraphConfig* config,
   drawCar(&ego, str_ego, 1, 0.0f, 10);
 
   drawBEVRuler(zeroOffsetX);
+  return;
 }
