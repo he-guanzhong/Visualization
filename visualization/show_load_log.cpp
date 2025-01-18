@@ -202,8 +202,8 @@ void SpdPlanDataParsing(float** values,
   // 8 coeffs, [0,5] for c0~c5(real), 6 = start, 7 = end.
   int LH_C_0[8] = {0}, LH_C_1[8] = {0}, LA_C_0[8] = {0}, LA_C_1[8] = {0};
 
-  // DP lines
-  int EGO_DP[4] = {0}, TAR_DP[4] = {0};
+  // REM info, DP lines
+  int EGO_DP[4] = {0}, TAR_DP[4] = {0}, MRG_DIS = 0, MRG_DIR = 0, MRG_ID = 0;
 
   // assign col name from measurements
   for (int i = 0; i < numColumns; i++) {
@@ -794,6 +794,13 @@ void SpdPlanDataParsing(float** values,
     else if (strncmp(columns[i], "VfINP_TSRSignLgDist2Proc_m[]", 26) == 0)
       TSR_LgDis[2] = i;
 
+    else if (strncmp(columns[i], "VfPASP_EHNearestMergedist_m[]", 27) == 0)
+      MRG_DIS = i;
+    else if (strncmp(columns[i], "VePASP_EHNearestMergeptDirForEgo[]", 32) == 0)
+      MRG_DIR = i;
+    else if (strncmp(columns[i], "ViPASP_EHMerge_DP_ID[]", 20) == 0)
+      MRG_ID = i;
+
     else if (strncmp(columns[i], "VfREM_EHEgoDP_C0_L4C[]", 20) == 0)
       EGO_DP[0] = i;
     else if (strncmp(columns[i], "VfREM_EHEgoDP_C1_L4C[]", 20) == 0)
@@ -834,11 +841,11 @@ void SpdPlanDataParsing(float** values,
 
     // alc find gap
     for (int k = 0; k < 6; k++) {
-      alcStCoeff_data[k][t] = ALC_ST[k] ? values[ALC_ST[k]][t] : 0;
+      alcStCoeff_data[k][t] = values[ALC_ST[k]][t];
     }
-    alcGapIndex_data[t] = ALC_GAP ? values[ALC_GAP][t] : 0;
-    alcGapTarS_data[t] = ALC_TARS ? values[ALC_TARS][t] : 0;
-    alcGapTarV_data[t] = ALC_TARV ? values[ALC_TARV][t] : 0;
+    alcGapIndex_data[t] = values[ALC_GAP][t];
+    alcGapTarS_data[t] = values[ALC_TARS][t];
+    alcGapTarV_data[t] = values[ALC_TARV][t];
 
     // alc_sts[0] for alc side: 0-0ff, 1-left, 2-right
     // alc_sts[1] for alc sts: 0-OFF, 1-Selected, 2-hold ego lane, 3-leaving,
@@ -955,7 +962,12 @@ void SpdPlanDataParsing(float** values,
       tsr_pos_x_data[k][t] = values[TSR_LgDis[k]][t];
       tsr_pos_y_data[k][t] = values[TSR_LaDis[k]][t] * -1;
     }
-
+    // REM, map merge
+    if (MRG_DIS != 0) {
+      merge_dis_data[t] = values[MRG_DIS][t];
+      merge_dir_data[t] = values[MRG_DIR][t];
+      merge_id_data[t] = values[MRG_ID][t];
+    }
     for (int k = 0; k < 4; k++) {
       if (EGO_DP[k] == 0)
         continue;

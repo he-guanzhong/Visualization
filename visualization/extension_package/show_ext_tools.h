@@ -28,10 +28,10 @@ typedef struct {
 } AgsmLinesInfo;
 
 typedef struct {
-  int iObjectId[16];
-  float fExistProb[16];
-  float fDistX[16];
-  float fDistY[16];
+  int iObjectId[20];
+  float fExistProb[20];
+  float fDistX[20];
+  float fDistY[20];
 } RadarObjInfo;
 
 void drawLaneMkr(const LaneMkr* path, const int color);

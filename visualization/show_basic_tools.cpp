@@ -18,10 +18,10 @@ const static float car_len_tbl[10] = {2.6f, 5.4f, 10.4f, 2.5f, 2.5f,
                                       1.0f, 2.0f, 2.0f,  2.0f, 2.5f};
 const static float car_wid_tbl[10] = {1.4f, 1.9f, 2.0f, 0.6f, 0.6f,
                                       1.0f, 2.0f, 2.0f, 2.0f, 0.6f};
-const static int tsr_spd_table1[14] = {10, 20, 30,  40,  50,  60,  70,
-                                       80, 90, 100, 110, 120, 130, 140};
-const static int tsr_spd_table2[15] = {5,  15, 25,  35,  45,  55,  65, 75,
-                                       85, 95, 105, 115, 125, 135, 145};
+const static int tsr_spd_tbl1[14] = {10, 20, 30,  40,  50,  60,  70,
+                                     80, 90, 100, 110, 120, 130, 140};
+const static int tsr_spd_tbl2[15] = {5,  15, 25,  35,  45,  55,  65, 75,
+                                     85, 95, 105, 115, 125, 135, 145};
 
 void coordinateTrans1(Point* point) {
   point->x = s_origin1.x + point->x * s_xScale1;
@@ -41,27 +41,64 @@ void strCompletion(char str[2][8], const int index, const int spd) {
   snprintf(&str[1][0], 8, "%d m/s", spd);
 }
 
-float getCubicPolynomial(const float x, const float* line) {
-  return line[0] + line[1] * x + line[2] * x * x + line[3] * x * x * x;
+float getQuinticPolynomial(const float x, const float* line, const int order) {
+  if (0 == order) {
+    return line[0] + line[1] * x + line[2] * x * x + line[3] * x * x * x +
+           line[4] * x * x * x * x + line[5] * x * x * x * x * x;
+  } else if (1 == order) {
+    return line[1] + 2.0f * line[2] * x + 3.0f * line[3] * x * x +
+           4.0f * line[4] * x * x * x + 5.0f * line[5] * x * x * x * x;
+  } else if (2 == order) {
+    return 2.0f * line[2] + 6.0f * line[3] * x + 12.0f * line[4] * x * x +
+           20.0f * line[5] * x * x * x;
+  } else {
+    return 0;
+  }
 }
 
-float getPiecewiseCubicPolynomial(const float x, const EgoPathVcc* egoPath) {
+float getCubicPolynomial(const float x, const float* line, const int order) {
+  if (0 == order) {
+    return line[0] + line[1] * x + line[2] * x * x + line[3] * x * x * x;
+  } else if (1 == order) {
+    return line[1] + 2.0f * line[2] * x + 3.0f * line[3] * x * x;
+  } else if (2 == order) {
+    return 2.0f * line[2] + 6.0f * line[3] * x;
+  } else if (3 == order) {
+    return 6.0f * line[3];
+  } else {
+    return 0;
+  }
+}
+
+float getPiecewiseCubicPolynomial(const float x,
+                                  const EgoPathVcc* egoPathVcc,
+                                  const int order) {
   float x_prime = x;
   float c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-  if (x <= egoPath->Len[0]) {
-    c0 = egoPath->C0[0], c1 = egoPath->C1[0], c2 = egoPath->C2[0],
-    c3 = egoPath->C3[0];
-  } else if (x <= egoPath->Len[0] + egoPath->Len[1]) {
-    x_prime = x - egoPath->Len[0];
-    c0 = egoPath->C0[1], c1 = egoPath->C1[1], c2 = egoPath->C2[1],
-    c3 = egoPath->C3[1];
+  if (x <= egoPathVcc->Len[0]) {
+    c0 = egoPathVcc->C0[0], c1 = egoPathVcc->C1[0], c2 = egoPathVcc->C2[0],
+    c3 = egoPathVcc->C3[0];
+  } else if (x <= egoPathVcc->Len[0] + egoPathVcc->Len[1]) {
+    x_prime = x - egoPathVcc->Len[0];
+    c0 = egoPathVcc->C0[1], c1 = egoPathVcc->C1[1], c2 = egoPathVcc->C2[1],
+    c3 = egoPathVcc->C3[1];
   } else {
-    x_prime = x - egoPath->Len[0] - egoPath->Len[1];
-    c0 = egoPath->C0[2], c1 = egoPath->C1[2], c2 = egoPath->C2[2],
-    c3 = egoPath->C3[2];
+    x_prime = x - egoPathVcc->Len[0] - egoPathVcc->Len[1];
+    c0 = egoPathVcc->C0[2], c1 = egoPathVcc->C1[2], c2 = egoPathVcc->C2[2],
+    c3 = egoPathVcc->C3[2];
   }
-  return c0 + c1 * x_prime + c2 * x_prime * x_prime +
-         c3 * x_prime * x_prime * x_prime;
+  if (0 == order) {
+    return c0 + c1 * x_prime + c2 * x_prime * x_prime +
+           c3 * x_prime * x_prime * x_prime;
+  } else if (1 == order) {
+    return c1 + 2.0f * c2 * x_prime + 3.0f * c3 * x_prime * x_prime;
+  } else if (2 == order) {
+    return 2.0f * c2 + 6.0f * c3 * x_prime;
+  } else if (3 == order) {
+    return 6.0f * c3;
+  } else {
+    return 0;
+  }
 }
 
 void drawCar(Point* car,
@@ -190,14 +227,14 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
     // TSR Speed limit: 10~140, 5~145, cancel sign
     char tsr_sign[4] = "";
     if (tsrInfo->tsr_signs[i].type <= 13) {
-      itoa(tsr_spd_table1[tsrInfo->tsr_signs[i].type], tsr_sign, 10);
+      itoa(tsr_spd_tbl1[tsrInfo->tsr_signs[i].type], tsr_sign, 10);
       outtextxy(tsr_pos.x - textwidth(tsr_sign) / 2,
                 tsr_pos.y - textheight(tsr_sign) / 2, tsr_sign);
       setlinecolor(RED);
       circle(tsr_pos.x, tsr_pos.y, textheight(tsr_sign) * 0.75f);
     } else if (tsrInfo->tsr_signs[i].type >= 100 &&
                tsrInfo->tsr_signs[i].type <= 114) {
-      itoa(tsr_spd_table2[tsrInfo->tsr_signs[i].type - 100], tsr_sign, 10);
+      itoa(tsr_spd_tbl2[tsrInfo->tsr_signs[i].type - 100], tsr_sign, 10);
       outtextxy(tsr_pos.x - textwidth(tsr_sign) / 2,
                 tsr_pos.y - textheight(tsr_sign) / 2, tsr_sign);
       setlinecolor(RED);
@@ -251,11 +288,11 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
       break;
     case 4:
     case 14:
-      strcat(spec_case_title, "mrgd");
+      strcat(spec_case_title, "mgBk");  // merge brake
       break;
     case 5:
     case 15:
-      strcat(spec_case_title, "cutP");
+      strcat(spec_case_title, "mgAc");  // merge active
       break;
     default:
       break;
@@ -438,7 +475,7 @@ void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
 
   float totalLen = egoPath->Len[0] + egoPath->Len[1] + egoPath->Len[2];
   for (float x = startX; x < totalLen; x += 3.0f) {
-    const float y = getPiecewiseCubicPolynomial(x, egoPath);
+    const float y = getPiecewiseCubicPolynomial(x, egoPath, 0);
     last.x = x, last.y = y;
     Point curDrawPoint = {x, y};
     coordinateTrans2(&curDrawPoint);
@@ -472,6 +509,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
 
     // obs latspd not stable, use ego centre line offset
     Point obs_pred, obs_pred_path[6];
+    float obs_pred_yaw, obs_pred_path_yaw[6];
     float objPosnLgt[6], objPosnLat[6];
 
     if (i == 0 || i == 2 || i == 3 || i == 6 || i == 7) {
@@ -481,27 +519,34 @@ void drawObstacles(const SsmObjType* ssmObjs,
     }
     for (int j = 0; j < 6; j++) {
       obs_pred_path[j].x = obs->pos_x + obs->speed_x * j;
+      float predHeadingAg = obs->pos_yaw;
       float predLatOffset = obs_speed_y_cor * j;
-      objPosnLgt[j] = obs->pos_x + obs->speed_x * j;
-      if (cur_spd > 30.0f / 3.6f && obs->speed_x > 1.0f &&
+      objPosnLgt[j] = obs_pred_path[j].x;
+      if (cur_spd > 10.0f / 3.6f && obs->speed_x > 1.0f &&
           objPosnLgt[j] < 150.0f) {
         if (i == 4 || i == 5) {
-          objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH0);
+          objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH0, 0);
         } else if (i == 8 || i == 9) {
-          objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH1);
+          objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH1, 0);
         } else {
-          objPosnLat[j] = getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath);
+          objPosnLat[j] =
+              getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath, 0);
         }
         const float roadCurveOffset = objPosnLat[j] - objPosnLat[0];
         if ((roadCurveOffset > predLatOffset && predLatOffset >= 0) ||
             (roadCurveOffset < predLatOffset && predLatOffset <= 0) ||
-            fabsf(roadCurveOffset) > fabsf(predLatOffset))
+            fabsf(roadCurveOffset) > fabsf(predLatOffset)) {
           predLatOffset = roadCurveOffset;
+          predHeadingAg =
+              getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath, 1);
+        }
       }
       obs_pred_path[j].y = obs->pos_y + predLatOffset;
+      obs_pred_path_yaw[j] = predHeadingAg;
     }
 
     obs_pred = obs_pred_path[5];
+    obs_pred_yaw = obs_pred_path_yaw[5];
     // cipv, considier 0->1s const acc, 1->5s const spd
     if (obs->lane_index == 3 && obs->pos_x > 0) {
       const float const_acc_time = 1.0f;
@@ -516,7 +561,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
       strcpy(str_obs_pred[1], "Pred");
       setfillcolor(LIGHTGRAY);
       strCompletion(str_obs_pred, i, obs->speed_x);
-      drawCar(&obs_pred, str_obs_pred, obs->type, obs->pos_yaw, i);
+      drawCar(&obs_pred, str_obs_pred, obs->type, obs_pred_yaw, i);
       setlinecolor(LIGHTGRAY);
       setlinestyle(PS_DASH);
 
@@ -833,10 +878,12 @@ void showBEVGraph(const GraphConfig* config,
   if (show_predict_swt && predictPosn.x > 2.0f) {
     // setfillstyle(BS_HATCHED, HS_DIAGCROSS);
     Point ego_pred = {predictPosn.x, predictPosn.y};
+    float ego_pred_yaw =
+        getQuinticPolynomial(predictPosn.x, linesInfo->alc_coeffs, 1);
     char str_ego_pred[2][8] = {};
     strcpy(str_ego_pred[0], "ego_pred");
     strCompletion(str_ego_pred, 10, motionInfo->egoPredSpd);
-    drawCar(&ego_pred, str_ego_pred, 1, 0, 10);
+    drawCar(&ego_pred, str_ego_pred, 1, ego_pred_yaw, 10);
     // setfillstyle(BS_SOLID);
   }
   // ego spd info and lane change status

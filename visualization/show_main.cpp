@@ -29,6 +29,7 @@ float gTempMeasureVal[4];
 
 // Key display information
 MotionInfo motionInfo;
+RemEhMerge remEhMerge;
 Point s_points[6], v_points[6], a_points[6];
 Point s_ctrlPoint, v_ctrlPoint, a_ctrlPoint;
 int spdPlanEnblSts;
@@ -207,6 +208,10 @@ void ReadInputData(const int t) {
     tsrInfo.tsr_signs[i].pos_y = tsr_pos_y_data[i][t];
   }
 
+  // REM map info
+  remEhMerge.NearestMergedist = merge_dis_data[t];
+  remEhMerge.NearestMergeptDirForEgo = merge_dir_data[t];
+  remEhMerge.Merge_DP_ID = merge_id_data[t];
   return;
 }
 
@@ -370,8 +375,8 @@ void DisplayLog(const int length, const int width, const int offset) {
                         &motionInfo);
         } else if (playMode == RADAR) {
           const GraphConfig BEV_cfg = {length, width,  offset,     0,
-                                       0,      100.0f, 3.4f * 5.0f};
-          showRadarGraph(&BEV_cfg, 30.0f, radarObjsInfo);
+                                       0,      170.0f, 3.4f * 5.0f};
+          showRadarGraph(&BEV_cfg, 70.0f, radarObjsInfo);
         } else if (playMode == LOOPBACK) {
           const int chartWidth = 200, charOffset = 50;
           ShowSpdPlanInterface(length, width - chartWidth + charOffset, offset,
@@ -444,7 +449,6 @@ void ExecuteSpdPlan(const AlcPathVcc* alcPathVcc,
   EgoMotionSts egoMotionSts = {motionInfo.egoSpd, motionInfo.egoAcc,
                                motionInfo.spdLmt, (uint8)motionInfo.accMode,
                                (uint8)motionInfo.tauGap};
-  RemEhMerge remEhMerge;
   SpeedPlanProcessor(
       &egoMotionSts, &motionInfo.alcBehav, alcPathVcc, agsmEnvModel,
       &remEhMerge, &ssmObjs->obj_lists[0], &ssmObjs->obj_lists[1],

@@ -51,6 +51,10 @@ float l_path_data[8][DATA_NUM];
 float r_path_data[8][DATA_NUM];
 float rr_path_data[8][DATA_NUM];
 
+float merge_dis_data[DATA_NUM];
+int merge_dir_data[DATA_NUM];
+int merge_id_data[DATA_NUM];
+
 float ego_dp_data[4][DATA_NUM];
 float tar_dp_data[4][DATA_NUM];
 
