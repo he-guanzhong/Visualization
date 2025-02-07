@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "visualization/extension_package/ext_rem_load_log.h"
 
 #ifdef AGSM_DEMO_TEST
 

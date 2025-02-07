@@ -41,35 +41,6 @@ void strCompletion(char str[2][8], const int index, const int spd) {
   snprintf(&str[1][0], 8, "%d m/s", spd);
 }
 
-float getQuinticPolynomial(const float x, const float* line, const int order) {
-  if (0 == order) {
-    return line[0] + line[1] * x + line[2] * x * x + line[3] * x * x * x +
-           line[4] * x * x * x * x + line[5] * x * x * x * x * x;
-  } else if (1 == order) {
-    return line[1] + 2.0f * line[2] * x + 3.0f * line[3] * x * x +
-           4.0f * line[4] * x * x * x + 5.0f * line[5] * x * x * x * x;
-  } else if (2 == order) {
-    return 2.0f * line[2] + 6.0f * line[3] * x + 12.0f * line[4] * x * x +
-           20.0f * line[5] * x * x * x;
-  } else {
-    return 0;
-  }
-}
-
-float getCubicPolynomial(const float x, const float* line, const int order) {
-  if (0 == order) {
-    return line[0] + line[1] * x + line[2] * x * x + line[3] * x * x * x;
-  } else if (1 == order) {
-    return line[1] + 2.0f * line[2] * x + 3.0f * line[3] * x * x;
-  } else if (2 == order) {
-    return 2.0f * line[2] + 6.0f * line[3] * x;
-  } else if (3 == order) {
-    return 6.0f * line[3];
-  } else {
-    return 0;
-  }
-}
-
 float getPiecewiseCubicPolynomial(const float x,
                                   const EgoPathVcc* egoPathVcc,
                                   const int order) {
@@ -323,10 +294,10 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
       strcat(scenario_title, "m2rN");
       break;
     case 7:
-      strcat(scenario_title, "rmp");
+      strcat(scenario_title, "Ext");
       break;
     case 17:
-      strcat(scenario_title, "rmpN");
+      strcat(scenario_title, "ExtN");
       break;
     case 1:
       strcat(scenario_title, "gA");
@@ -796,7 +767,7 @@ void showBEVGraph(const GraphConfig* config,
                   const TsrInfo* tsrInfo,
                   const MotionInfo* motionInfo) {
   initBEVGraph(config, zeroOffsetX);
-
+  s_origin2.x *= 0.95f;
   // tsr info
   drawTsrSign(tsrInfo);
 

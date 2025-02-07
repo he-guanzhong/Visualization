@@ -13,6 +13,7 @@ extern float ego_path_data[9][DATA_NUM];
 extern int alcBehav_data[8][DATA_NUM];
 extern int accMode_data[DATA_NUM];
 extern int tauGap_data[DATA_NUM];
+extern float accDisRef_data[DATA_NUM];
 
 extern int spdPlanEnblSts_data[DATA_NUM];
 extern int truncated_col_data[DATA_NUM];

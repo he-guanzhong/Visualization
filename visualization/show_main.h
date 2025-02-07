@@ -7,6 +7,7 @@
 #include "visualization/show_test_cases.h"
 #endif
 
+#include "visualization/extension_package/ext_rem_read_data.h"
 #include "visualization/extension_package/show_ext_read_data.h"
 #include "visualization/show_basic_tools.h"
 #include "visualization/show_load_log.h"
@@ -18,7 +19,8 @@ typedef enum {
   SIMULATION = 4,
   LINECHART = 5,
   AGSM = 6,
-  RADAR = 7
+  RADAR = 7,
+  REM = 8
 } PLAYMODE;
 
 void ReadInputData(const int t);

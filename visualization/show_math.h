@@ -4,6 +4,10 @@
 #include <math.h>
 #define MAT_SIZE 6
 
+float getQuinticPolynomial(const float x, const float* line, const int order);
+
+float getCubicPolynomial(const float x, const float* line, const int order);
+
 int combination(const int n, const int m);
 
 void bezierPoint(const float tau,

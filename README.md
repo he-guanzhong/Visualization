@@ -3,7 +3,7 @@
 - [中文](#中文)
 - [Français](#français)
 
-<img src="build/example1_img.png" height="400">   <img src="build/example3_img.png" height="400">  
+<img src="build/example1_img.png" height="400">   <img src="build/example2_img.png" height="400">   <img src="build/example3_img.png" height="400">  
 
 ## English
 ### Discription
@@ -64,7 +64,7 @@ En mode standard, les informations d’affichage suivantes sont actuellement pri
 4. État du mouvement de l’ego (vitesse réglée/réelle, mode ACC)
 5. Infos TSR (panneau de limitation de vitesse, panneau spécial, affichage de l’ego/état d’alerte)
 ### Instructions d'utilisation
-- Télécharger tous les fichiers du Répertoire ` /Build/ ` ( ` spdplan.exe `, ` libgcc_s_seh-1.dll ` et ` libstdc++-6.dll ` sont requis)
+- Télécharger tous les fichiers du Répertoire ` /build/ ` ( ` spdplan.exe `, ` libgcc_s_seh-1.dll ` et ` libstdc++-6.dll ` sont requis)
 - Ouvrez le fichier exécutable ` spdplan.exe `. Dans la fenêtre contextuelle, sélectionnez le Journal au format **.csv** que vous souhaitez lire
 - Pour votre commodité, un exemple de log ` example1_std.csv ` est fournis à des fins d’auto-test
 - Facultativement, pour lire ` example2_agsm.csv ` ou ` example3_radar.csv `, il est indispensable d'activer les macros correspondantes (AGSM ou RADAR) dans CMakeLists.txt et de recompiler le projet

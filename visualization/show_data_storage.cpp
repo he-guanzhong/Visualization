@@ -9,6 +9,7 @@ float ego_path_data[9][DATA_NUM];
 int alcBehav_data[8][DATA_NUM];
 int accMode_data[DATA_NUM];
 int tauGap_data[DATA_NUM];
+float accDisRef_data[DATA_NUM];
 
 int spdPlanEnblSts_data[DATA_NUM];
 int truncated_col_data[DATA_NUM];

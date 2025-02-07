@@ -1,5 +1,36 @@
 #include "visualization/show_math.h"
 
+float getQuinticPolynomial(const float x, const float* line, const int order) {
+  switch (order) {
+    case 0:
+      return line[0] + line[1] * x + line[2] * x * x + line[3] * x * x * x +
+             line[4] * x * x * x * x + line[5] * x * x * x * x * x;
+    case 1:
+      return line[1] + 2.0f * line[2] * x + 3.0f * line[3] * x * x +
+             4.0f * line[4] * x * x * x + 5.0f * line[5] * x * x * x * x;
+    case 2:
+      return 2.0f * line[2] + 6.0f * line[3] * x + 12.0f * line[4] * x * x +
+             20.0f * line[5] * x * x * x;
+    default:
+      return 0;
+  }
+}
+
+float getCubicPolynomial(const float x, const float* line, const int order) {
+  switch (order) {
+    case 0:
+      return line[0] + line[1] * x + line[2] * x * x + line[3] * x * x * x;
+    case 1:
+      return line[1] + 2.0f * line[2] * x + 3.0f * line[3] * x * x;
+    case 2:
+      return 2.0f * line[2] + 6.0f * line[3] * x;
+    case 3:
+      return 6.0f * line[3];
+    default:
+      return 0;
+  }
+}
+
 int combination(const int n, const int m) {
   long long numerator = 1;
   int denominator = m;
