@@ -8,7 +8,7 @@
 void ReadRemInputData(const int t,
                       MotionInfo* motionInfo,
                       LinesInfo* linesInfo,
-                      RemPointsInfo* remPointsInfo);
+                      RemInfo* remInfo);
 #endif
 
 #endif  // EXT_REM_READ_DATA_H_

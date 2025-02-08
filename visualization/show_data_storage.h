@@ -64,6 +64,7 @@ extern float original_data[DATA_NUM];
 extern float loopback_data[DATA_NUM];
 extern float tempMeasureVal_data[4][DATA_NUM];
 
-extern float ego_dp_data[4][DATA_NUM];
-extern float tar_dp_data[4][DATA_NUM];
+// extern float ego_dp_data[4][DATA_NUM];
+// extern float tar_dp_data[4][DATA_NUM];
+
 #endif  // SHOW_DATA_STORAGE_H_

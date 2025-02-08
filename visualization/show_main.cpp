@@ -32,7 +32,7 @@ static MotionInfo sMotionInfo;
 static RemEhMerge sRemEhMerge;
 Point s_points[6], v_points[6], a_points[6];
 Point s_ctrlPoint, v_ctrlPoint, a_ctrlPoint;
-int spdPlanEnblSts;
+static int sSpdPlanEnblSts;
 // go straight
 // ego_coeff[9]: c0~c2, c31~c32, len1~len2
 // changeleft
@@ -45,12 +45,12 @@ static LinesInfo sLinesInfo = {
     .leftleft_coeffs = {3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100},
     .right_coeffs = {-3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100},
     .rightright_coeffs = {-3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100},
-    .ego_dp = {0, 0, 0, 0, 0, 0, 0, 0},
-    .tar_dp = {0, 0, 0, 0, 0, 0, 0, 0}};
+    .ego_dp_org = {0, 0, 0, 0, 0, 0, 0, 0},
+    .tar_dp_org = {0, 0, 0, 0, 0, 0, 0, 0}};
 static TsrInfo sTsrInfo;
 static RadarObjInfo sRadarObjsInfo[4];
 static AgsmLinesInfo sAgsmLinesInfo;
-static RemPointsInfo sRemPointsInfo;
+static RemInfo sRemInfo;
 
 // temporary storage of log data
 PLAYMODE playMode;
@@ -71,7 +71,7 @@ void ReadOutputData(const int t) {
   v_ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[2][t]};
   a_ctrlPoint = {ctrl_point_data[0][t], ctrl_point_data[3][t]};
 
-  spdPlanEnblSts = spdPlanEnblSts_data[t];
+  sSpdPlanEnblSts = spdPlanEnblSts_data[t];
   g_truncated_col = truncated_col_data[t];
 
   gInnerSpdLmt_kph = innerSpdLmt_data[t];
@@ -104,7 +104,7 @@ void WriteOutputData(const int t) {
   ctrl_point_data[2][t] = v_ctrlPoint.y;
   ctrl_point_data[3][t] = a_ctrlPoint.y;
 
-  spdPlanEnblSts_data[t] = spdPlanEnblSts;
+  spdPlanEnblSts_data[t] = sSpdPlanEnblSts;
   truncated_col_data[t] = g_truncated_col;
 
   innerSpdLmt_data[t] = gInnerSpdLmt_kph;
@@ -190,13 +190,13 @@ void ReadInputData(const int t) {
     sLinesInfo.leftleft_coeffs[i] = ll_path_data[i][t];
     sLinesInfo.rightright_coeffs[i] = rr_path_data[i][t];
   }
-  // dp lines
-  for (int i = 0; i < 4; i++) {
-    sLinesInfo.ego_dp[i] = ego_dp_data[i][t];
-    sLinesInfo.tar_dp[i] = tar_dp_data[i][t];
-  }
-  sLinesInfo.ego_dp[6] = sLinesInfo.tar_dp[6] = -5;
-  sLinesInfo.ego_dp[7] = sLinesInfo.tar_dp[7] = 40;
+  // dp lines, discard
+  /*   for (int i = 0; i < 4; i++) {
+      sLinesInfo.ego_dp_org[i] = ego_dp_data[i][t];
+      sLinesInfo.tar_dp_org[i] = tar_dp_data[i][t];
+    }
+    sLinesInfo.ego_dp_org[6] = sLinesInfo.tar_dp_org[6] = -5;
+    sLinesInfo.ego_dp_org[7] = sLinesInfo.tar_dp_org[7] = 40; */
 
   // TSR info
   sTsrInfo.tsr_spd = tsr_spd_data[t];
@@ -218,7 +218,7 @@ void ReadInputData(const int t) {
 }
 
 void ConvertMotionInfo() {
-  sMotionInfo.enblSts = spdPlanEnblSts;
+  sMotionInfo.enblSts = sSpdPlanEnblSts;
   sMotionInfo.egoPredSpd = fmaxf(v_points[4].y, v_points[5].y);
   sMotionInfo.innerSpdLmt = gInnerSpdLmt_kph;
   sMotionInfo.specCaseFlg = gSpecialCaseFlg;
@@ -245,7 +245,7 @@ void ShowOutputKeyInfo(const int posY) {
   char szPlanSts[10] = "";
   char szTmpMeas[4][20] = {"Meas1: ", "Meas2: ", "Meas3: ", "Meas4: "};
   itoa(g_truncated_col, szPlanSts, 10);
-  const char* str2 = spdPlanEnblSts ? " Enable" : " Fail  ";
+  const char* str2 = sSpdPlanEnblSts ? " Enable" : " Fail  ";
   strcat(szPlanSts, str2);
   const int posYzero = posY - textheight(szPlanSts) * 4;
   outtextxy(0, posYzero, szPlanSts);
@@ -362,7 +362,7 @@ void DisplayLog(const int length, const int width, const int offset) {
 
         ReadInputData(t);
 #ifdef REM_DEMO_TEST
-        ReadRemInputData(t, &sMotionInfo, &sLinesInfo, &sRemPointsInfo);
+        ReadRemInputData(t, &sMotionInfo, &sLinesInfo, &sRemInfo);
 #endif
 #ifdef AGSM_DEMO_TEST
         ReadAgsmInputData(t, &sMotionInfo, &sAgsmLinesInfo, &g_ssmObjType);
@@ -376,11 +376,11 @@ void DisplayLog(const int length, const int width, const int offset) {
 
         if (playMode == REM) {
           const GraphConfig BEV_cfg = {length, width,  offset, 0,
-                                       0,      120.0f, 30.0f};
-          showRemGraph(&BEV_cfg, 0, &sLinesInfo, &sMotionInfo, &sRemPointsInfo);
+                                       0,      100.0f, 30.0f};
+          showRemGraph(&BEV_cfg, 0, &sLinesInfo, &sMotionInfo, &sRemInfo);
         } else if (playMode == AGSM) {
           const GraphConfig BEV_cfg = {length, width,  offset, 0,
-                                       0,      120.0f, 30.0f};
+                                       0,      120.0f, 20.0f};
           showAGSMGraph(&BEV_cfg, 0, &g_ssmObjType, &sAgsmLinesInfo,
                         &sMotionInfo);
         } else if (playMode == RADAR) {
@@ -489,7 +489,7 @@ void ExecuteSpdPlan(const AlcPathVcc* alcPathVcc,
   s_ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.s};
   v_ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.v};
   a_ctrlPoint = {output.PointCtrl0.t, output.PointCtrl0.a};
-  spdPlanEnblSts = output.SpdPlanEnblSts;
+  sSpdPlanEnblSts = output.SpdPlanEnblSts;
   return;
 }
 
@@ -701,8 +701,9 @@ void ReleaseWrapper(int length, int width, int offset) {
   if (GetOpenFileNameA(&ofn) == FALSE) {
     return;
   }
-  // printf("Selected file: %s\n", ofn.lpstrFile);
   strcpy(csvFileName, ofn.lpstrFile);
+  // printf("Selected file: %s\n", ofn.lpstrFile);
+
   LoadLog(csvFileName, &totalFrame);
   width = playMode == LOOPBACK ? width + 150 : width;
 
@@ -719,7 +720,6 @@ void ReleaseWrapper(int length, int width, int offset) {
 
 #ifdef REM_DEMO_TEST
   playMode = REM;
-  length = 400;
 #endif
 #ifdef RADAR_DEMO_TEST
   playMode = fFL_DistX_data[0][0] ? RADAR : playMode;

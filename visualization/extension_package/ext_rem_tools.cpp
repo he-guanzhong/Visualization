@@ -11,11 +11,75 @@ void drawDpPoints(const Point* pointsInfo, const int nums, const int color) {
   return;
 }
 
+void drawRemDpInfo(const GraphConfig* config,
+                   const RemInfo* remInfo,
+                   const int egoOrgColor,
+                   const int tarOrgColor,
+                   const int egoOffColor,
+                   const int tarOffColor) {
+  const int infoAreaLeftBdy[2] = {config->oriX + config->length - 150,
+                                  config->oriX + config->length - 70};
+  const int infoAreaUpBdy[2] = {160, 280};
+
+  // set spd display, only 5 characters in title is acceptable
+  const char ego_org_title[10] = "Ego Org";
+  const char ego_off_title[10] = "Ego Off";
+  const char tar_org_title[10] = "Tar Org";
+  const char tar_off_title[10] = "Tar Off";
+
+  char ego_org_coeff[4][12] = {"C0: ", "C1: ", "C2: ", "C3: "};
+  char tar_org_coeff[4][12] = {"C0: ", "C1: ", "C2: ", "C3: "};
+  char ego_off_coeff[4][12] = {"", "", "", ""};
+  char tar_off_coeff[4][12] = {"", "", "", ""};
+  // char ego_off_coeff[4][10] = {"C0: ", "C1: ", "C2: ", "C3: "};
+  // char tar_off_coeff[4][10] = {"C0: ", "C1: ", "C2: ", "C3: "};
+  const int coeff_len1 = strlen(ego_org_coeff[0]);
+  const int coeff_len2 = strlen(ego_off_coeff[0]);
+  const int text_height = textheight(ego_org_coeff[0]);
+  settextcolor(egoOrgColor);
+  outtextxy(infoAreaLeftBdy[0], infoAreaUpBdy[0], ego_org_title);
+  settextcolor(tarOrgColor);
+  outtextxy(infoAreaLeftBdy[0], infoAreaUpBdy[1], tar_org_title);
+  settextcolor(egoOffColor);
+  outtextxy(infoAreaLeftBdy[1], infoAreaUpBdy[0], ego_off_title);
+  settextcolor(tarOffColor);
+  outtextxy(infoAreaLeftBdy[1], infoAreaUpBdy[1], tar_off_title);
+
+  for (int i = 0; i < 4; i++) {
+    snprintf(ego_org_coeff[i] + coeff_len1,
+             sizeof(ego_org_coeff[i]) - coeff_len1, "%.3f",
+             remInfo->ego_dp_org[i]);
+    snprintf(tar_org_coeff[i] + coeff_len1,
+             sizeof(tar_org_coeff[i]) - coeff_len1, "%.3f",
+             remInfo->tar_dp_org[i]);
+    snprintf(ego_off_coeff[i] + coeff_len2,
+             sizeof(ego_off_coeff[i]) - coeff_len2, "%.3f",
+             remInfo->ego_dp_off[i]);
+    snprintf(tar_off_coeff[i] + coeff_len2,
+             sizeof(tar_off_coeff[i]) - coeff_len2, "%.3f",
+             remInfo->tar_dp_off[i]);
+    settextcolor(egoOrgColor);
+    outtextxy(infoAreaLeftBdy[0], infoAreaUpBdy[0] + text_height * (i + 1),
+              ego_org_coeff[i]);
+    settextcolor(tarOrgColor);
+    outtextxy(infoAreaLeftBdy[0], infoAreaUpBdy[1] + text_height * (i + 1),
+              tar_org_coeff[i]);
+    settextcolor(egoOffColor);
+    outtextxy(infoAreaLeftBdy[1], infoAreaUpBdy[0] + text_height * (i + 1),
+              ego_off_coeff[i]);
+    settextcolor(tarOffColor);
+    outtextxy(infoAreaLeftBdy[1], infoAreaUpBdy[1] + text_height * (i + 1),
+              tar_off_coeff[i]);
+  }
+  settextcolor(BLACK);
+  return;
+}
+
 void showRemGraph(const GraphConfig* config,
                   const float zeroOffsetX,
                   const LinesInfo* linesInfo,
                   const MotionInfo* motionInfo,
-                  const RemPointsInfo* remPointsInfo) {
+                  const RemInfo* remInfo) {
   initBEVGraph(config, zeroOffsetX);
 
   /* road line type:
@@ -51,22 +115,49 @@ void showRemGraph(const GraphConfig* config,
   const float naviRange = linesInfo->alc_coeffs[7];
   Point predictPosn = {0.0f, 0.0f};
 
-  // REM dp lines
-  if (linesInfo->ego_dp[0]) {
-    setlinestyle(PS_SOLID, 3);
-    drawQuinticPolyTraj(linesInfo->ego_dp, BLUE, linesInfo->ego_dp[6],
-                        linesInfo->ego_dp[7], linesInfo->ego_dp[7], &lineEnd);
-  }
-  if (linesInfo->tar_dp[0]) {
-    setlinestyle(PS_SOLID, 3);
-    drawQuinticPolyTraj(linesInfo->tar_dp, BROWN, linesInfo->tar_dp[6],
-                        linesInfo->tar_dp[7], linesInfo->tar_dp[7], &lineEnd);
-  }
-  // REM dp points
-  drawDpPoints(remPointsInfo->egoDpPoint, remPointsInfo->nums, BLUE);
-  drawDpPoints(remPointsInfo->tarDpPoint, remPointsInfo->nums, BROWN);
+  //  REM origin ego / tar DP lines
+  const int egoOrgColor = BLUE;
+  const int tarOrgColor = BROWN;
+  const int egoOffColor = LIGHTBLUE;
+  const int tarOffColor = RGB(208, 159, 126);
 
-  // ego lane PA path, c0 ~ c3
+  if (remInfo->ego_dp_org[0]) {
+    setlinestyle(PS_SOLID, 2);
+    drawQuinticPolyTraj(remInfo->ego_dp_org, egoOrgColor,
+                        remInfo->ego_dp_org[6], remInfo->ego_dp_org[7],
+                        remInfo->ego_dp_org[7], &lineEnd);
+  }
+  if (remInfo->tar_dp_org[0]) {
+    setlinestyle(PS_SOLID, 2);
+    drawQuinticPolyTraj(remInfo->tar_dp_org, tarOrgColor,
+                        remInfo->tar_dp_org[6], remInfo->tar_dp_org[7],
+                        remInfo->tar_dp_org[7], &lineEnd);
+  }
+
+  // REM offline ego / tar DP lines
+  if (remInfo->ego_dp_off[0]) {
+    setlinestyle(PS_SOLID, 3);
+    drawQuinticPolyTraj(remInfo->ego_dp_off, egoOffColor,
+                        remInfo->ego_dp_off[6], remInfo->ego_dp_off[7],
+                        remInfo->ego_dp_off[7], &lineEnd);
+  }
+  if (remInfo->tar_dp_off[0]) {
+    setlinestyle(PS_SOLID, 3);
+    drawQuinticPolyTraj(remInfo->tar_dp_off, tarOffColor,
+                        remInfo->tar_dp_off[6], remInfo->tar_dp_off[7],
+                        remInfo->tar_dp_off[7], &lineEnd);
+  }
+
+  // REM dp lines text info
+  drawRemDpInfo(config, remInfo, egoOrgColor, tarOrgColor, egoOffColor,
+                tarOffColor);
+
+  // REM dp points
+  setlinestyle(PS_SOLID, 1);
+  drawDpPoints(remInfo->ego_dp_point, remInfo->point_nums, egoOrgColor);
+  drawDpPoints(remInfo->tar_dp_point, remInfo->point_nums, egoOffColor);
+
+  // PA path, c0 ~ c3
   setlinestyle(PS_DASHDOT, 1);
   drawPiecewiseCubicPolyTraj(&linesInfo->ego_coeffs, MAGENTA, 0.0f,
                              &predictPosn);
@@ -93,7 +184,7 @@ void showRemGraph(const GraphConfig* config,
   drawCar(&ego, str_ego, 1, 0, 10);
 
   // ego spd info and lane change status
-  drawMotionInfo(motionInfo);
+  // drawMotionInfo(motionInfo);
   drawBEVRuler(zeroOffsetX);
   return;
 }

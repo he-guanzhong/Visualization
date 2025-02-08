@@ -145,14 +145,15 @@ void LoadLog(const char* const csvFileName, int* totalFrame) {
       }
       printf("\n");
     } */
-#ifdef REM_DEMO_TEST
-  RemDataParsing(totalFrame);
-#endif
+
 #ifdef RADAR_DEMO_TEST
   RadarDataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #endif
 #ifdef AGSM_DEMO_TEST
   AgsmDataParsing(values, numColumns, columns, valuesCount, totalFrame);
+#endif
+#ifdef REM_DEMO_TEST
+  RemDataParsing(totalFrame);
 #else
   SpdPlanDataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #endif
@@ -1033,8 +1034,8 @@ void SpdPlanDataParsing(float** values,
     }
     accDisRef_data[t] = ACC_DREF ? values[ACC_DREF][t] : 0;
     truncated_col_data[t] = TRUC_CL ? values[TRUC_CL][t] : 0;
-    specialCaseFlg_data[t] = SPC_FLG ? values[SPC_FLG][t] : 0;
-    scenarioFlg_data[t] = SCE_FLG ? values[SCE_FLG][t] : 0;
+    specialCaseFlg_data[t] = values[SPC_FLG][t];
+    scenarioFlg_data[t] = values[SCE_FLG][t];
 
     // alc find gap
     for (int k = 0; k < 6; k++) {
@@ -1167,12 +1168,12 @@ void SpdPlanDataParsing(float** values,
       merge_dir_data[t] = values[MRG_DIR][t];
       merge_id_data[t] = values[MRG_ID][t];
     }
-    for (int k = 0; k < 4; k++) {
-      if (EGO_DP[k] == 0)
-        continue;
-      ego_dp_data[k][t] = values[EGO_DP[k]][t];
-      tar_dp_data[k][t] = values[TAR_DP[k]][t];
-    }
+    /*     for (int k = 0; k < 4; k++) {
+          if (EGO_DP[k] == 0)
+            continue;
+          ego_dp_data[k][t] = values[EGO_DP[k]][t];
+          tar_dp_data[k][t] = values[TAR_DP[k]][t];
+        } */
   }
 
   return;

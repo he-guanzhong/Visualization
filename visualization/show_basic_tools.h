@@ -75,8 +75,8 @@ typedef struct {
   float leftleft_coeffs[8];
   float right_coeffs[8];
   float rightright_coeffs[8];
-  float ego_dp[8];
-  float tar_dp[8];
+  float ego_dp_org[8];
+  float tar_dp_org[8];
 } LinesInfo;
 
 void coordinateTrans1(Point* point);

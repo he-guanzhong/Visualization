@@ -749,7 +749,7 @@ void initBEVGraph(const GraphConfig* config, const float zeroOffsetX) {
   s_xScale2 = len / config->rangeY;
   s_yScale2 = wid / config->rangeX;
   s_origin2.y -= s_yScale2 * zeroOffsetX;
-  s_infoAreaBoundary = config->oriX + config->length - 65;
+  s_infoAreaBoundary = config->oriX + config->length - 70;
 
   // title
   settextcolor(BLACK);
@@ -767,7 +767,9 @@ void showBEVGraph(const GraphConfig* config,
                   const TsrInfo* tsrInfo,
                   const MotionInfo* motionInfo) {
   initBEVGraph(config, zeroOffsetX);
+  // Note: Origin slightly further left, for aesthetic purpose
   s_origin2.x *= 0.95f;
+
   // tsr info
   drawTsrSign(tsrInfo);
 
@@ -809,15 +811,17 @@ void showBEVGraph(const GraphConfig* config,
   Point predictPosn = {0.0f, 0.0f};
 
   if (show_dp_line) {
-    if (linesInfo->ego_dp[0]) {
+    if (linesInfo->ego_dp_org[0]) {
       setlinestyle(PS_SOLID, 3);
-      drawQuinticPolyTraj(linesInfo->ego_dp, BLUE, linesInfo->ego_dp[6],
-                          linesInfo->ego_dp[7], linesInfo->ego_dp[7], &lineEnd);
+      drawQuinticPolyTraj(linesInfo->ego_dp_org, BLUE, linesInfo->ego_dp_org[6],
+                          linesInfo->ego_dp_org[7], linesInfo->ego_dp_org[7],
+                          &lineEnd);
     }
-    if (linesInfo->tar_dp[0]) {
+    if (linesInfo->tar_dp_org[0]) {
       setlinestyle(PS_SOLID, 3);
-      drawQuinticPolyTraj(linesInfo->tar_dp, BROWN, linesInfo->tar_dp[6],
-                          linesInfo->tar_dp[7], linesInfo->tar_dp[7], &lineEnd);
+      drawQuinticPolyTraj(linesInfo->tar_dp_org, BROWN,
+                          linesInfo->tar_dp_org[6], linesInfo->tar_dp_org[7],
+                          linesInfo->tar_dp_org[7], &lineEnd);
     }
   }
   // ego lane path, c0 ~ c3
@@ -908,7 +912,6 @@ bool buttonOneStep(ExMessage* msg,
 }
 
 int functionButton(ExMessage msg) {
-  // while (1) {
   if (buttonShowPred(&msg, s_infoAreaBoundary - 2, 50, 60, 30,
                      &show_predict_swt)) {
     return 1;
@@ -919,12 +922,6 @@ int functionButton(ExMessage msg) {
   } else {
     return 0;
   }
-  // BeginBatchDraw();
-  //  cleardevice();
-
-  // EndBatchDraw();
-  // msg.message = 0;
-  // return;
 }
 
 void keyboardTest() {
