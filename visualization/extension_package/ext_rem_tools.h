@@ -22,6 +22,8 @@ void drawRemDpInfo(const GraphConfig* config,
                    const int egoOffColor,
                    const int tarOffColor);
 
+void drawRemRuler(const float zeroOffsetX);
+
 /// @brief REM graph, x-axis_forward_vertical, y-axis_lateral_horizontal
 /// @param config         basic configuration
 /// @param zeroOffsetX    distance behind ego vehicle to be displayed

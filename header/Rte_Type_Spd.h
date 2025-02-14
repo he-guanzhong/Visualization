@@ -353,6 +353,7 @@ typedef struct {
 
 /* Exported Global Signals for Dataset Calibration */
 extern uint8 KbPASP_SpdPlanSwitch;
+extern uint8 KbPASP_SpdPlanPreDecelSwt;
 extern float32 KfPASP_CtrlPoint_s;
 
 /*

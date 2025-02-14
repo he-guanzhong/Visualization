@@ -375,8 +375,8 @@ void DisplayLog(const int length, const int width, const int offset) {
         ConvertMotionInfo();
 
         if (playMode == REM) {
-          const GraphConfig BEV_cfg = {length, width,  offset, 0,
-                                       0,      100.0f, 30.0f};
+          const GraphConfig BEV_cfg = {length, width, offset, 0,
+                                       0,      50.0f, 5.0f};
           showRemGraph(&BEV_cfg, 0, &sLinesInfo, &sMotionInfo, &sRemInfo);
         } else if (playMode == AGSM) {
           const GraphConfig BEV_cfg = {length, width,  offset, 0,

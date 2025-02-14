@@ -6,7 +6,7 @@ void drawDpPoints(const Point* pointsInfo, const int nums, const int color) {
     coordinateTrans2(&obj_posn);
     setlinecolor(BLACK);
     setfillcolor(color);
-    solidcircle(obj_posn.x, obj_posn.y, 5);
+    solidcircle(obj_posn.x, obj_posn.y, 2);
   }
   return;
 }
@@ -17,8 +17,8 @@ void drawRemDpInfo(const GraphConfig* config,
                    const int tarOrgColor,
                    const int egoOffColor,
                    const int tarOffColor) {
-  const int infoAreaLeftBdy[2] = {config->oriX + config->length - 150,
-                                  config->oriX + config->length - 70};
+  const int infoAreaLeftBdy[2] = {config->oriX + config->length - 180,
+                                  config->oriX + config->length - 80};
   const int infoAreaUpBdy[2] = {160, 280};
 
   // set spd display, only 5 characters in title is acceptable
@@ -27,12 +27,11 @@ void drawRemDpInfo(const GraphConfig* config,
   const char tar_org_title[10] = "Tar Org";
   const char tar_off_title[10] = "Tar Off";
 
-  char ego_org_coeff[4][12] = {"C0: ", "C1: ", "C2: ", "C3: "};
-  char tar_org_coeff[4][12] = {"C0: ", "C1: ", "C2: ", "C3: "};
-  char ego_off_coeff[4][12] = {"", "", "", ""};
-  char tar_off_coeff[4][12] = {"", "", "", ""};
-  // char ego_off_coeff[4][10] = {"C0: ", "C1: ", "C2: ", "C3: "};
-  // char tar_off_coeff[4][10] = {"C0: ", "C1: ", "C2: ", "C3: "};
+  char ego_org_coeff[4][15] = {"C0: ", "C1: ", "C2: ", "C3: "};
+  char tar_org_coeff[4][15] = {"C0: ", "C1: ", "C2: ", "C3: "};
+  char ego_off_coeff[4][15] = {"", "", "", ""};
+  char tar_off_coeff[4][15] = {"", "", "", ""};
+
   const int coeff_len1 = strlen(ego_org_coeff[0]);
   const int coeff_len2 = strlen(ego_off_coeff[0]);
   const int text_height = textheight(ego_org_coeff[0]);
@@ -47,16 +46,16 @@ void drawRemDpInfo(const GraphConfig* config,
 
   for (int i = 0; i < 4; i++) {
     snprintf(ego_org_coeff[i] + coeff_len1,
-             sizeof(ego_org_coeff[i]) - coeff_len1, "%.3f",
+             sizeof(ego_org_coeff[i]) - coeff_len1, "%.6f",
              remInfo->ego_dp_org[i]);
     snprintf(tar_org_coeff[i] + coeff_len1,
-             sizeof(tar_org_coeff[i]) - coeff_len1, "%.3f",
+             sizeof(tar_org_coeff[i]) - coeff_len1, "%.6f",
              remInfo->tar_dp_org[i]);
     snprintf(ego_off_coeff[i] + coeff_len2,
-             sizeof(ego_off_coeff[i]) - coeff_len2, "%.3f",
+             sizeof(ego_off_coeff[i]) - coeff_len2, "%.6f",
              remInfo->ego_dp_off[i]);
     snprintf(tar_off_coeff[i] + coeff_len2,
-             sizeof(tar_off_coeff[i]) - coeff_len2, "%.3f",
+             sizeof(tar_off_coeff[i]) - coeff_len2, "%.6f",
              remInfo->tar_dp_off[i]);
     settextcolor(egoOrgColor);
     outtextxy(infoAreaLeftBdy[0], infoAreaUpBdy[0] + text_height * (i + 1),
@@ -75,12 +74,48 @@ void drawRemDpInfo(const GraphConfig* config,
   return;
 }
 
+void drawRemRuler(const float zeroOffsetX,
+                  const float rangeX,
+                  const float rangeY) {
+  settextcolor(BLACK);
+  const float coordinate_x_of_ruler_y = fminf(-4.0f, -zeroOffsetX);
+  Point ruler_x[4] = {{-rangeX * 0.2f, -rangeY / 2.0f},
+                      {0.0f, -rangeY / 2.0f},
+                      {rangeX * 0.4f, -rangeY / 2.0f},
+                      {rangeX, -rangeY / 2.0f}};
+  Point ruler_y[2] = {{coordinate_x_of_ruler_y, -rangeY / 2.0f},
+                      {coordinate_x_of_ruler_y, rangeY / 2.0f}};
+  char str[7] = "";
+  for (int i = 0; i < 4; ++i) {
+    snprintf(str, sizeof(str), "%.1f m", ruler_x[i].x);
+    coordinateTrans2(&ruler_x[i]);
+    line(ruler_x[i].x, ruler_x[i].y, ruler_x[i].x - 10, ruler_x[i].y);
+    outtextxy(ruler_x[i].x, ruler_x[i].y - textheight(str) / 2, str);
+  }
+  for (int i = 0; i < 2; i++) {
+    snprintf(str, sizeof(str), "%.1f m", ruler_y[i].y);
+    coordinateTrans2(&ruler_y[i]);
+    line(ruler_y[i].x, ruler_y[i].y, ruler_y[i].x, ruler_y[i].y + 10);
+    outtextxy(ruler_y[i].x - textwidth(str) / 2, ruler_y[i].y + 10, str);
+  }
+}
+
 void showRemGraph(const GraphConfig* config,
                   const float zeroOffsetX,
                   const LinesInfo* linesInfo,
                   const MotionInfo* motionInfo,
                   const RemInfo* remInfo) {
   initBEVGraph(config, zeroOffsetX);
+
+  // ego car
+  setlinecolor(LIGHTRED);
+  setfillcolor(WHITE);
+  setlinestyle(PS_SOLID);
+  Point ego = {0.0f, 0};
+  char str_ego[2][8] = {};
+  strcpy(str_ego[0], "ego");
+  strCompletion(str_ego, 10, motionInfo->egoSpd);
+  drawCar(&ego, str_ego, 1, 0, 10);
 
   /* road line type:
   0-unknown, 1-solid, 2-dash, 3-Double Lane(Near Dashed,FarSolid)
@@ -167,24 +202,8 @@ void showRemGraph(const GraphConfig* config,
   drawQuinticPolyTraj(linesInfo->alc_coeffs, RED, 0.0f, naviRange, 120.0f,
                       &predictPosn);
 
-  // ego car
-  if (1 == motionInfo->enblSts) {
-    setfillcolor(LIGHTRED);
-  } else if (2 == motionInfo->enblSts) {
-    setfillcolor(MAGENTA);
-  } else {
-    setfillcolor(RED);
-  }
-  setlinecolor(RED);
-  setlinestyle(PS_SOLID);
-  Point ego = {0.0f, 0};
-  char str_ego[2][8] = {};
-  strcpy(str_ego[0], "ego");
-  strCompletion(str_ego, 10, motionInfo->egoSpd);
-  drawCar(&ego, str_ego, 1, 0, 10);
-
   // ego spd info and lane change status
   // drawMotionInfo(motionInfo);
-  drawBEVRuler(zeroOffsetX);
+  drawRemRuler(zeroOffsetX, config->rangeX, config->rangeY);
   return;
 }
