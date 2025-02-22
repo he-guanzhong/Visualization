@@ -214,7 +214,7 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
                tsrInfo->tsr_signs[i].type == 80) {
       strcpy(tsr_sign, "Cnl");
       const int r = textheight(tsr_sign) * 0.75f;
-      const int r_x = (double)r / sqrt(2);
+      const int r_x = (float)r / sqrtf(2.0f);
       setlinecolor(BLACK);
       line(tsr_pos.x - r_x, tsr_pos.y + r_x, tsr_pos.x + r_x, tsr_pos.y - r_x);
       circle(tsr_pos.x, tsr_pos.y, r);
@@ -230,6 +230,7 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
   char inner_set_title[10] = "Inn: ";
   char spec_case_title[10] = "Spc: ";
   char scenario_title[10] = "Sce: ";
+  char maxDecel_title[10] = "Dcl: ";
 
   const int cur_spd = round(motionInfo->egoSpd * 1.04f * 3.6f);
   const int spd_lmt = round(motionInfo->spdLmt);
@@ -242,6 +243,8 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
            inner_spd_lmt);
   snprintf(tau_title + tle_len, sizeof(tau_title) - tle_len, "%d",
            motionInfo->tauGap);
+  snprintf(maxDecel_title + tle_len, sizeof(maxDecel_title) - tle_len, "%.2f",
+           motionInfo->maxDecel);
 
   // spd plan inner value
   switch (motionInfo->specCaseFlg) {
@@ -332,6 +335,8 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
             spec_case_title);
   outtextxy(s_infoAreaBoundary, s_origin2.y - 5 * textheight(spd_title),
             scenario_title);
+  outtextxy(s_infoAreaBoundary, s_origin2.y + 3 * textheight(spd_title),
+            maxDecel_title);
 
   // ACC mode: 3-stand still, 4-stand active, 5-active, 6-override
   if (motionInfo->accMode <= 5 && motionInfo->accMode >= 3) {
@@ -464,7 +469,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
                    const float* LH0,
                    const float* LH1,
                    const float cur_spd) {
-  const float objSpdLatConf = 0.9f;
+  const float objSpdLatConf = 0.55f;
   float obs_speed_y_cor = 0;
   for (int i = 0; i < ssmObjs->obj_num; i++) {
     if (!ssmObjs->obj_lists[i].valid_flag) {
@@ -479,17 +484,18 @@ void drawObstacles(const SsmObjType* ssmObjs,
     drawCar(&obs_cur, str_obs_cur, obs->type, obs->pos_yaw, i);
 
     // obs latspd not stable, use ego centre line offset
-    Point obs_pred, obs_pred_path[6];
-    float obs_pred_yaw, obs_pred_path_yaw[6];
-    float objPosnLgt[6], objPosnLat[6];
+    Point obs_pred, obs_pred_path[11];
+    float obs_pred_yaw, obs_pred_path_yaw[11];
+    float objPosnLgt[11], objPosnLat[11];
 
     if (i == 0 || i == 2 || i == 3 || i == 6 || i == 7) {
       obs_speed_y_cor = obs->speed_y * objSpdLatConf;
     } else {
       obs_speed_y_cor = 0;
     }
-    for (int j = 0; j < 6; j++) {
-      obs_pred_path[j].x = obs->pos_x + obs->speed_x * j;
+    const float t_interval = 0.5f;
+    for (int j = 0; j <= 10; j++) {
+      obs_pred_path[j].x = obs->pos_x + obs->speed_x * j * t_interval;
       float predHeadingAg = obs->pos_yaw;
       float predLatOffset = obs_speed_y_cor * j;
       objPosnLgt[j] = obs_pred_path[j].x;
@@ -516,8 +522,8 @@ void drawObstacles(const SsmObjType* ssmObjs,
       obs_pred_path_yaw[j] = predHeadingAg;
     }
 
-    obs_pred = obs_pred_path[5];
-    obs_pred_yaw = obs_pred_path_yaw[5];
+    obs_pred = obs_pred_path[10];
+    obs_pred_yaw = obs_pred_path_yaw[10];
     // cipv, considier 0->1s const acc, 1->5s const spd
     if (obs->lane_index == 3 && obs->pos_x > 0) {
       const float const_acc_time = 1.0f;
@@ -537,7 +543,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
       setlinestyle(PS_DASH);
 
       coordinateTrans2(&obs_pred_path[0]);
-      for (int j = 0; j < 5; j++) {
+      for (int j = 0; j < 10; j++) {
         coordinateTrans2(&obs_pred_path[j + 1]);
         line(obs_pred_path[j].x, obs_pred_path[j].y, obs_pred_path[j + 1].x,
              obs_pred_path[j + 1].y);
@@ -572,7 +578,9 @@ void drawBasicGraph(const int len,
                     const int wid,
                     const float rangeX,
                     const float rangeY,
-                    const float offsetY) {
+                    const float offsetY,
+                    const int gridNumsX,
+                    const int gridNumsY) {
   // boundary
   setlinecolor(BLACK);
   rectangle(s_origin1.x, s_origin1.y, s_origin1.x + len, s_origin1.y - wid);
@@ -581,30 +589,44 @@ void drawBasicGraph(const int len,
   settextcolor(BLACK);
   settextstyle(20, 0, "Calibri");
   // horizontal lines
-  const float intervalX = rangeX / 5.0f, intervalY = rangeY / 6.0f;
-  for (int i = 1; i <= 6; i++) {
+  const float intervalX = rangeX / gridNumsX, intervalY = rangeY / gridNumsY;
+  for (int i = 1; i <= gridNumsY; i++) {
     Point point1 = {0.0f, i * intervalY};
     Point point2 = {rangeX, i * intervalY};
     coordinateTrans1(&point1);
     coordinateTrans1(&point2);
     line(point1.x, point1.y, point2.x, point2.y);
     point1 = {0.0f, i * intervalY};
-    char str[4] = {0};
-    itoa(i * intervalY - offsetY, str, 10);
+    char str[8] = "";
+    const float val = i * intervalY - offsetY;
+    if (intervalY > 0.9f) {
+      itoa(i * intervalY - offsetY, str, 10);
+    } else if (intervalY < 0.02f) {
+      snprintf(str, sizeof(str), "%.4f", val);
+    } else {
+      snprintf(str, sizeof(str), "%.2f", val);
+    }
     coordinateTrans1(&point1);
     outtextxy(point1.x - textwidth(str) - textwidth(" "),
               point1.y - textheight(str) / 2, str);
   }
   // vertical lines
-  for (int i = 1; i <= 5; i++) {
+  for (int i = 1; i <= gridNumsX; i++) {
     Point point1 = {i * intervalX, 0.0f};
     Point point2 = {i * intervalX, rangeY};
     coordinateTrans1(&point1);
     coordinateTrans1(&point2);
     line(point1.x, point1.y, point2.x, point2.y);
     point1 = {i * intervalX, 0.0f};
-    char str[4] = {0};
-    itoa(i * intervalX, str, 10);
+    char str[8] = {0};
+    const float val = i * intervalX;
+    if (intervalX > 0.9f) {
+      itoa(i * intervalX, str, 10);
+    } else if (intervalX < 0.02f) {
+      snprintf(str, sizeof(str), "%.4f", val);
+    } else {
+      snprintf(str, sizeof(str), "%.2f", val);
+    }
     coordinateTrans1(&point1);
     outtextxy(point1.x - textwidth(str) / 2, point1.y, str);
   }
@@ -623,7 +645,8 @@ void showXYGraph(const GraphConfig* config,
   s_xScale1 = len / config->rangeX;
   s_yScale1 = wid / config->rangeY;
 
-  drawBasicGraph(len, wid, config->rangeX, config->rangeY, zeroOffsetY);
+  drawBasicGraph(len, wid, config->rangeX, config->rangeY, zeroOffsetY,
+                 config->gridNumsX, config->gridNumsY);
 
   //  titles
   settextcolor(BLACK);
@@ -640,7 +663,7 @@ void showXYGraph(const GraphConfig* config,
   } else if (plot->title[0] == 'S') {
     strcpy(titleY, "S (m)");
   } else {
-    strcpy(titleY, "y");
+    strcpy(titleY, "");
   }
 
   outtextxy(s_origin1.x - 50, s_origin1.y - wid / 2, titleY);
@@ -749,7 +772,7 @@ void initBEVGraph(const GraphConfig* config, const float zeroOffsetX) {
   s_xScale2 = len / config->rangeY;
   s_yScale2 = wid / config->rangeX;
   s_origin2.y -= s_yScale2 * zeroOffsetX;
-  s_infoAreaBoundary = config->oriX + config->length - 70;
+  s_infoAreaBoundary = config->oriX + config->length - 65;
 
   // title
   settextcolor(BLACK);
@@ -866,19 +889,72 @@ void showBEVGraph(const GraphConfig* config,
   drawBEVRuler(zeroOffsetX);
 }
 
+void showLineChart(GraphConfig* chartConfig,
+                   float zeroOffsetY,
+                   const int curFrame,
+                   const int totalFrame,
+                   const int winFrames,
+                   const float* time_data,
+                   const float* original_data,
+                   const float* loopback_data,
+                   const char* title,
+                   const bool fixedRangeYFlg) {
+  const int startFrame = fmax(0, curFrame - winFrames / 2);
+  const int endFrame = fmin(totalFrame - 1, curFrame + winFrames / 2);
+
+  Point original_arr[winFrames];
+  Point loopback_arr[winFrames];
+  float min_arr_y = 100.0f, max_arr_y = -100.0f;
+  for (int i = 0; i < winFrames; i++) {
+    original_arr[i].x = time_data[i + startFrame] - time_data[startFrame];
+    original_arr[i].y = original_data[i + startFrame];
+    loopback_arr[i].x = original_arr[i].x;
+    loopback_arr[i].y = loopback_data[i + startFrame];
+    min_arr_y = fmin(min_arr_y, original_arr[i].y);
+    max_arr_y = fmax(max_arr_y, original_arr[i].y);
+  }
+
+  chartConfig->rangeX = original_arr[winFrames - 1].x - original_arr[0].x;
+  if (!fixedRangeYFlg) {
+    int interval_tmp = chartConfig->gridNumsY / chartConfig->rangeY;
+    zeroOffsetY = fmax(zeroOffsetY, fmax(fabsf(min_arr_y), fabsf(max_arr_y)));
+    zeroOffsetY = ceilf(zeroOffsetY * interval_tmp) / interval_tmp;
+    chartConfig->rangeY = fmax(chartConfig->rangeY, zeroOffsetY * 2);
+  }
+  char title1[25] = "";
+  strcpy(title1, title);
+  float* curveCoeff = NULL;
+  Point keyPoint;
+  PlotInfo plot_info1 = {title1,    original_arr, &keyPoint, 0,
+                         winFrames, BLUE,         false,     curveCoeff};
+  char title2[1] = "";
+  PlotInfo plot_info2 = {title2,    loopback_arr, &keyPoint, 0,
+                         winFrames, RED,          false,     curveCoeff};
+  showXYGraph(chartConfig, zeroOffsetY, &plot_info1);
+  showXYGraph(chartConfig, zeroOffsetY, &plot_info2);
+  return;
+}
+
 // following functions beckup
 // delay 100ms to eliminate misoperation caused by long press
 bool inArea(int mx, int my, int x, int y, int w, int h) {
   return (mx > x && mx < x + w && my > y && my < y + h);
 }
-bool buttonShowPred(ExMessage* msg, int x, int y, int w, int h, bool* swt) {
+bool buttonStateSwitch(const ExMessage* msg,
+                       int x,
+                       int y,
+                       int w,
+                       int h,
+                       bool* swt,
+                       const char* txtOn,
+                       const char* txtOff) {
   bool ans =
       msg->message == WM_LBUTTONDOWN && inArea(msg->x, msg->y, x, y, w, h);
   if (ans) {
     *swt = !(*swt);
     Sleep(100);
   }
-  const char* text = (*swt) ? "Pred On" : "Pred Off";
+  const char* text = (*swt) ? txtOn : txtOff;
   if (inArea(msg->x, msg->y, x, y, w, h))
     setfillcolor(CYAN);
   else
@@ -912,8 +988,8 @@ bool buttonOneStep(ExMessage* msg,
 }
 
 int functionButton(ExMessage msg) {
-  if (buttonShowPred(&msg, s_infoAreaBoundary - 2, 50, 60, 30,
-                     &show_predict_swt)) {
+  if (buttonStateSwitch(&msg, s_infoAreaBoundary - 2, 50, 60, 30,
+                        &show_predict_swt, "Pred On", "Pred Off")) {
     return 1;
   } else if (buttonOneStep(&msg, s_infoAreaBoundary - 2, 80, 60, 30, "Prev")) {
     return 2;

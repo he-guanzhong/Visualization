@@ -16,6 +16,7 @@ int truncated_col_data[DATA_NUM];
 float innerSpdLmt_data[DATA_NUM];
 int specialCaseFlg_data[DATA_NUM];
 int scenarioFlg_data[DATA_NUM];
+float maxDecel_data[DATA_NUM];
 int alcGapIndex_data[DATA_NUM];
 float alcGapTarS_data[DATA_NUM];
 float alcGapTarV_data[DATA_NUM];
@@ -59,6 +60,3 @@ int merge_id_data[DATA_NUM];
 float original_data[DATA_NUM];
 float loopback_data[DATA_NUM];
 float tempMeasureVal_data[4][DATA_NUM];
-
-// float ego_dp_data[4][DATA_NUM];
-// float tar_dp_data[4][DATA_NUM];

@@ -38,13 +38,13 @@ void ShowSpdPlanInterface(const int length,
                           const LinesInfo* linesInfo,
                           const MotionInfo* motionInfo);
 
-void DisplayLineChart(const int length,
-                      const int width,
-                      const int offset,
-                      const int oriX,
-                      const int oriY,
-                      const int curFrame,
-                      const int frameNums);
+void DisplaySpdPlanLineChart(const int length,
+                             const int width,
+                             const int offset,
+                             const int oriX,
+                             const int oriY,
+                             const int curFrame,
+                             const int winFrames);
 
 void DisplayLog(const int length, const int width, const int offset);
 

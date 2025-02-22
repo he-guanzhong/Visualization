@@ -14,14 +14,23 @@ extern int current_frame;
 
 float ego_dp_org_data[4][DATA_NUM];  // c0~c3
 float tar_dp_org_data[4][DATA_NUM];  // c0~c3
-float ego_dp_off_data[4][DATA_NUM];  // c0~c3
-float tar_dp_off_data[4][DATA_NUM];  // c0~c3
+float ego_dp_off_data[6][DATA_NUM];  // c0~c3
+float tar_dp_off_data[6][DATA_NUM];  // c0~c3
 
-int dp_point_nums_data[DATA_NUM];
+int ego_dp_point_nums_data[DATA_NUM];
+int tar_dp_point_nums_data[DATA_NUM];
 float ego_dp_point_x_data[POINT_NUM][DATA_NUM];
 float ego_dp_point_y_data[POINT_NUM][DATA_NUM];
 float tar_dp_point_x_data[POINT_NUM][DATA_NUM];
 float tar_dp_point_y_data[POINT_NUM][DATA_NUM];
+
+int dp_usage[2][DATA_NUM];
+float special_point_distance_data[2][DATA_NUM];  // 0:merge 1:split
+int split_attribute_data[2][DATA_NUM];           // 0:direction 1:id
+int forward_lanes_data[4][DATA_NUM];
+
+float left_lanemark_data[3][DATA_NUM];
+float right_lanemark_data[3][DATA_NUM];
 
 void RemDataParsing(int* totalFrame) {
   /* *totalFrame = current_frame;

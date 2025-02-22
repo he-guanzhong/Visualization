@@ -20,6 +20,7 @@ extern int truncated_col_data[DATA_NUM];
 extern float innerSpdLmt_data[DATA_NUM];
 extern int specialCaseFlg_data[DATA_NUM];
 extern int scenarioFlg_data[DATA_NUM];
+extern float maxDecel_data[DATA_NUM];
 extern int alcGapIndex_data[DATA_NUM];
 extern float alcGapTarS_data[DATA_NUM];
 extern float alcGapTarV_data[DATA_NUM];
@@ -63,8 +64,5 @@ extern int merge_id_data[DATA_NUM];
 extern float original_data[DATA_NUM];
 extern float loopback_data[DATA_NUM];
 extern float tempMeasureVal_data[4][DATA_NUM];
-
-// extern float ego_dp_data[4][DATA_NUM];
-// extern float tar_dp_data[4][DATA_NUM];
 
 #endif  // SHOW_DATA_STORAGE_H_

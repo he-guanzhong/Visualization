@@ -157,7 +157,7 @@ void CaseFollow(SsmObjType* ssmObjs) {
   ssmObjs->obj_lists[0].speed_y = 0.0f;
   ssmObjs->obj_lists[0].type = 1;
   ssmObjs->obj_lists[0].lane_index = 3;
-  ssmObjs->obj_lists[0].valid_flag = TRUE;
+  ssmObjs->obj_lists[0].valid_flag = FALSE;
 
   ssmObjs->obj_lists[2].pos_x = 30;
   ssmObjs->obj_lists[2].pos_y = 0;
@@ -200,7 +200,7 @@ void CaseRearObs(SsmObjType* ssmObjs) {
 void LoadDummySSmData(SsmObjType* ssmObjs) {
   // CaseLeftChange(ssmObjs);
   // CaseSideCarMoveSlowly(ssmObjs);
-  // CaseFollow(ssmObjs);
+  CaseFollow(ssmObjs);
   // CaseCutIn(ssmObjs);
   // CaseRearObs(ssmObjs);
   return;
@@ -212,7 +212,7 @@ void LoadDummyMotionData(float* egoSpd,
                          int* accMode,
                          int* tauGap,
                          AlcBehavior* alcBehav) {
-  *egoSpd = 25.0f, *egoAcc = 0.0f, *spdLmt = 100.0f;
+  *egoSpd = 30.0f, *egoAcc = 0.0f, *spdLmt = 100.0f;
   *accMode = 5;
   *tauGap = 1;
   alcBehav->AutoLaneChgSide = 0;

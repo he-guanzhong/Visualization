@@ -2,7 +2,7 @@
 Version;V1.1
 MultiRasterSeparator;&
 
-[PASP]
+[pasp]
 VbPASP_IVPresent_flg
 VbPASP_NIIVLPresent_flg
 VbPASP_NIIVRPresent_flg
@@ -54,6 +54,8 @@ VfINP_TSRSignLgDist0Proc_m
 VfINP_TSRSignLgDist1Proc_m
 VfINP_TSRSignLgDist2Proc_m
 VfLGIN_TsrTrgtSpdReq_kph
+VfPASP_ACC_Dref_m
+VfPASP_ACC_SetSpeedByCurve_kph
 VfPASP_ALC_path_C0
 VfPASP_ALC_path_C1
 VfPASP_ALC_path_C2
@@ -194,6 +196,7 @@ VfPASP_StPointCtrl0_t_s
 VfPASP_StPointCtrl0_v_mps
 VfPASP_egoAcc_mpss
 VfPASP_egoSpd_mps
+VfPASP_maxDecel_mpss
 VfPASP_spdLmt_kph
 ViPASP_EHMerge_DP_ID
 VuINP_TSRSignName0Proc

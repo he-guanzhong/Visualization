@@ -5,6 +5,7 @@
 #include "visualization/extension_package/ext_rem_tools.h"
 
 #ifdef REM_DEMO_TEST
+
 void ReadRemInputData(const int t,
                       MotionInfo* motionInfo,
                       LinesInfo* linesInfo,

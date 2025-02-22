@@ -61,20 +61,26 @@ void ReadRemInputData(const int t,
   remInfo->ego_dp_org[7] = remInfo->tar_dp_org[7] = 40;
 
   // REM dp off lines
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 6; i++) {
     remInfo->ego_dp_off[i] = ego_dp_off_data[i][t];
     remInfo->tar_dp_off[i] = tar_dp_off_data[i][t];
   }
-  remInfo->ego_dp_off[6] = remInfo->tar_dp_off[6] = -5;
-  remInfo->ego_dp_off[7] = remInfo->tar_dp_off[7] = 40;
+  remInfo->ego_dp_off[8] = remInfo->tar_dp_off[8] = -5;
+  remInfo->ego_dp_off[9] = remInfo->tar_dp_off[9] = 40;
 
   // REM dp points
-  remInfo->point_nums = dp_point_nums_data[t];
-  for (int i = 0; i < remInfo->point_nums; i++) {
+  remInfo->ego_point_nums = ego_dp_point_nums_data[t];
+  remInfo->tar_point_nums = tar_dp_point_nums_data[t];
+  for (int i = 0; i < remInfo->ego_point_nums; i++) {
     remInfo->ego_dp_point[i].x = ego_dp_point_x_data[i][t];
     remInfo->ego_dp_point[i].y = ego_dp_point_y_data[i][t];
+  }
+  for (int i = 0; i < remInfo->tar_point_nums; i++) {
     remInfo->tar_dp_point[i].x = tar_dp_point_x_data[i][t];
     remInfo->tar_dp_point[i].y = tar_dp_point_y_data[i][t];
+  }
+  for (int i = 0; i < 2; i++) {
+    remInfo->dp_usage[i] = dp_usage[i][t];
   }
 
   return;

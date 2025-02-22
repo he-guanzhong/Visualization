@@ -16,13 +16,15 @@ typedef struct {
 } Point;
 
 typedef struct {
-  int length;    // plot area length
-  int width;     // plot area width
-  int offset;    // distance between graph and plot area boundary
-  int oriX;      // plot area origin x in overall canvas (LH coordinate)
-  int oriY;      // plot area origin y in overall canvas (LH coordinate)
-  float rangeX;  // display range of x-axis
-  float rangeY;  // display range of y-axis
+  int length;     // plot area length
+  int width;      // plot area width
+  int offset;     // distance between graph and plot area boundary
+  int oriX;       // plot area origin x in overall canvas (LH coordinate)
+  int oriY;       // plot area origin y in overall canvas (LH coordinate)
+  float rangeX;   // display range of x-axis
+  float rangeY;   // display range of y-axis
+  int gridNumsX;  // vertical gridline nums of x-axis
+  int gridNumsY;  // horizontal gridline nums of y-axis
 } GraphConfig;
 
 typedef struct {
@@ -62,6 +64,7 @@ typedef struct {
   float innerSpdLmt;
   int specCaseFlg;
   int scenarioFlg;
+  float maxDecel;
   int gapIndex;
   float gapTarS;
   float gapTarV;
@@ -113,7 +116,9 @@ void drawBasicGraph(const int len,
                     const int wid,
                     const float rangeX,
                     const float rangeY,
-                    const float offsetY);
+                    const float offsetY,
+                    const int gridNumsX,
+                    const int gridNumsY);
 
 void drawObstacles(const SsmObjType* ssmObjs,
                    const EgoPathVcc* egoPath,
@@ -147,8 +152,28 @@ void showBEVGraph(const GraphConfig* config,
                   const TsrInfo* tsrInfo,
                   const MotionInfo* motionInfo);
 
+void showLineChart(GraphConfig* chartConfig,
+                   float zeroOffsetY,
+                   const int curFrame,
+                   const int totalFrame,
+                   const int winFrames,
+                   const float* time_data,
+                   const float* original_data,
+                   const float* loopback_data,
+                   const char* title,
+                   const bool fixedRangeYFlg);
+
 bool inArea(int mx, int my, int x, int y, int w, int h);
-bool buttonShowPred(ExMessage* msg, int x, int y, int w, int h, bool* swt);
+
+bool buttonStateSwitch(const ExMessage* msg,
+                       int x,
+                       int y,
+                       int w,
+                       int h,
+                       bool* swt,
+                       const char* txtOn,
+                       const char* txtOff);
+
 bool buttonOneStep(ExMessage* msg,
                    int x,
                    int y,

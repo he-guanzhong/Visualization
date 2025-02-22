@@ -183,7 +183,7 @@ void SpdPlanDataParsing(float** values,
   // time, alc path and speed plan input and output results
   int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, ENBL_STS = 0, TRUC_CL = 0,
       ACC_MODE = 0, TAU_GAP = 0, ACC_DREF = 0;
-  int IN_SPDLMT = 0, SPC_FLG = 0, SCE_FLG = 0;
+  int IN_SPDLMT = 0, SPC_FLG = 0, SCE_FLG = 0, MAX_DCL = 0;
   int EGO_PATH[9] = {0};
   int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, NOA_STS = 0,
       ALC_RMP = 0, ALC_RMP_D = 0, ALC_EXT_D = 0;
@@ -277,6 +277,8 @@ void SpdPlanDataParsing(float** values,
       SPC_FLG = i;
     else if (strncmp(columns[i], "VePASP_ScenarioFlg[]", 18) == 0)
       SCE_FLG = i;
+    else if (strncmp(columns[i], "VfPASP_maxDecel_mpss[]", 20) == 0)
+      MAX_DCL = i;
     else if (strncmp(columns[i], "g_truncated_col[]", 15) == 0)
       TRUC_CL = i;
 
@@ -1036,6 +1038,7 @@ void SpdPlanDataParsing(float** values,
     truncated_col_data[t] = TRUC_CL ? values[TRUC_CL][t] : 0;
     specialCaseFlg_data[t] = values[SPC_FLG][t];
     scenarioFlg_data[t] = values[SCE_FLG][t];
+    maxDecel_data[t] = MAX_DCL ? values[MAX_DCL][t] : 0;
 
     // alc find gap
     for (int k = 0; k < 6; k++) {
