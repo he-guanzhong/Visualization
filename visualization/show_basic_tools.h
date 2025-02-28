@@ -59,6 +59,7 @@ typedef struct {
   int accMode;
   int tauGap;
   float accDisRef;
+  float accCurvSpdLmt;
   int enblSts;
   float egoPredSpd;
   float innerSpdLmt;

@@ -182,7 +182,7 @@ void SpdPlanDataParsing(float** values,
                         int* totalFrame) {
   // time, alc path and speed plan input and output results
   int Ts = 0, EGO_V = 0, EGO_A = 0, SPD_LMT = 0, ENBL_STS = 0, TRUC_CL = 0,
-      ACC_MODE = 0, TAU_GAP = 0, ACC_DREF = 0;
+      ACC_MODE = 0, TAU_GAP = 0, ACC_DREF = 0, ACC_CURV = 0;
   int IN_SPDLMT = 0, SPC_FLG = 0, SCE_FLG = 0, MAX_DCL = 0;
   int EGO_PATH[9] = {0};
   int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, NOA_STS = 0,
@@ -194,9 +194,10 @@ void SpdPlanDataParsing(float** values,
   // Obstacles, In-path VehicleS (IVS)
   // 0 = IV, 1 = RIV, 2 = NIVL, 3 = NIIVL, 4 = RIVL, 5 = RIIVL
   // 6 = NIVR, 7 = NIIVR, 8 = RIVR, 9 = RIIVR
-  int IVS_Present[10] = {0}, IVS_Class[10] = {0}, IVS_LaDis[10] = {0},
-      IVS_LgDis[10] = {0}, IVS_V[10] = {0}, IVS_LaV[10] = {0}, IVS_A[10] = {0},
-      IVS_Yaw[10] = {0}, IVS_CUT[10] = {0};
+  int IVS_ID[10] = {0}, IVS_Present[10] = {0}, IVS_Class[10] = {0},
+      IVS_LaDis[10] = {0}, IVS_LgDis[10] = {0}, IVS_V[10] = {0},
+      IVS_LaV[10] = {0}, IVS_A[10] = {0}, IVS_Yaw[10] = {0}, IVS_CUT[10] = {0},
+      IVS_LaVF[10] = {0};
 
   // TSR signs
   int TSR_Spd = 0, TSR_Warn = 0, TSR_TSI[2] = {0};
@@ -232,6 +233,8 @@ void SpdPlanDataParsing(float** values,
       TAU_GAP = i;
     else if (strncmp(columns[i], "VfPASP_ACC_Dref_m[]", 17) == 0)
       ACC_DREF = i;
+    else if (strncmp(columns[i], "VfPASP_ACC_SetSpeedByCurve_kph[]", 30) == 0)
+      ACC_CURV = i;
 
     else if (strncmp(columns[i], "VePASP_AutoLaneChgSide[]", 22) == 0)
       ALC_SIDE = i;
@@ -382,6 +385,9 @@ void SpdPlanDataParsing(float** values,
 
 #if READ_EXEED_OBS == 0
     // obstacle, 0 = IV
+    else if (strncmp(columns[i], "VeINP_IVID[]", 10) == 0 ||
+             strncmp(columns[i], "VePASP_IVID[]", 11) == 0)
+      IVS_ID[0] = i;
     else if (strncmp(columns[i], "VeINP_IVClass[enum]", 13) == 0 ||
              strncmp(columns[i], "VePASP_IVClass[]", 14) == 0)
       IVS_Class[0] = i;
@@ -408,6 +414,9 @@ void SpdPlanDataParsing(float** values,
       IVS_A[0] = i;
 
     // obstacle, 1 = RIV
+    else if (strncmp(columns[i], "VeINP_RIVID[]", 11) == 0 ||
+             strncmp(columns[i], "VePASP_RIVID[]", 12) == 0)
+      IVS_ID[1] = i;
     else if (strncmp(columns[i], "VeINP_RIVClass_enum[enum]", 19) == 0 ||
              strncmp(columns[i], "VePASP_RIVClass_enum[]", 20) == 0)
       IVS_Class[1] = i;
@@ -433,6 +442,9 @@ void SpdPlanDataParsing(float** values,
       IVS_A[1] = i;
 
     // obstacle, 2 = NIVL
+    else if (strncmp(columns[i], "VeINP_NIVLID[]", 12) == 0 ||
+             strncmp(columns[i], "VePASP_NIVLID[]", 13) == 0)
+      IVS_ID[2] = i;
     else if (strncmp(columns[i], "VeINP_NIVLClass_enum[enum]", 20) == 0 ||
              strncmp(columns[i], "VePASP_NIVLClass_enum[]", 21) == 0)
       IVS_Class[2] = i;
@@ -460,6 +472,9 @@ void SpdPlanDataParsing(float** values,
       IVS_CUT[2] = i;
 
     // obstacle, 6 = NIVR
+    else if (strncmp(columns[i], "VeINP_NIVRID[]", 12) == 0 ||
+             strncmp(columns[i], "VePASP_NIVRID[]", 13) == 0)
+      IVS_ID[6] = i;
     else if (strncmp(columns[i], "VeINP_NIVRClass_enum[enum]", 20) == 0 ||
              strncmp(columns[i], "VePASP_NIVRClass_enum[]", 21) == 0)
       IVS_Class[6] = i;
@@ -487,6 +502,9 @@ void SpdPlanDataParsing(float** values,
       IVS_CUT[6] = i;
 
     // obstacle, 3 = NIIVL
+    else if (strncmp(columns[i], "VeINP_NIIVLID[]", 13) == 0 ||
+             strncmp(columns[i], "VePASP_NIIVLID[]", 14) == 0)
+      IVS_ID[3] = i;
     else if (strncmp(columns[i], "VeINP_NIIVLClass_enum[enum]", 21) == 0 ||
              strncmp(columns[i], "VePASP_NIIVLClass_enum[]", 22) == 0)
       IVS_Class[3] = i;
@@ -514,6 +532,9 @@ void SpdPlanDataParsing(float** values,
       IVS_CUT[3] = i;
 
     // obstacle, 7 = NIIVR
+    else if (strncmp(columns[i], "VeINP_NIIVRID[]", 13) == 0 ||
+             strncmp(columns[i], "VePASP_NIIVRID[]", 14) == 0)
+      IVS_ID[7] = i;
     else if (strncmp(columns[i], "VeINP_NIIVRClass_enum[enum]", 21) == 0 ||
              strncmp(columns[i], "VePASP_NIIVRClass_enum[]", 22) == 0)
       IVS_Class[7] = i;
@@ -541,6 +562,9 @@ void SpdPlanDataParsing(float** values,
       IVS_CUT[7] = i;
 
     // obstacle, 4 = RIVL
+    else if (strncmp(columns[i], "VeINP_RIVLID[]", 12) == 0 ||
+             strncmp(columns[i], "VePASP_RIVLID[]", 13) == 0)
+      IVS_ID[4] = i;
     else if (strncmp(columns[i], "VeINP_RIVLClass_enum[enum]", 20) == 0 ||
              strncmp(columns[i], "VePASP_RIVLClass_enum[]", 21) == 0)
       IVS_Class[4] = i;
@@ -566,6 +590,9 @@ void SpdPlanDataParsing(float** values,
       IVS_A[4] = i;
 
     // obstacle, 8 = RIVR
+    else if (strncmp(columns[i], "VeINP_RIVRID[]", 12) == 0 ||
+             strncmp(columns[i], "VePASP_RIVRID[]", 13) == 0)
+      IVS_ID[8] = i;
     else if (strncmp(columns[i], "VeINP_RIVRClass_enum[enum]", 20) == 0 ||
              strncmp(columns[i], "VePASP_RIVRClass_enum[]", 21) == 0)
       IVS_Class[8] = i;
@@ -591,6 +618,9 @@ void SpdPlanDataParsing(float** values,
       IVS_A[8] = i;
 
     // obstacle, 5 = RIIVL
+    else if (strncmp(columns[i], "VeINP_RIIVLID[]", 13) == 0 ||
+             strncmp(columns[i], "VePASP_RIIVLID[]", 14) == 0)
+      IVS_ID[5] = i;
     else if (strncmp(columns[i], "VeINP_RIIVLClass_enum[enum]", 21) == 0 ||
              strncmp(columns[i], "VePASP_RIIVLClass_enum[]", 22) == 0)
       IVS_Class[5] = i;
@@ -616,6 +646,9 @@ void SpdPlanDataParsing(float** values,
       IVS_A[5] = i;
 
     // obstacle, 9 = RIIVR
+    else if (strncmp(columns[i], "VeINP_RIIVRID[]", 13) == 0 ||
+             strncmp(columns[i], "VePASP_RIIVRID[]", 14) == 0)
+      IVS_ID[9] = i;
     else if (strncmp(columns[i], "VeINP_RIIVRClass_enum[enum]", 21) == 0 ||
              strncmp(columns[i], "VePASP_RIIVRClass_enum[]", 22) == 0)
       IVS_Class[9] = i;
@@ -1035,6 +1068,8 @@ void SpdPlanDataParsing(float** values,
       innerSpdLmt_data[t] = values[IN_SPDLMT][t];
     }
     accDisRef_data[t] = ACC_DREF ? values[ACC_DREF][t] : 0;
+    accCurveSpdLmt_data[t] = ACC_CURV ? values[ACC_CURV][t] : 0;
+
     truncated_col_data[t] = TRUC_CL ? values[TRUC_CL][t] : 0;
     specialCaseFlg_data[t] = values[SPC_FLG][t];
     scenarioFlg_data[t] = values[SCE_FLG][t];
@@ -1099,9 +1134,9 @@ void SpdPlanDataParsing(float** values,
     // for rear obs, ego front bumper center to rear car center.
     float pos_x_compensation = 0;
     for (int k = 0; k < 10; k++) {
-      if (IVS_Present[k] == 0)
+      if (IVS_Present[k] == 0) {
         continue;
-
+      }
       // rear obs lat spd not stable, unacceptable
       if (0 == k || 2 == k || 3 == k || 6 == k || 7 == k) {
         pos_x_compensation =
@@ -1119,6 +1154,7 @@ void SpdPlanDataParsing(float** values,
       objs_acc_x_data[k][t] = IVS_A[k] ? values[IVS_A[k]][t] : 0;
       objs_pos_yaw_data[k][t] = values[IVS_Yaw[k]][t] * -1;
       objs_cut_in_data[k][t] = IVS_CUT[k] ? values[IVS_CUT[k]][t] : 0;
+      objs_id_data[k][t] = IVS_ID[k] ? values[IVS_ID[k]][t] : 0;
 
       if (k <= 1) {
         objs_lane_index_data[k][t] = 3;

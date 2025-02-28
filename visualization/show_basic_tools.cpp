@@ -203,6 +203,13 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
                 tsr_pos.y - textheight(tsr_sign) / 2, tsr_sign);
       setlinecolor(RED);
       circle(tsr_pos.x, tsr_pos.y, textheight(tsr_sign) * 0.75f);
+    } else if (tsrInfo->tsr_signs[i].type >= 28 &&
+               tsrInfo->tsr_signs[i].type <= 41) {
+      itoa(tsr_spd_tbl1[tsrInfo->tsr_signs[i].type - 28], tsr_sign, 10);
+      outtextxy(tsr_pos.x - textwidth(tsr_sign) / 2,
+                tsr_pos.y - textheight(tsr_sign) / 2, tsr_sign);
+      setlinecolor(LIGHTRED);
+      circle(tsr_pos.x, tsr_pos.y, textheight(tsr_sign) * 0.75f);
     } else if (tsrInfo->tsr_signs[i].type >= 100 &&
                tsrInfo->tsr_signs[i].type <= 114) {
       itoa(tsr_spd_tbl2[tsrInfo->tsr_signs[i].type - 100], tsr_sign, 10);
@@ -469,7 +476,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
                    const float* LH0,
                    const float* LH1,
                    const float cur_spd) {
-  const float objSpdLatConf = 0.55f;
+  const float objSpdLatConf = 0.7f;
   float obs_speed_y_cor = 0;
   for (int i = 0; i < ssmObjs->obj_num; i++) {
     if (!ssmObjs->obj_lists[i].valid_flag) {
@@ -497,7 +504,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
     for (int j = 0; j <= 10; j++) {
       obs_pred_path[j].x = obs->pos_x + obs->speed_x * j * t_interval;
       float predHeadingAg = obs->pos_yaw;
-      float predLatOffset = obs_speed_y_cor * j;
+      float predLatOffset = obs_speed_y_cor * j * t_interval;
       objPosnLgt[j] = obs_pred_path[j].x;
       if (cur_spd > 10.0f / 3.6f && obs->speed_x > 1.0f &&
           objPosnLgt[j] < 150.0f) {

@@ -133,6 +133,8 @@ void ReadInputData(const int t) {
   sMotionInfo.accMode = accMode_data[t];
   sMotionInfo.tauGap = tauGap_data[t];
   sMotionInfo.accDisRef = accDisRef_data[t];
+  sMotionInfo.accCurvSpdLmt = accCurveSpdLmt_data[t];
+
   sMotionInfo.alcBehav.AutoLaneChgSide = alcBehav_data[0][t];
   sMotionInfo.alcBehav.AutoLaneChgSts = alcBehav_data[1][t];
   sMotionInfo.alcBehav.LeftBoundaryType = alcBehav_data[2][t];
@@ -155,6 +157,7 @@ void ReadInputData(const int t) {
     g_ssmObjType.obj_lists[i].acc_x = objs_acc_x_data[i][t];
     g_ssmObjType.obj_lists[i].pos_yaw = objs_pos_yaw_data[i][t];
     g_ssmObjType.obj_lists[i].cut_in_flag = objs_cut_in_data[i][t];
+    g_ssmObjType.obj_lists[i].id = objs_id_data[i][t];
   }
 
   // ego path, cubic polynominal
@@ -299,7 +302,7 @@ void ShowSpdPlanInterface(const int length,
                           const LinesInfo* linesInfo,
                           const MotionInfo* motionInfo) {
   const GraphConfig BEV_cfg = {length / 2, width,       offset, length / 2, 0,
-                               140.0f,     3.4f * 5.0f, 0,      0};
+                               150.0f,     3.4f * 5.0f, 0,      0};
   const GraphConfig ST_cfg = {
       length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f, 120.0f, 5, 6};
   GraphConfig VT_cfg = ST_cfg;
@@ -320,6 +323,7 @@ void ShowSpdPlanInterface(const int length,
                       6,        RED,      true,         gAlcStCoeff};
   showBEVGraph(&BEV_cfg, 30.0f, &g_ssmObjType, linesInfo, &sTsrInfo,
                motionInfo);
+
   showXYGraph(&ST_cfg, 0.0f, &ST_info);
   showXYGraph(&VT_cfg, 0.0f, &VT_info);
   showXYGraph(&AT_cfg, 4.0f, &AT_info);
@@ -446,9 +450,17 @@ void ExecuteSpdPlan(const AlcPathVcc* alcPathVcc,
                     const AgsmEnvModel* agsmEnvModel,
                     const SsmObjType* ssmObjs) {
   DpSpeedPoints output;
-  EgoMotionSts egoMotionSts = {sMotionInfo.egoSpd, sMotionInfo.egoAcc,
-                               sMotionInfo.spdLmt, (uint8)sMotionInfo.accMode,
-                               (uint8)sMotionInfo.tauGap};
+  EgoMotionSts egoMotionSts = {sMotionInfo.egoSpd,
+                               sMotionInfo.egoAcc,
+                               sMotionInfo.spdLmt,
+                               (uint8)sMotionInfo.accMode,
+                               (uint8)sMotionInfo.tauGap,
+                               0,
+                               sMotionInfo.accCurvSpdLmt,
+                               sMotionInfo.accDisRef,
+                               0,
+                               0};
+
   SpeedPlanProcessor(
       &egoMotionSts, &sMotionInfo.alcBehav, alcPathVcc, agsmEnvModel,
       &sRemEhMerge, &ssmObjs->obj_lists[0], &ssmObjs->obj_lists[1],
@@ -596,6 +608,7 @@ void GenerateLocalData() {
     accMode_data[t] = sMotionInfo.accMode;
     tauGap_data[t] = sMotionInfo.tauGap;
     accDisRef_data[t] = sMotionInfo.accDisRef;
+    accCurveSpdLmt_data[t] = sMotionInfo.accCurvSpdLmt;
 
     for (int k = 0; k < 10; k++) {
       if (0 == t) {  // initial obs pos
@@ -619,6 +632,7 @@ void GenerateLocalData() {
       objs_acc_x_data[k][t] = ssmObjs.obj_lists[k].acc_x;
       objs_pos_yaw_data[k][t] = ssmObjs.obj_lists[k].pos_yaw;
       objs_cut_in_data[k][t] = ssmObjs.obj_lists[k].cut_in_flag;
+      objs_id_data[k][t] = ssmObjs.obj_lists[k].id;
     }
     // simulate auto lane change
     /*       if (objs_pos_x_data[2][t] > 20 && alcBehav_data[0][t] == 1 &&

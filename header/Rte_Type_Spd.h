@@ -136,6 +136,7 @@ typedef struct {
   Float SpdLmt;
   UInt8 AccMode;
   UInt8 TauGapSet;
+  UInt8 MrgFailBrkFlg;
   Float AccCurveSpdLmt;
   Float AccDisRef;
   Float AccFollowAccel;

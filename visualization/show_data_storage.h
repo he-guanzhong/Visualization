@@ -14,6 +14,7 @@ extern int alcBehav_data[8][DATA_NUM];
 extern int accMode_data[DATA_NUM];
 extern int tauGap_data[DATA_NUM];
 extern float accDisRef_data[DATA_NUM];
+extern float accCurveSpdLmt_data[DATA_NUM];
 
 extern int spdPlanEnblSts_data[DATA_NUM];
 extern int truncated_col_data[DATA_NUM];
@@ -42,6 +43,8 @@ extern float objs_speed_y_data[10][DATA_NUM];
 extern float objs_acc_x_data[10][DATA_NUM];
 extern float objs_pos_yaw_data[10][DATA_NUM];
 extern int objs_cut_in_data[10][DATA_NUM];
+extern int objs_id_data[10][DATA_NUM];
+extern float objs_speed_y_f_data[10][DATA_NUM];
 
 extern int tsr_spd_data[DATA_NUM];
 extern bool tsr_spd_warn_data[DATA_NUM];

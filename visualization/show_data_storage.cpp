@@ -10,6 +10,7 @@ int alcBehav_data[8][DATA_NUM];
 int accMode_data[DATA_NUM];
 int tauGap_data[DATA_NUM];
 float accDisRef_data[DATA_NUM];
+float accCurveSpdLmt_data[DATA_NUM];
 
 int spdPlanEnblSts_data[DATA_NUM];
 int truncated_col_data[DATA_NUM];
@@ -38,6 +39,8 @@ float objs_speed_y_data[10][DATA_NUM];
 float objs_acc_x_data[10][DATA_NUM];
 float objs_pos_yaw_data[10][DATA_NUM];
 int objs_cut_in_data[10][DATA_NUM];
+int objs_id_data[10][DATA_NUM];
+float objs_speed_y_f_data[10][DATA_NUM];
 
 int tsr_spd_data[DATA_NUM];
 bool tsr_spd_warn_data[DATA_NUM];
