@@ -8,7 +8,7 @@ project(SPDPLAN VERSION 1.0)
 include_directories(${PROJECT_SOURCE_DIR})
 
 # 收集指定目录中所有源文件的名称，并将名称列表存储在coreFiles变量中
-# aux_source_directory(${PROJECT_SOURCE_DIR}/spdplanning coreFiles)
+#aux_source_directory(${PROJECT_SOURCE_DIR}/spdplanning coreFiles)
 aux_source_directory(${PROJECT_SOURCE_DIR}/visualization coreFiles)
 aux_source_directory(${PROJECT_SOURCE_DIR}/visualization/extension_package coreFiles)
 
@@ -22,10 +22,11 @@ add_executable(SpdPlan ${coreFiles})
 # add_library(SpdPlan STATIC ${coreFiles})
 
 # 切换速度规划回灌/融合/雷达/地图显示模式
-# target_compile_definitions(SpdPlan PRIVATE SPDPLAN_LOCAL_TEST)
+#target_compile_definitions(SpdPlan PRIVATE SPDPLAN_LOCAL_TEST)
 
 # target_compile_definitions(SpdPlan PRIVATE AGSM_DEMO_TEST)
 # target_compile_definitions(SpdPlan PRIVATE RADAR_DEMO_TEST)
+# target_compile_definitions(SpdPlan PRIVATE MEOBJ_DEMO_TEST)
 # target_compile_definitions(SpdPlan PRIVATE REM_DEMO_TEST)
 
 # 编译过程中需要链接的文件

@@ -1,4 +1,4 @@
-#include "visualization/extension_package/show_ext_read_data.h"
+#include "visualization/extension_package/ext_radar_read_data.h"
 
 #ifdef AGSM_DEMO_TEST
 
@@ -86,6 +86,21 @@ void ReadRadarInputData(const int t, RadarObjInfo* radarObjsInfo) {
     radarObjsInfo[3].fExistProb[j] = fRR_ExistProb_data[j][t];
     radarObjsInfo[3].fDistX[j] = fRR_DistX_data[j][t];
     radarObjsInfo[3].fDistY[j] = fRR_DistY_data[j][t];
+  }
+}
+
+#endif
+
+#ifdef MEOBJ_DEMO_TEST
+void ReadMeObjInputData(const int t, MeObjInfo* meObjsInfo) {
+  for (int j = 0; j < OBJ_NUM; j++) {
+    meObjsInfo->iId[j] = iId_data[j][t];
+    meObjsInfo->iClass[j] = iClass_data[j][t];
+    meObjsInfo->fLongDis[j] = fLongDis_data[j][t];
+    meObjsInfo->fLatDis[j] = fLatDis_data[j][t];
+    meObjsInfo->fLen[j] = fLen_data[j][t];
+    meObjsInfo->fWid[j] = fWid_data[j][t];
+    meObjsInfo->fLongSpd[j] = fLongSpd_data[j][t];
   }
 }
 

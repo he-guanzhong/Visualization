@@ -1,5 +1,5 @@
-#ifndef SHOW_EXT_TOOLS_H_
-#define SHOW_EXT_TOOLS_H_
+#ifndef EXT_RADAR_TOOLS_H_
+#define EXT_RADAR_TOOLS_H_
 
 #include "visualization/show_basic_tools.h"
 
@@ -34,6 +34,16 @@ typedef struct {
   float fDistY[20];
 } RadarObjInfo;
 
+typedef struct {
+  int iId[12];
+  int iClass[12];
+  float fLongDis[12];
+  float fLatDis[12];
+  float fLen[12];
+  float fWid[12];
+  float fLongSpd[12];
+} MeObjInfo;
+
 void drawLaneMkr(const LaneMkr* path, const int color);
 
 void drawConftPath(const ConftPathTyp* path,
@@ -64,4 +74,11 @@ void showRadarGraph(const GraphConfig* config,
                     const float zeroOffsetX,
                     const RadarObjInfo* radarObjsInfo);
 
-#endif  // SHOW_EXT_TOOLS_H_
+void drawBox(Point* center, float len, float wid);
+void drawMeObj(const MeObjInfo* meInfo);
+
+void showMeObjGraph(const GraphConfig* config,
+                    const float zeroOffsetX,
+                    const MeObjInfo* meObjsInfo);
+
+#endif  // EXT_RADAR_TOOLS_H_

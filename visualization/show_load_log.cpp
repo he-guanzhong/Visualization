@@ -1,8 +1,5 @@
 #include "visualization/show_load_log.h"
 
-#define RAW_LINE 0
-#define READ_EXEED_OBS 0
-
 static inline float readValue(float** values, int col_name, int t) {
   if (values[col_name][t] == 0 && t > 0)
     values[col_name][t] = values[col_name][t - 1];
@@ -149,6 +146,9 @@ void LoadLog(const char* const csvFileName, int* totalFrame) {
 #ifdef RADAR_DEMO_TEST
   RadarDataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #endif
+#ifdef MEOBJ_DEMO_TEST
+  MeObjDataParsing(values, numColumns, columns, valuesCount, totalFrame);
+#endif
 #ifdef AGSM_DEMO_TEST
   AgsmDataParsing(values, numColumns, columns, valuesCount, totalFrame);
 #endif
@@ -194,10 +194,10 @@ void SpdPlanDataParsing(float** values,
   // Obstacles, In-path VehicleS (IVS)
   // 0 = IV, 1 = RIV, 2 = NIVL, 3 = NIIVL, 4 = RIVL, 5 = RIIVL
   // 6 = NIVR, 7 = NIIVR, 8 = RIVR, 9 = RIIVR
-  int IVS_ID[10] = {0}, IVS_Present[10] = {0}, IVS_Class[10] = {0},
-      IVS_LaDis[10] = {0}, IVS_LgDis[10] = {0}, IVS_V[10] = {0},
-      IVS_LaV[10] = {0}, IVS_A[10] = {0}, IVS_Yaw[10] = {0}, IVS_CUT[10] = {0},
-      IVS_LaVF[10] = {0};
+  int IVS_ID[14] = {0}, IVS_Present[14] = {0}, IVS_Class[14] = {0},
+      IVS_LaDis[14] = {0}, IVS_LgDis[14] = {0}, IVS_V[14] = {0},
+      IVS_LaV[14] = {0}, IVS_A[14] = {0}, IVS_Yaw[14] = {0}, IVS_CUT[14] = {0},
+      IVS_LaVF[14] = {0};
 
   // TSR signs
   int TSR_Spd = 0, TSR_Warn = 0, TSR_TSI[2] = {0};
@@ -383,7 +383,6 @@ void SpdPlanDataParsing(float** values,
     else if (strncmp(columns[i], "VfPASP_StPointCtrl0_a_mpss[]", 26) == 0)
       P_A[6] = i;
 
-#if READ_EXEED_OBS == 0
     // obstacle, 0 = IV
     else if (strncmp(columns[i], "VeINP_IVID[]", 10) == 0 ||
              strncmp(columns[i], "VePASP_IVID[]", 11) == 0)
@@ -412,6 +411,8 @@ void SpdPlanDataParsing(float** values,
     else if (strncmp(columns[i], "VfINP_IVAcc_mpss[]", 16) == 0 ||
              strncmp(columns[i], "VfPASP_IVAcc_mpss[]", 17) == 0)
       IVS_A[0] = i;
+    else if (strncmp(columns[i], "VfPASP_IV_LaV_f_mps[]", 19) == 0)
+      IVS_LaVF[0] = i;
 
     // obstacle, 1 = RIV
     else if (strncmp(columns[i], "VeINP_RIVID[]", 11) == 0 ||
@@ -440,6 +441,8 @@ void SpdPlanDataParsing(float** values,
       IVS_Yaw[1] = i;
     else if (strncmp(columns[i], "VfPASP_RIVAcc_mpss[]", 18) == 0)
       IVS_A[1] = i;
+    else if (strncmp(columns[i], "VfPASP_RIV_LaV_f_mps[]", 20) == 0)
+      IVS_LaVF[1] = i;
 
     // obstacle, 2 = NIVL
     else if (strncmp(columns[i], "VeINP_NIVLID[]", 12) == 0 ||
@@ -470,6 +473,8 @@ void SpdPlanDataParsing(float** values,
       IVS_A[2] = i;
     else if (strncmp(columns[i], "VePASP_NIVLCutIn[]", 16) == 0)
       IVS_CUT[2] = i;
+    else if (strncmp(columns[i], "VfPASP_NIVL_LaV_f_mps[]", 21) == 0)
+      IVS_LaVF[2] = i;
 
     // obstacle, 6 = NIVR
     else if (strncmp(columns[i], "VeINP_NIVRID[]", 12) == 0 ||
@@ -500,6 +505,8 @@ void SpdPlanDataParsing(float** values,
       IVS_A[6] = i;
     else if (strncmp(columns[i], "VePASP_NIVRCutIn[]", 16) == 0)
       IVS_CUT[6] = i;
+    else if (strncmp(columns[i], "VfPASP_NIVR_LaV_f_mps[]", 21) == 0)
+      IVS_LaVF[6] = i;
 
     // obstacle, 3 = NIIVL
     else if (strncmp(columns[i], "VeINP_NIIVLID[]", 13) == 0 ||
@@ -530,6 +537,8 @@ void SpdPlanDataParsing(float** values,
       IVS_A[3] = i;
     else if (strncmp(columns[i], "VePASP_NIIVLCutIn[]", 17) == 0)
       IVS_CUT[3] = i;
+    else if (strncmp(columns[i], "VfPASP_NIIVL_LaV_f_mps[]", 22) == 0)
+      IVS_LaVF[3] = i;
 
     // obstacle, 7 = NIIVR
     else if (strncmp(columns[i], "VeINP_NIIVRID[]", 13) == 0 ||
@@ -560,6 +569,8 @@ void SpdPlanDataParsing(float** values,
       IVS_A[7] = i;
     else if (strncmp(columns[i], "VePASP_NIIVRCutIn[]", 17) == 0)
       IVS_CUT[7] = i;
+    else if (strncmp(columns[i], "VfPASP_NIIVR_LaV_f_mps[]", 22) == 0)
+      IVS_LaVF[7] = i;
 
     // obstacle, 4 = RIVL
     else if (strncmp(columns[i], "VeINP_RIVLID[]", 12) == 0 ||
@@ -588,6 +599,8 @@ void SpdPlanDataParsing(float** values,
       IVS_Yaw[4] = i;
     else if (strncmp(columns[i], "VfPASP_RIVLAcc_mpss[]", 19) == 0)
       IVS_A[4] = i;
+    else if (strncmp(columns[i], "VfPASP_RIVL_LaV_f_mps[]", 21) == 0)
+      IVS_LaVF[4] = i;
 
     // obstacle, 8 = RIVR
     else if (strncmp(columns[i], "VeINP_RIVRID[]", 12) == 0 ||
@@ -616,6 +629,8 @@ void SpdPlanDataParsing(float** values,
       IVS_Yaw[8] = i;
     else if (strncmp(columns[i], "VfPASP_RIVRAcc_mpss[]", 19) == 0)
       IVS_A[8] = i;
+    else if (strncmp(columns[i], "VfPASP_RIVR_LaV_f_mps[]", 21) == 0)
+      IVS_LaVF[8] = i;
 
     // obstacle, 5 = RIIVL
     else if (strncmp(columns[i], "VeINP_RIIVLID[]", 13) == 0 ||
@@ -644,6 +659,8 @@ void SpdPlanDataParsing(float** values,
       IVS_Yaw[5] = i;
     else if (strncmp(columns[i], "VfPASP_RIIVLAcc_mpss[]", 20) == 0)
       IVS_A[5] = i;
+    else if (strncmp(columns[i], "VfPASP_RIIVL_LaV_f_mps[]", 22) == 0)
+      IVS_LaVF[5] = i;
 
     // obstacle, 9 = RIIVR
     else if (strncmp(columns[i], "VeINP_RIIVRID[]", 13) == 0 ||
@@ -672,273 +689,9 @@ void SpdPlanDataParsing(float** values,
       IVS_Yaw[9] = i;
     else if (strncmp(columns[i], "VfPASP_RIIVRAcc_mpss[]", 20) == 0)
       IVS_A[9] = i;
-#else
-    // obstacle, 0 = IV
-    else if (strncmp(columns[i], "VeINP_ExeedIVClass[enum]", 18) == 0)
-      IVS_Class[0] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedIVLaDis_m[m]", 20) == 0)
-      IVS_LaDis[0] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedIVLgDis_m[m]", 20) == 0)
-      IVS_LgDis[0] = i;
-    else if (strncmp(columns[i], "VbINP_ExeedIVPresent_flg[flg]", 24) == 0)
-      IVS_Present[0] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedIVV_mps[mps]", 18) == 0)
-      IVS_V[0] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedIVLaSpd_mps[]", 22) == 0)
-      IVS_LaV[0] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedIVHeading_rad[]", 24) == 0)
-      IVS_Yaw[0] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedIVAcc_mpss[]", 21) == 0)
-      IVS_A[0] = i;
+    else if (strncmp(columns[i], "VfPASP_RIIVR_LaV_f_mps[]", 22) == 0)
+      IVS_LaVF[9] = i;
 
-    // obstacle, 1 = RIV
-    else if (strncmp(columns[i], "VeINP_ExeedRIVClass_enum[enum]", 24) == 0)
-      IVS_Class[1] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVLaDis_m[m]", 21) == 0)
-      IVS_LaDis[1] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVLgDis_m[m]", 21) == 0)
-      IVS_LgDis[1] = i;
-    else if (strncmp(columns[i], "VbINP_ExeedRIVPresent_flg[flg]", 25) == 0)
-      IVS_Present[1] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVV_mps[mps]", 19) == 0)
-      IVS_V[1] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVLaV_mps[mps]", 21) == 0)
-      IVS_LaV[1] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVHeading_rad[]", 25) == 0)
-      IVS_Yaw[1] = i;
-    else if (strncmp(columns[i], "VfPASP_ExeedRIVAcc_mpss[]", 23) == 0)
-      IVS_A[1] = i;
-
-    // obstacle, 2 = NIVL
-    else if (strncmp(columns[i], "VeINP_ExeedNIVLClass_enum[enum]", 25) == 0)
-      IVS_Class[2] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIVLLaDis_m[m]", 22) == 0)
-      IVS_LaDis[2] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIVLLgDis_m[m]", 22) == 0)
-      IVS_LgDis[2] = i;
-    else if (strncmp(columns[i], "VbINP_ExeedNIVLPresent_flg[flg]", 26) == 0)
-      IVS_Present[2] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIVLV_mps[mps]", 20) == 0)
-      IVS_V[2] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIVLLaV_mps[mps]", 22) == 0)
-      IVS_LaV[2] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIVLHeading_rad[]", 26) == 0)
-      IVS_Yaw[2] = i;
-    else if (strncmp(columns[i], "VfPASP_ExeedNIVLAcc_mpss[]", 24) == 0)
-      IVS_A[2] = i;
-    else if (strncmp(columns[i], "VePASP_ExeedNIVLCutIn[]", 21) == 0)
-      IVS_CUT[2] = i;
-
-    // obstacle, 6 = NIVR
-    else if (strncmp(columns[i], "VeINP_ExeedNIVRClass_enum[enum]", 25) == 0)
-      IVS_Class[6] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIVRLaDis_m[m]", 22) == 0)
-      IVS_LaDis[6] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIVRLgDis_m[m]", 22) == 0)
-      IVS_LgDis[6] = i;
-    else if (strncmp(columns[i], "VbINP_ExeedNIVRPresent_flg[flg]", 26) == 0)
-      IVS_Present[6] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIVRV_mps[mps]", 20) == 0)
-      IVS_V[6] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIVRLaV_mps[mps]", 22) == 0)
-      IVS_LaV[6] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIVRHeading_rad[]", 26) == 0)
-      IVS_Yaw[6] = i;
-    else if (strncmp(columns[i], "VfPASP_ExeedNIVRAcc_mpss[]", 24) == 0)
-      IVS_A[6] = i;
-    else if (strncmp(columns[i], "VePASP_ExeedNIVRCutIn[]", 21) == 0)
-      IVS_CUT[6] = i;
-
-    // obstacle, 3 = NIIVL
-    else if (strncmp(columns[i], "VeINP_ExeedNIIVLClass_enum[enum]", 26) == 0)
-      IVS_Class[3] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIIVLLaDis_m[m]", 23) == 0)
-      IVS_LaDis[3] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIIVLLgDis_m[m]", 23) == 0)
-      IVS_LgDis[3] = i;
-    else if (strncmp(columns[i], "VbINP_ExeedNIIVLPresent_flg[flg]", 27) == 0)
-      IVS_Present[3] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIIVLV_mps[mps]", 21) == 0)
-      IVS_V[3] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIIVLLaV_mps[mps]", 23) == 0)
-      IVS_LaV[3] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIIVLHeading_rad[]", 27) == 0)
-      IVS_Yaw[3] = i;
-    else if (strncmp(columns[i], "VfPASP_ExeedNIIVLAcc_mpss[]", 25) == 0)
-      IVS_A[3] = i;
-    else if (strncmp(columns[i], "VePASP_ExeedNIIVLCutIn[]", 22) == 0)
-      IVS_CUT[3] = i;
-
-    // obstacle, 7 = NIIVR
-    else if (strncmp(columns[i], "VeINP_ExeedNIIVRClass_enum[enum]", 26) == 0)
-      IVS_Class[7] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIIVRLaDis_m[m]", 23) == 0)
-      IVS_LaDis[7] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIIVRLgDis_m[m]", 23) == 0)
-      IVS_LgDis[7] = i;
-    else if (strncmp(columns[i], "VbINP_ExeedNIIVRPresent_flg[flg]", 27) == 0)
-      IVS_Present[7] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIIVRV_mps[mps]", 21) == 0)
-      IVS_V[7] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIIVRLaV_mps[mps]", 23) == 0)
-      IVS_LaV[7] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedNIIVRHeading_rad[]", 27) == 0)
-      IVS_Yaw[7] = i;
-    else if (strncmp(columns[i], "VfPASP_ExeedNIIVRAcc_mpss[]", 25) == 0)
-      IVS_A[7] = i;
-    else if (strncmp(columns[i], "VePASP_ExeedNIIVRCutIn[]", 22) == 0)
-      IVS_CUT[7] = i;
-
-    // obstacle, 4 = RIVL
-    else if (strncmp(columns[i], "VeINP_ExeedRIVLClass_enum[enum]", 25) == 0)
-      IVS_Class[4] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVLLaDis_m[m]", 22) == 0)
-      IVS_LaDis[4] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVLLgDis_m[m]", 22) == 0)
-      IVS_LgDis[4] = i;
-    else if (strncmp(columns[i], "VbINP_ExeedRIVLPresent_flg[flg]", 26) == 0)
-      IVS_Present[4] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVLV_mps[mps]", 20) == 0)
-      IVS_V[4] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVLLaV_mps[mps]", 22) == 0)
-      IVS_LaV[4] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVLHeading_rad[]", 26) == 0)
-      IVS_Yaw[4] = i;
-    else if (strncmp(columns[i], "VfPASP_ExeedRIVLAcc_mpss[]", 24) == 0)
-      IVS_A[4] = i;
-
-    // obstacle, 8 = RIVR
-    else if (strncmp(columns[i], "VeINP_ExeedRIVRClass_enum[enum]", 25) == 0)
-      IVS_Class[8] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVRLaDis_m[m]", 22) == 0)
-      IVS_LaDis[8] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVRLgDis_m[m]", 22) == 0)
-      IVS_LgDis[8] = i;
-    else if (strncmp(columns[i], "VbINP_ExeedRIVRPresent_flg[flag]", 26) == 0)
-      IVS_Present[8] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVRV_mps[mps]", 20) == 0)
-      IVS_V[8] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVRLaV_mps[mps]", 22) == 0)
-      IVS_LaV[8] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIVRHeading_rad[]", 26) == 0)
-      IVS_Yaw[8] = i;
-    else if (strncmp(columns[i], "VfPASP_ExeedRIVRAcc_mpss[]", 24) == 0)
-      IVS_A[8] = i;
-
-    // obstacle, 5 = RIIVL
-    else if (strncmp(columns[i], "VeINP_ExeedRIIVLClass_enum[enum]", 26) == 0)
-      IVS_Class[5] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIIVLLaDis_m[m]", 23) == 0)
-      IVS_LaDis[5] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIIVLLgDis_m[m]", 23) == 0)
-      IVS_LgDis[5] = i;
-    else if (strncmp(columns[i], "VbINP_ExeedRIIVLPresent_flg[flag]", 27) == 0)
-      IVS_Present[5] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIIVLV_mps[mps]", 21) == 0)
-      IVS_V[5] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIIVLLaV_mps[mps]", 23) == 0)
-      IVS_LaV[5] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIIVLHeading_rad[]", 27) == 0)
-      IVS_Yaw[5] = i;
-    else if (strncmp(columns[i], "VfPASP_ExeedRIIVLAcc_mpss[]", 25) == 0)
-      IVS_A[5] = i;
-
-    // obstacle, 9 = RIIVR
-    else if (strncmp(columns[i], "VeINP_ExeedRIIVRClass_enum[enum]", 26) == 0)
-      IVS_Class[9] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIIVRLaDis_m[m]", 23) == 0)
-      IVS_LaDis[9] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIIVRLgDis_m[m]", 23) == 0)
-      IVS_LgDis[9] = i;
-    else if (strncmp(columns[i], "VbINP_ExeedRIIVRPresent_flg[flag]", 27) == 0)
-      IVS_Present[9] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIIVRV_mps[mps]", 21) == 0)
-      IVS_V[9] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIIVRLaV_mps[mps]", 23) == 0)
-      IVS_LaV[9] = i;
-    else if (strncmp(columns[i], "VfINP_ExeedRIIVRHeading_rad[]", 27) == 0)
-      IVS_Yaw[9] = i;
-    else if (strncmp(columns[i], "VfPASP_ExeedRIIVRAcc_mpss[]", 25) == 0)
-      IVS_A[9] = i;
-#endif
-
-//  Mobile Eye original lines
-#if RAW_LINE == 1
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C0_0[m]", 24) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_Line_First_C0_0[]", 25) == 0)
-      LH_C_0[0] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C0_1[m]", 24) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_Line_First_C0_1[]", 25) == 0)
-      LH_C_1[0] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C1_0[rad]", 24) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_Line_First_C1_0[]", 25) == 0)
-      LH_C_0[1] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C1_1[rad]", 24) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_Line_First_C1_1[]", 25) == 0)
-      LH_C_1[1] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C2_0[]", 24) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_Line_First_C2_0[]", 25) == 0)
-      LH_C_0[2] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C2_1[]", 24) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_Line_First_C2_1[]", 25) == 0)
-      LH_C_1[2] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C3_0[]", 24) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_Line_First_C3_0[]", 25) == 0)
-      LH_C_0[3] = i;
-    else if (strncmp(columns[i], "VfINP_LH_Line_First_C3_1[]", 24) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_Line_First_C3_1[]", 25) == 0)
-      LH_C_1[3] = i;
-    else if (strncmp(columns[i], "VfINP_LH_First_VR_Start_0[m]", 25) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_First_VR_Start_0[]", 26) == 0)
-      LH_C_0[6] = i;
-    else if (strncmp(columns[i], "VfINP_LH_First_VR_Start_1[m]", 25) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_First_VR_Start_1[]", 26) == 0)
-      LH_C_1[6] = i;
-    else if (strncmp(columns[i], "VfINP_LH_First_VR_End_0[m]", 23) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_First_VR_End_0[]", 24) == 0)
-      LH_C_0[7] = i;
-    else if (strncmp(columns[i], "VfINP_LH_First_VR_End_1[m]", 23) == 0 ||
-             strncmp(columns[i], "VfPASP_LH_First_VR_End_1[]", 24) == 0)
-      LH_C_1[7] = i;
-
-    else if (strncmp(columns[i], "VfINP_LA_Line_C0_0[m]", 18) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_Line_C0_0[]", 19) == 0)
-      LA_C_0[0] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C0_1[m]", 18) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_Line_C0_1[]", 19) == 0)
-      LA_C_1[0] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C1_0[rad]", 18) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_Line_C1_0[]", 19) == 0)
-      LA_C_0[1] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C1_1[rad]", 18) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_Line_C1_1[]", 19) == 0)
-      LA_C_1[1] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C2_0[]", 18) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_Line_C2_0[]", 19) == 0)
-      LA_C_0[2] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C2_1[]", 18) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_Line_C2_1[]", 19) == 0)
-      LA_C_1[2] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C3_0[]", 18) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_Line_C3_0[]", 19) == 0)
-      LA_C_0[3] = i;
-    else if (strncmp(columns[i], "VfINP_LA_Line_C3_1[]", 18) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_Line_C3_1[]", 19) == 0)
-      LA_C_1[3] = i;
-    else if (strncmp(columns[i], "VfINP_LA_View_Range_Start_0[m]", 27) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_View_Range_Start_0[]", 28) == 0)
-      LA_C_0[6] = i;
-    else if (strncmp(columns[i], "VfINP_LA_View_Range_Start_1[m]", 27) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_View_Range_Start_1[]", 28) == 0)
-      LA_C_1[6] = i;
-    else if (strncmp(columns[i], "VfINP_LA_View_Range_End_0[m]", 25) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_View_Range_End_0[]", 26) == 0)
-      LA_C_0[7] = i;
-    else if (strncmp(columns[i], "VfINP_LA_View_Range_End_1[m]", 25) == 0 ||
-             strncmp(columns[i], "VfPASP_LA_View_Range_End_1[]", 26) == 0)
-      LA_C_1[7] = i;
-
-#else
     else if (strncmp(columns[i], "VfPASP_EnvModel_LH0LineFirstC0[]", 30) == 0)
       LH_C_0[0] = i;
     else if (strncmp(columns[i], "VfPASP_EnvModel_LH1LineFirstC0[]", 30) == 0)
@@ -988,7 +741,6 @@ void SpdPlanDataParsing(float** values,
       LA_C_0[7] = i;
     else if (strncmp(columns[i], "VfPASP_EnvModel_LA1FirstVREnd[]", 29) == 0)
       LA_C_1[7] = i;
-#endif
 
     // TSR status
     else if (strncmp(columns[i], "VfLGIN_TsrTrgtSpdReq_kph[]", 24) == 0)
@@ -1097,12 +849,19 @@ void SpdPlanDataParsing(float** values,
       alcBehav_data[7][t] = ALC_EXT_D ? values[ALC_EXT_D][t] : 0;
     }
 
-    // alc path and speed plan points
-    for (int k = 0; k < 8; k++) {
-      alc_path_data[k][t] = ALC_C[k] ? values[ALC_C[k]][t] : 0;
+    // alc path
+    if (ALC_C[7]) {
+      for (int k = 0; k < 8; k++) {
+        alc_path_data[k][t] = values[ALC_C[k]][t];
+      }
     }
-    alc_path_data[7][t] = ALC_C[7] ? values[ALC_C[7]][t] : 50;
-
+    // ego_path[9]: c0,c1,c2,c31,c32,c33,len1,len2,len3
+    if (EGO_PATH[6]) {
+      for (int k = 0; k < 9; k++) {
+        ego_path_data[k][t] = values[EGO_PATH[k]][t];
+      }
+    }
+    // speed plan points
     for (int k = 0; k <= 5; k++) {
       if (0 == P_S[k])
         continue;
@@ -1118,22 +877,12 @@ void SpdPlanDataParsing(float** values,
       ctrl_point_data[3][t] = values[P_A[6]][t];
     }
 
-    // ego_path[9]: c0,c1,c2,c31,c32,c33,len1,len2,len3
-    for (int k = 0; k < 9; k++) {
-      ego_path_data[k][t] = EGO_PATH[k] ? values[EGO_PATH[k]][t] : 0;
-      if (6 == k && 0 == EGO_PATH[k])
-        ego_path_data[k][t] = 80;
-      /*       if (6 == k)
-              ego_path_data[k][t] = 80;  // default disp ego length: 80
-            else if (7 == k || 8 == k || 4 == k || 5 == k)
-              ego_path_data[k][t] = 0; */
-    }
     // obstacles, BTL original: lateral distance/speed direction opposite.
     // longi distance needs compensation to transfer pos centre to centre
     // for front obs, ego front bumper center to obs rear bumper.
     // for rear obs, ego front bumper center to rear car center.
     float pos_x_compensation = 0;
-    for (int k = 0; k < 10; k++) {
+    for (int k = 0; k < 14; k++) {
       if (IVS_Present[k] == 0) {
         continue;
       }
@@ -1141,10 +890,8 @@ void SpdPlanDataParsing(float** values,
       if (0 == k || 2 == k || 3 == k || 6 == k || 7 == k) {
         pos_x_compensation =
             2.5f + (objs_type_data[k][t] == 2 ? 10.0f : 5.0f) / 2.0f;
-        objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
       } else {
         pos_x_compensation = 2.5f;
-        objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
       }
       objs_valid_flag_data[k][t] = values[IVS_Present[k]][t];
       objs_type_data[k][t] = values[IVS_Class[k]][t];
@@ -1155,6 +902,8 @@ void SpdPlanDataParsing(float** values,
       objs_pos_yaw_data[k][t] = values[IVS_Yaw[k]][t] * -1;
       objs_cut_in_data[k][t] = IVS_CUT[k] ? values[IVS_CUT[k]][t] : 0;
       objs_id_data[k][t] = IVS_ID[k] ? values[IVS_ID[k]][t] : 0;
+      objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
+      objs_speed_y_f_data[k][t] = IVS_LaVF[k] ? values[IVS_LaVF[k]][t] * -1 : 0;
 
       if (k <= 1) {
         objs_lane_index_data[k][t] = 3;

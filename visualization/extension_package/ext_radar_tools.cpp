@@ -1,5 +1,5 @@
 
-#include "visualization/extension_package/show_ext_tools.h"
+#include "visualization/extension_package/ext_radar_tools.h"
 
 void drawLaneMkr(const LaneMkr* path, const int color) {
   setlinecolor(color);
@@ -76,8 +76,9 @@ void showAGSMGraph(const GraphConfig* config,
 
   // obstacles
   EgoPathVcc default_ego_path = {0};
-  float LH0[8] = {0}, LH1[8] = {0};
-  drawObstacles(ssmObjs, &default_ego_path, LH0, LH1, motionInfo->egoSpd);
+  float LH0[8] = {0}, LH1[8] = {0}, ssmObjSpdY[10] = {0};
+  drawObstacles(ssmObjs, &default_ego_path, LH0, LH1, motionInfo->egoSpd,
+                ssmObjSpdY);
 
   // ego lane path
   drawConftPath(&agsmlinesInfo->conft_path_record, MAGENTA, 0.0f);
@@ -155,6 +156,91 @@ void showRadarGraph(const GraphConfig* config,
   drawRadarObj(&radarObjsInfo[1], 1, BLUE);
   drawRadarObj(&radarObjsInfo[2], 2, MAGENTA);
   drawRadarObj(&radarObjsInfo[3], 3, GREEN);
+
+  // ego car
+  setfillcolor(LIGHTGRAY);
+  Point ego = {0.0f, 0.0f};
+  char str_ego[2][8] = {};
+  strcpy(str_ego[0], "ego");
+  drawCar(&ego, str_ego, 1, 0.0f, 10);
+
+  drawBEVRuler(zeroOffsetX);
+  return;
+}
+
+void drawBox(Point* center, float len, float wid) {
+  float yaw = 0;
+  // display: left-hand system. control: right-hand system
+  // vertice order: upper-right -> lower-right-> lower-left -> upper-left
+  const float halfLenCos = len / 2.0f * cosf(yaw),
+              halfLenSin = len / 2.0f * sinf(yaw);
+  const float halfWidCos = wid / 2.0f * cosf(yaw),
+              halfWidSin = wid / 2.0f * sinf(yaw);
+  Point vertices[4] = {{center->x + halfLenCos - halfWidSin,
+                        center->y + halfLenSin + halfWidCos},
+                       {center->x + halfLenCos + halfWidSin,
+                        center->y + halfLenSin - halfWidCos},
+                       {center->x - halfLenCos + halfWidSin,
+                        center->y - halfLenSin - halfWidCos},
+                       {center->x - halfLenCos - halfWidSin,
+                        center->y - halfLenSin + halfWidCos}};
+  coordinateTrans2(center);
+  for (int i = 0; i < 4; ++i)
+    coordinateTrans2(&vertices[i]);
+  POINT vertices_show[4];
+  for (int i = 0; i < 4; ++i) {
+    vertices_show[i].x = vertices[i].x;
+    vertices_show[i].y = vertices[i].y;
+  }
+  fillpolygon(vertices_show, 4);
+  return;
+}
+
+void drawMeObj(const MeObjInfo* meInfo) {
+  for (int j = 0; j < 12; j++) {
+    if (meInfo->iId[j] == 0 || meInfo->fLongDis[j] < 0) {
+      continue;
+    }
+    Point obj_posn = {meInfo->fLongDis[j], meInfo->fLatDis[j]};
+    char obj_id[10] = "ID";
+    const int obj_len = strlen(obj_id);
+    snprintf(obj_id + obj_len, sizeof(obj_id) - obj_len, "%d", j + 1);
+    char obj_spd[10] = "";
+    snprintf(obj_spd, sizeof(obj_id), "%.1f m/s", meInfo->fLongSpd[j]);
+
+    setlinecolor(BLACK);
+    if (meInfo->iClass[j] == 1) {
+      setfillcolor(BLUE);
+    } else if (meInfo->iClass[j] == 2) {
+      setfillcolor(CYAN);
+    } else {
+      setfillcolor(RED);
+    }
+    drawBox(&obj_posn, meInfo->fLen[j], meInfo->fWid[j]);
+
+    const int off_disp = 20;
+    if (meInfo->fLatDis[j] > 0) {
+      outtextxy(obj_posn.x - off_disp - textwidth(obj_id),
+                obj_posn.y - textheight(obj_id) / 2, obj_id);
+      outtextxy(obj_posn.x - off_disp - textwidth(obj_spd),
+                obj_posn.y + textheight(obj_id) / 2, obj_spd);
+
+    } else {
+      outtextxy(obj_posn.x + off_disp, obj_posn.y - textheight(obj_id) / 2,
+                obj_id);
+      outtextxy(obj_posn.x + off_disp, obj_posn.y + textheight(obj_spd) / 2,
+                obj_spd);
+    }
+  }
+  return;
+}
+
+void showMeObjGraph(const GraphConfig* config,
+                    const float zeroOffsetX,
+                    const MeObjInfo* meObjsInfo) {
+  initBEVGraph(config, zeroOffsetX);
+
+  drawMeObj(meObjsInfo);
 
   // ego car
   setfillcolor(LIGHTGRAY);

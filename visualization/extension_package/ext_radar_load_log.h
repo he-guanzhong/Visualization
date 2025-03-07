@@ -1,9 +1,8 @@
-#ifndef SHOW_EXT_LOAD_LOG_
-#define SHOW_EXT_LOAD_LOG_
+#ifndef EXT_RADAR_LOAD_LOG_
+#define EXT_RADAR_LOAD_LOG_
 
 #include <stdio.h>
 #include <string.h>
-#include "visualization/extension_package/ext_rem_load_log.h"
 
 #ifdef AGSM_DEMO_TEST
 
@@ -86,4 +85,27 @@ void RadarDataParsing(float** values,
                       int* totalFrame);
 #endif
 
-#endif  // SHOW_EXT_LOAD_LOG_
+#ifdef MEOBJ_DEMO_TEST
+
+#ifndef DATA_NUM
+#define DATA_NUM 20480
+#endif
+
+#define OBJ_NUM 12
+
+extern int iId_data[OBJ_NUM][DATA_NUM];
+extern int iClass_data[OBJ_NUM][DATA_NUM];
+extern float fLongDis_data[OBJ_NUM][DATA_NUM];
+extern float fLatDis_data[OBJ_NUM][DATA_NUM];
+extern float fLen_data[OBJ_NUM][DATA_NUM];
+extern float fWid_data[OBJ_NUM][DATA_NUM];
+extern float fLongSpd_data[OBJ_NUM][DATA_NUM];
+
+void MeObjDataParsing(float** values,
+                      const int numColumns,
+                      char** columns,
+                      const int* valuesCount,
+                      int* totalFrame);
+#endif
+
+#endif  // EXT_RADAR_LOAD_LOG_

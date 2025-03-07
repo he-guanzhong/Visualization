@@ -4,6 +4,10 @@
 // csv row nums (total steps) exceeding DATA_NUM will result in errors
 #define DATA_NUM 24480
 
+#ifndef OBJ_NUM
+#define OBJ_NUM 14
+#endif
+
 extern float time_data[DATA_NUM];
 extern float egoSpd_data[DATA_NUM];
 extern float egoAcc_data[DATA_NUM];
@@ -33,18 +37,18 @@ extern float v_points_data[6][DATA_NUM];
 extern float a_points_data[6][DATA_NUM];
 extern float t_points_data[6][DATA_NUM];
 
-extern bool objs_valid_flag_data[10][DATA_NUM];
-extern int objs_lane_index_data[10][DATA_NUM];
-extern int objs_type_data[10][DATA_NUM];
-extern float objs_pos_x_data[10][DATA_NUM];
-extern float objs_pos_y_data[10][DATA_NUM];
-extern float objs_speed_x_data[10][DATA_NUM];
-extern float objs_speed_y_data[10][DATA_NUM];
-extern float objs_acc_x_data[10][DATA_NUM];
-extern float objs_pos_yaw_data[10][DATA_NUM];
-extern int objs_cut_in_data[10][DATA_NUM];
-extern int objs_id_data[10][DATA_NUM];
-extern float objs_speed_y_f_data[10][DATA_NUM];
+extern bool objs_valid_flag_data[OBJ_NUM][DATA_NUM];
+extern int objs_lane_index_data[OBJ_NUM][DATA_NUM];
+extern int objs_type_data[OBJ_NUM][DATA_NUM];
+extern float objs_pos_x_data[OBJ_NUM][DATA_NUM];
+extern float objs_pos_y_data[OBJ_NUM][DATA_NUM];
+extern float objs_speed_x_data[OBJ_NUM][DATA_NUM];
+extern float objs_speed_y_data[OBJ_NUM][DATA_NUM];
+extern float objs_acc_x_data[OBJ_NUM][DATA_NUM];
+extern float objs_pos_yaw_data[OBJ_NUM][DATA_NUM];
+extern int objs_cut_in_data[OBJ_NUM][DATA_NUM];
+extern int objs_id_data[OBJ_NUM][DATA_NUM];
+extern float objs_speed_y_f_data[OBJ_NUM][DATA_NUM];
 
 extern int tsr_spd_data[DATA_NUM];
 extern bool tsr_spd_warn_data[DATA_NUM];

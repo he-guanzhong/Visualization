@@ -313,8 +313,8 @@ typedef struct {
 #define Rte_TypeDef_rt_Array_SsmCurvatureType_20
 typedef SsmCurvatureType rt_Array_SsmCurvatureType_20[20];
 
-#define Rte_TypeDef_rt_Array_SsmObsType_12  // hgz 32->12
-typedef SsmObsType rt_Array_SsmObsType_12[12];
+#define Rte_TypeDef_rt_Array_SsmObsType_16  // hgz 32->16
+typedef SsmObsType rt_Array_SsmObsType_16[16];
 
 #define Rte_TypeDef_rt_Array_SsmRefPtType_100
 typedef SsmRefPtType rt_Array_SsmRefPtType_100[100];
@@ -349,7 +349,7 @@ typedef struct {
   UInt8 is_fusion;
   UInt32 ts_high;
   UInt32 ts_low;
-  rt_Array_SsmObsType_12 obj_lists;
+  rt_Array_SsmObsType_16 obj_lists;
 } SsmObjType;
 
 /* Exported Global Signals for Dataset Calibration */

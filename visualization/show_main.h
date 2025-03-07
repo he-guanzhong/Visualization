@@ -7,8 +7,8 @@
 #include "visualization/show_test_cases.h"
 #endif
 
+#include "visualization/extension_package/ext_radar_read_data.h"
 #include "visualization/extension_package/ext_rem_read_data.h"
-#include "visualization/extension_package/show_ext_read_data.h"
 #include "visualization/show_basic_tools.h"
 #include "visualization/show_load_log.h"
 
@@ -20,7 +20,8 @@ typedef enum {
   LINECHART = 5,
   AGSM = 6,
   RADAR = 7,
-  REM = 8
+  REM = 8,
+  MEOBJ = 9
 } PLAYMODE;
 
 void ReadInputData(const int t);
@@ -32,11 +33,7 @@ void Time2Str(const float time, char* str, const int strSize);
 
 void ShowOutputKeyInfo(const int posY);
 void ShowBasicFrameInfo(int* t, int* cycle, const int length, const int width);
-void ShowSpdPlanInterface(const int length,
-                          const int width,
-                          const int offset,
-                          const LinesInfo* linesInfo,
-                          const MotionInfo* motionInfo);
+void ShowSpdPlanInterface(const int length, const int width, const int offset);
 
 void DisplaySpdPlanLineChart(const int length,
                              const int width,

@@ -1,9 +1,9 @@
 #include "visualization/show_basic_tools.h"
 
 #define CURVE_FITTING_TYPE 2
-bool show_predict_swt = false;
-bool show_dp_line = false;
-bool show_noa_scenario = false;
+bool g_showPredictSwt = false;
+bool g_showDpLine = false;
+extern uint8 gScenarioFlg;
 
 // float fit_coeffi[6] = {0};
 
@@ -35,8 +35,9 @@ void coordinateTrans2(Point* point) {
 }
 
 void strCompletion(char str[2][8], const int index, const int spd) {
-  const char* obsName[11] = {"IV ",  "RIV ",  "NIVL", "NIIVL", "RIVL", "RIIVL",
-                             "NIVR", "NIIVR", "RIVR", "RIIVR", "Ego "};
+  const char* obsName[15] = {"IV ",   "RIV ",  "NIVL",  "NIIVL", "RIVL",
+                             "RIIVL", "NIVR",  "NIIVR", "RIVR",  "RIIVR",
+                             "NNIVL", "NNIVR", "NRIVL", "NRIVR", "Ego "};
   strcpy(str[0], obsName[index]);
   snprintf(&str[1][0], 8, "%d m/s", spd);
 }
@@ -116,12 +117,12 @@ void drawCar(Point* car,
     solidcircle(car->x, car->y, 5);
   }
 
-  if (index == 0 || index == 1 || index == 10) {
+  if (index == 0 || index == 1 || index >= 14) {
     const int y_offset =
         carType == 2 ? textheight(str[0]) : textheight(str[0]) / 2;
     outtextxy(car->x - textwidth(str[0]), car->y + y_offset, str[0]);
     outtextxy(car->x, car->y + y_offset, str[1]);
-  } else if (index <= 5) {
+  } else if (index <= 5 || index == 10 || index == 12) {
     outtextxy(car->x - 20 - textwidth(str[0]), car->y - textheight(str[0]),
               str[0]);
     outtextxy(car->x - 20 - textwidth(str[1]), car->y, str[1]);
@@ -129,6 +130,7 @@ void drawCar(Point* car,
     outtextxy(car->x + 20, car->y - textheight(str[0]), str[0]);
     outtextxy(car->x + 20, car->y, str[1]);
   }
+  return;
 }
 
 void drawPolygon(const Point* center, const int num, const float rotateDegree) {
@@ -141,12 +143,13 @@ void drawPolygon(const Point* center, const int num, const float rotateDegree) {
     vertices_show[i] = {vertex_x, vertex_y};
   }
   polygon(vertices_show, num);
+  return;
 }
 
 void drawTsrSign(const TsrInfo* tsrInfo) {
   // TSR status display
   char tsr_disp[] = "TSR: ";
-  char spd_val[10];
+  char spd_val[10] = "";
   const int tsr_spd = tsrInfo->tsr_spd;
   const bool tsr_spd_warn = tsrInfo->tsr_spd_warn;
   if (tsr_spd == 166) {
@@ -227,6 +230,7 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
       circle(tsr_pos.x, tsr_pos.y, r);
     }
   }
+  return;
 }
 
 void drawMotionInfo(const MotionInfo* motionInfo) {
@@ -446,6 +450,7 @@ void drawQuinticPolyTraj(const float* coeffs,
   }
   predictPosn->x = last.x;
   predictPosn->y = last.y;
+  return;
 }
 
 void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
@@ -469,14 +474,16 @@ void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
   }
   predictPosn->x = last.x;
   predictPosn->y = last.y;
+  return;
 }
 
 void drawObstacles(const SsmObjType* ssmObjs,
                    const EgoPathVcc* egoPath,
                    const float* LH0,
                    const float* LH1,
-                   const float cur_spd) {
-  const float objSpdLatConf = 0.7f;
+                   const float cur_spd,
+                   const float* ssmObjSpdY) {
+  const float objSpdLatConf = 1.0f;
   float obs_speed_y_cor = 0;
   for (int i = 0; i < ssmObjs->obj_num; i++) {
     if (!ssmObjs->obj_lists[i].valid_flag) {
@@ -495,8 +502,9 @@ void drawObstacles(const SsmObjType* ssmObjs,
     float obs_pred_yaw, obs_pred_path_yaw[11];
     float objPosnLgt[11], objPosnLat[11];
 
-    if (i == 0 || i == 2 || i == 3 || i == 6 || i == 7) {
-      obs_speed_y_cor = obs->speed_y * objSpdLatConf;
+    if (i == 0 || i == 2 || i == 3 || i == 6 || i == 7 || i == 10 || i == 11) {
+      // obs_speed_y_cor = obs->speed_y * objSpdLatConf; // original spd
+      obs_speed_y_cor = ssmObjSpdY[i];  // filtered spd
     } else {
       obs_speed_y_cor = 0;
     }
@@ -508,9 +516,9 @@ void drawObstacles(const SsmObjType* ssmObjs,
       objPosnLgt[j] = obs_pred_path[j].x;
       if (cur_spd > 10.0f / 3.6f && obs->speed_x > 1.0f &&
           objPosnLgt[j] < 150.0f) {
-        if (i == 4 || i == 5) {
+        if ((i == 4 || i == 5) && 5 == gScenarioFlg) {
           objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH0, 0);
-        } else if (i == 8 || i == 9) {
+        } else if ((i == 8 || i == 9) && 5 == gScenarioFlg) {
           objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH1, 0);
         } else {
           objPosnLat[j] =
@@ -533,14 +541,14 @@ void drawObstacles(const SsmObjType* ssmObjs,
     obs_pred_yaw = obs_pred_path_yaw[10];
     // cipv, considier 0->1s const acc, 1->5s const spd
     if (obs->lane_index == 3 && obs->pos_x > 0) {
-      const float const_acc_time = 1.0f;
+      const float const_acc_time = 2.5f;
       obs_pred.x = obs->pos_x +
                    (obs->speed_x + obs->acc_x * const_acc_time) * 5.0f -
                    0.5f * obs->acc_x * const_acc_time * const_acc_time;
       obs_pred.x = fmaxf(obs->pos_x, obs_pred.x);
     }
 
-    if (show_predict_swt && fabsf(obs_pred.x - obs->pos_x) > 5.0f) {
+    if (g_showPredictSwt && fabsf(obs_pred.x - obs->pos_x) > 5.0f) {
       char str_obs_pred[2][8] = {};
       strcpy(str_obs_pred[1], "Pred");
       setfillcolor(LIGHTGRAY);
@@ -557,6 +565,7 @@ void drawObstacles(const SsmObjType* ssmObjs,
       }
     }
   }
+  return;
 }
 
 void drawBEVRuler(const float zeroOffsetX) {
@@ -637,6 +646,7 @@ void drawBasicGraph(const int len,
     coordinateTrans1(&point1);
     outtextxy(point1.x - textwidth(str) / 2, point1.y, str);
   }
+  return;
 }
 
 void showXYGraph(const GraphConfig* config,
@@ -768,6 +778,7 @@ void showXYGraph(const GraphConfig* config,
     outtextxy(plot->ctrlPoint->x - textwidth(str) / 2,
               plot->ctrlPoint->y - textheight(str), str);
   }
+  return;
 }
 
 void initBEVGraph(const GraphConfig* config, const float zeroOffsetX) {
@@ -795,7 +806,8 @@ void showBEVGraph(const GraphConfig* config,
                   const SsmObjType* ssmObjs,
                   const LinesInfo* linesInfo,
                   const TsrInfo* tsrInfo,
-                  const MotionInfo* motionInfo) {
+                  const MotionInfo* motionInfo,
+                  const float* ssmObjSpdY) {
   initBEVGraph(config, zeroOffsetX);
   // Note: Origin slightly further left, for aesthetic purpose
   s_origin2.x *= 0.95f;
@@ -834,13 +846,13 @@ void showBEVGraph(const GraphConfig* config,
 
   // obstacles
   drawObstacles(ssmObjs, &linesInfo->ego_coeffs, linesInfo->left_coeffs,
-                linesInfo->right_coeffs, motionInfo->egoSpd);
+                linesInfo->right_coeffs, motionInfo->egoSpd, ssmObjSpdY);
 
   // navigation path, ego c7 as end point
   const float naviRange = linesInfo->alc_coeffs[7];
   Point predictPosn = {0.0f, 0.0f};
 
-  if (show_dp_line) {
+  if (g_showDpLine) {
     if (linesInfo->ego_dp_org[0]) {
       setlinestyle(PS_SOLID, 3);
       drawQuinticPolyTraj(linesInfo->ego_dp_org, BLUE, linesInfo->ego_dp_org[6],
@@ -865,6 +877,7 @@ void showBEVGraph(const GraphConfig* config,
                       &predictPosn);
 
   // ego car
+  const int ego_index = ssmObjs->obj_num;
   if (1 == motionInfo->enblSts) {
     setfillcolor(LIGHTRED);
   } else if (2 == motionInfo->enblSts) {
@@ -877,18 +890,18 @@ void showBEVGraph(const GraphConfig* config,
   Point ego = {0.0f, 0};
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
-  strCompletion(str_ego, 10, motionInfo->egoSpd);
-  drawCar(&ego, str_ego, 1, 0, 10);
+  strCompletion(str_ego, ego_index, motionInfo->egoSpd);
+  drawCar(&ego, str_ego, 1, 0, ego_index);
 
-  if (show_predict_swt && predictPosn.x > 2.0f) {
+  if (g_showPredictSwt && predictPosn.x > 2.0f) {
     // setfillstyle(BS_HATCHED, HS_DIAGCROSS);
     Point ego_pred = {predictPosn.x, predictPosn.y};
     float ego_pred_yaw =
         getQuinticPolynomial(predictPosn.x, linesInfo->alc_coeffs, 1);
     char str_ego_pred[2][8] = {};
     strcpy(str_ego_pred[0], "ego_pred");
-    strCompletion(str_ego_pred, 10, motionInfo->egoPredSpd);
-    drawCar(&ego_pred, str_ego_pred, 1, ego_pred_yaw, 10);
+    strCompletion(str_ego_pred, ego_index, motionInfo->egoPredSpd);
+    drawCar(&ego_pred, str_ego_pred, 1, ego_pred_yaw, ego_index);
     // setfillstyle(BS_SOLID);
   }
   // ego spd info and lane change status
@@ -996,7 +1009,7 @@ bool buttonOneStep(ExMessage* msg,
 
 int functionButton(ExMessage msg) {
   if (buttonStateSwitch(&msg, s_infoAreaBoundary - 2, 50, 60, 30,
-                        &show_predict_swt, "Pred On", "Pred Off")) {
+                        &g_showPredictSwt, "Pred On", "Pred Off")) {
     return 1;
   } else if (buttonOneStep(&msg, s_infoAreaBoundary - 2, 80, 60, 30, "Prev")) {
     return 2;

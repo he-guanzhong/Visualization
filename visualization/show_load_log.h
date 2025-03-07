@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "visualization/extension_package/show_ext_load_log.h"
+#include "visualization/extension_package/ext_radar_load_log.h"
 #include "visualization/show_data_storage.h"
 
 // character nums of first row (variable names) shall not exceed MAX_LINE_SIZE

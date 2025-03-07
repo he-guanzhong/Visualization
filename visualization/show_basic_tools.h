@@ -125,7 +125,8 @@ void drawObstacles(const SsmObjType* ssmObjs,
                    const EgoPathVcc* egoPath,
                    const float* LH0,
                    const float* LH1,
-                   const float cur_spd);
+                   const float cur_spd,
+                   const float* ssmObjSpdY);
 
 void drawBEVRuler(const float zeroOffsetX);
 
@@ -146,12 +147,14 @@ void showXYGraph(const GraphConfig* config,
 /// @param linesInfo      lane lines info
 /// @param tsrInfo        environmental TSR info and ego TSR status
 /// @param motionInfo     ego vehicle motion status
+/// @param ssmObjSpdY     filtered obs lat spd
 void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,
                   const SsmObjType* ssmObjs,
                   const LinesInfo* linesInfo,
                   const TsrInfo* tsrInfo,
-                  const MotionInfo* motionInfo);
+                  const MotionInfo* motionInfo,
+                  const float* ssmObjSpdY);
 
 void showLineChart(GraphConfig* chartConfig,
                    float zeroOffsetY,
