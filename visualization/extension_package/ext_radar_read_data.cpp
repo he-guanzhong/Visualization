@@ -93,14 +93,16 @@ void ReadRadarInputData(const int t, RadarObjInfo* radarObjsInfo) {
 
 #ifdef MEOBJ_DEMO_TEST
 void ReadMeObjInputData(const int t, MeObjInfo* meObjsInfo) {
-  for (int j = 0; j < OBJ_NUM; j++) {
+  // ME:left-hand coordinate. Inner: right-hand
+  for (int j = 0; j < ME_OBS; j++) {
     meObjsInfo->iId[j] = iId_data[j][t];
     meObjsInfo->iClass[j] = iClass_data[j][t];
     meObjsInfo->fLongDis[j] = fLongDis_data[j][t];
-    meObjsInfo->fLatDis[j] = fLatDis_data[j][t];
+    meObjsInfo->fLatDis[j] = -fLatDis_data[j][t];
     meObjsInfo->fLen[j] = fLen_data[j][t];
     meObjsInfo->fWid[j] = fWid_data[j][t];
     meObjsInfo->fLongSpd[j] = fLongSpd_data[j][t];
+    meObjsInfo->fHeading[j] = -fHeading_data[j][t];
   }
 }
 

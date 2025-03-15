@@ -380,25 +380,25 @@ void AgsmDataParsing(float** values,
 
 extern float time_data[DATA_NUM];
 
-int iFL_ObjectId_data[OBJ_NUM][DATA_NUM];
-float fFL_ExistProb_data[OBJ_NUM][DATA_NUM];
-float fFL_DistX_data[OBJ_NUM][DATA_NUM];
-float fFL_DistY_data[OBJ_NUM][DATA_NUM];
+int iFL_ObjectId_data[RADAR_OBS][DATA_NUM];
+float fFL_ExistProb_data[RADAR_OBS][DATA_NUM];
+float fFL_DistX_data[RADAR_OBS][DATA_NUM];
+float fFL_DistY_data[RADAR_OBS][DATA_NUM];
 
-int iFR_ObjectId_data[OBJ_NUM][DATA_NUM];
-float fFR_ExistProb_data[OBJ_NUM][DATA_NUM];
-float fFR_DistX_data[OBJ_NUM][DATA_NUM];
-float fFR_DistY_data[OBJ_NUM][DATA_NUM];
+int iFR_ObjectId_data[RADAR_OBS][DATA_NUM];
+float fFR_ExistProb_data[RADAR_OBS][DATA_NUM];
+float fFR_DistX_data[RADAR_OBS][DATA_NUM];
+float fFR_DistY_data[RADAR_OBS][DATA_NUM];
 
-int iRL_ObjectId_data[OBJ_NUM][DATA_NUM];
-float fRL_ExistProb_data[OBJ_NUM][DATA_NUM];
-float fRL_DistX_data[OBJ_NUM][DATA_NUM];
-float fRL_DistY_data[OBJ_NUM][DATA_NUM];
+int iRL_ObjectId_data[RADAR_OBS][DATA_NUM];
+float fRL_ExistProb_data[RADAR_OBS][DATA_NUM];
+float fRL_DistX_data[RADAR_OBS][DATA_NUM];
+float fRL_DistY_data[RADAR_OBS][DATA_NUM];
 
-int iRR_ObjectId_data[OBJ_NUM][DATA_NUM];
-float fRR_ExistProb_data[OBJ_NUM][DATA_NUM];
-float fRR_DistX_data[OBJ_NUM][DATA_NUM];
-float fRR_DistY_data[OBJ_NUM][DATA_NUM];
+int iRR_ObjectId_data[RADAR_OBS][DATA_NUM];
+float fRR_ExistProb_data[RADAR_OBS][DATA_NUM];
+float fRR_DistX_data[RADAR_OBS][DATA_NUM];
+float fRR_DistY_data[RADAR_OBS][DATA_NUM];
 
 void RadarDataParsing(float** values,
                       const int numColumns,
@@ -406,19 +406,19 @@ void RadarDataParsing(float** values,
                       const int* valuesCount,
                       int* totalFrame) {
   int Ts = 0;
-  int FL_ID[OBJ_NUM] = {0}, FL_EXI_PB[OBJ_NUM] = {0}, FL_DIS_X[OBJ_NUM] = {0},
-      FL_DIS_Y[OBJ_NUM] = {0};
-  int FR_ID[OBJ_NUM] = {0}, FR_EXI_PB[OBJ_NUM] = {0}, FR_DIS_X[OBJ_NUM] = {0},
-      FR_DIS_Y[OBJ_NUM] = {0};
-  int RL_ID[OBJ_NUM] = {0}, RL_EXI_PB[OBJ_NUM] = {0}, RL_DIS_X[OBJ_NUM] = {0},
-      RL_DIS_Y[OBJ_NUM] = {0};
-  int RR_ID[OBJ_NUM] = {0}, RR_EXI_PB[OBJ_NUM] = {0}, RR_DIS_X[OBJ_NUM] = {0},
-      RR_DIS_Y[OBJ_NUM] = {0};
+  int FL_ID[RADAR_OBS] = {0}, FL_EXI_PB[RADAR_OBS] = {0},
+      FL_DIS_X[RADAR_OBS] = {0}, FL_DIS_Y[RADAR_OBS] = {0};
+  int FR_ID[RADAR_OBS] = {0}, FR_EXI_PB[RADAR_OBS] = {0},
+      FR_DIS_X[RADAR_OBS] = {0}, FR_DIS_Y[RADAR_OBS] = {0};
+  int RL_ID[RADAR_OBS] = {0}, RL_EXI_PB[RADAR_OBS] = {0},
+      RL_DIS_X[RADAR_OBS] = {0}, RL_DIS_Y[RADAR_OBS] = {0};
+  int RR_ID[RADAR_OBS] = {0}, RR_EXI_PB[RADAR_OBS] = {0},
+      RR_DIS_X[RADAR_OBS] = {0}, RR_DIS_Y[RADAR_OBS] = {0};
   for (int i = 0; i < numColumns; i++) {
     if (strcmp(columns[i], "timestamps") == 0)
       Ts = i;
 
-    for (int j = 0; j < OBJ_NUM; j++) {
+    for (int j = 0; j < RADAR_OBS; j++) {
       char obs_title[70] = "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
       char exiP_title[85] =
           "AswIf_SRRDataFrontLeft.SyncTrack_s.radar_track_s._";
@@ -452,7 +452,7 @@ void RadarDataParsing(float** values,
       }
     }
 
-    for (int j = 0; j < OBJ_NUM; j++) {
+    for (int j = 0; j < RADAR_OBS; j++) {
       char obs_title[70] =
           "AswIf_SRRDataFrontRight.SyncTrack_s.radar_track_s._";
       char exiP_title[85] =
@@ -485,7 +485,7 @@ void RadarDataParsing(float** values,
       }
     }
 
-    for (int j = 0; j < OBJ_NUM; j++) {
+    for (int j = 0; j < RADAR_OBS; j++) {
       char obs_title[70] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
       char exiP_title[85] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
       char disX_title[70] = "AswIf_SRRDataRearLeft.SyncTrack_s.radar_track_s._";
@@ -514,7 +514,7 @@ void RadarDataParsing(float** values,
       }
     }
 
-    for (int j = 0; j < OBJ_NUM; j++) {
+    for (int j = 0; j < RADAR_OBS; j++) {
       char obs_title[70] = "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
       char exiP_title[85] =
           "AswIf_SRRDataRearRight.SyncTrack_s.radar_track_s._";
@@ -548,14 +548,14 @@ void RadarDataParsing(float** values,
   }
 
   *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
-  /*   for (int j = 0; j < OBJ_NUM; j++) {
+  /*   for (int j = 0; j < RADAR_OBS; j++) {
       printf("FL_ID[%d] = %d\t %d, %d, %d\n", j, FL_ID[j], FR_ID[j], RL_ID[j],
              RR_ID[j]);
     } */
   for (int t = 0; t < *totalFrame; t++) {
     time_data[t] = values[Ts][t];
 
-    for (int j = 0; j < OBJ_NUM; j++) {
+    for (int j = 0; j < RADAR_OBS; j++) {
       if (FL_ID[j] == 0)
         continue;
       iFL_ObjectId_data[j][t] = values[FL_ID[j]][t];
@@ -564,7 +564,7 @@ void RadarDataParsing(float** values,
       fFL_DistY_data[j][t] = values[FL_DIS_Y[j]][t];
     }
 
-    for (int j = 0; j < OBJ_NUM; j++) {
+    for (int j = 0; j < RADAR_OBS; j++) {
       if (FR_ID[j] == 0)
         continue;
       iFR_ObjectId_data[j][t] = values[FR_ID[j]][t];
@@ -573,7 +573,7 @@ void RadarDataParsing(float** values,
       fFR_DistY_data[j][t] = values[FR_DIS_Y[j]][t];
     }
 
-    for (int j = 0; j < OBJ_NUM; j++) {
+    for (int j = 0; j < RADAR_OBS; j++) {
       if (RL_ID[j] == 0)
         continue;
       iRL_ObjectId_data[j][t] = values[RL_ID[j]][t];
@@ -582,7 +582,7 @@ void RadarDataParsing(float** values,
       fRL_DistY_data[j][t] = values[RL_DIS_Y[j]][t];
     }
 
-    for (int j = 0; j < OBJ_NUM; j++) {
+    for (int j = 0; j < RADAR_OBS; j++) {
       if (RR_ID[j] == 0)
         continue;
       iRR_ObjectId_data[j][t] = values[RR_ID[j]][t];
@@ -598,13 +598,14 @@ void RadarDataParsing(float** values,
 #ifdef MEOBJ_DEMO_TEST
 extern float time_data[DATA_NUM];
 
-int iId_data[OBJ_NUM][DATA_NUM];
-int iClass_data[OBJ_NUM][DATA_NUM];
-float fLongDis_data[OBJ_NUM][DATA_NUM];
-float fLatDis_data[OBJ_NUM][DATA_NUM];
-float fLen_data[OBJ_NUM][DATA_NUM];
-float fWid_data[OBJ_NUM][DATA_NUM];
-float fLongSpd_data[OBJ_NUM][DATA_NUM];
+int iId_data[ME_OBS][DATA_NUM];
+int iClass_data[ME_OBS][DATA_NUM];
+float fLongDis_data[ME_OBS][DATA_NUM];
+float fLatDis_data[ME_OBS][DATA_NUM];
+float fLen_data[ME_OBS][DATA_NUM];
+float fWid_data[ME_OBS][DATA_NUM];
+float fLongSpd_data[ME_OBS][DATA_NUM];
+float fHeading_data[ME_OBS][DATA_NUM];
 
 void MeObjDataParsing(float** values,
                       const int numColumns,
@@ -612,9 +613,9 @@ void MeObjDataParsing(float** values,
                       const int* valuesCount,
                       int* totalFrame) {
   int Ts = 0;
-  int ID[OBJ_NUM] = {0}, CLASS[OBJ_NUM] = {0}, LONDIS[OBJ_NUM] = {0},
-      LADIS[OBJ_NUM] = {0}, LON[OBJ_NUM] = {0}, WID[OBJ_NUM] = {0},
-      SPD[OBJ_NUM] = {0};
+  int ID[ME_OBS] = {0}, CLASS[ME_OBS] = {0}, LONDIS[ME_OBS] = {0},
+      LADIS[ME_OBS] = {0}, LON[ME_OBS] = {0}, WID[ME_OBS] = {0},
+      SPD[ME_OBS] = {0}, YAW[ME_OBS] = {0};
   int LH_C_0[8] = {0}, LH_C_1[8] = {0}, LA_C_0[8] = {0}, LA_C_1[8] = {0};
 
   for (int i = 0; i < numColumns; i++) {
@@ -695,7 +696,7 @@ void MeObjDataParsing(float** values,
              strncmp(columns[i], "VfPASP_LA_View_Range_End_1[]", 26) == 0)
       LA_C_1[7] = i;
 
-    for (int j = 0; j < OBJ_NUM; j++) {
+    for (int j = 0; j < ME_OBS; j++) {
       char id_title[70] = "OBJ_ID_";
       char class_title[85] = "OBJ_Object_Class_";
       char long_dis_title[70] = "OBJ_Long_Distance_";
@@ -703,6 +704,7 @@ void MeObjDataParsing(float** values,
       char len_title[70] = "OBJ_Length_";
       char wid_title[70] = "OBJ_Width_";
       char spd_title[70] = "OBJ_Abs_Long_Velocity_";
+      char yaw_title[70] = "OBJ_Heading_";
 
       const int id_len = strlen(id_title);
       const int class_len = strlen(class_title);
@@ -711,6 +713,7 @@ void MeObjDataParsing(float** values,
       const int len_len = strlen(len_title);
       const int wid_len = strlen(wid_title);
       const int spd_len = strlen(spd_title);
+      const int yaw_len = strlen(yaw_title);
 
       snprintf(id_title + id_len, sizeof(id_title) - id_len,
                "%d_proc_Sensor_disp", j + 1);
@@ -727,6 +730,8 @@ void MeObjDataParsing(float** values,
                "%d_proc_Sensor_disp", j + 1);
       snprintf(spd_title + spd_len, sizeof(spd_title) - spd_len,
                "%d_proc_Sensor_disp", j + 1);
+      snprintf(yaw_title + yaw_len, sizeof(yaw_title) - yaw_len,
+               "%d_proc_Sensor_disp", j + 1);
 
       if (strcmp(columns[i], id_title) == 0) {
         ID[j] = i;
@@ -742,19 +747,21 @@ void MeObjDataParsing(float** values,
         WID[j] = i;
       } else if (strcmp(columns[i], spd_title) == 0) {
         SPD[j] = i;
+      } else if (strcmp(columns[i], yaw_title) == 0) {
+        YAW[j] = i;
       }
     }
   }
 
   *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
-  /*   for (int j = 0; j < OBJ_NUM; j++) {
+  /*   for (int j = 0; j < ME_OBS; j++) {
       printf("FL_ID[%d] = %d\t %d, %d, %d\n", j, FL_ID[j], FR_ID[j], RL_ID[j],
              RR_ID[j]);
     } */
   for (int t = 0; t < *totalFrame; t++) {
     time_data[t] = values[Ts][t];
 
-    for (int j = 0; j < OBJ_NUM; j++) {
+    for (int j = 0; j < ME_OBS; j++) {
       if (ID[j] == 0)
         continue;
       iId_data[j][t] = values[ID[j]][t];
@@ -764,6 +771,7 @@ void MeObjDataParsing(float** values,
       fLen_data[j][t] = values[LON[j]][t];
       fWid_data[j][t] = values[WID[j]][t];
       fLongSpd_data[j][t] = values[SPD[j]][t];
+      fHeading_data[j][t] = values[YAW[j]][t];
     }
   }
   return;

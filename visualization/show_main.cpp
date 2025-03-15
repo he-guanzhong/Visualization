@@ -127,7 +127,7 @@ void WriteOutputData(const int t) {
   for (int k = 0; k < 6; k++) {
     alcStCoeff_data[k][t] = gAlcStCoeff[k];
   }
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < 14; ++i) {
     objs_speed_y_f_data[i][t] = g_ssmObjSpdY[i];
   }
   return;
@@ -309,7 +309,7 @@ void ShowBasicFrameInfo(int* t, int* cycle, const int length, const int width) {
 
 void ShowSpdPlanInterface(const int length, const int width, const int offset) {
   const GraphConfig BEV_cfg = {length / 2, width,       offset, length / 2, 0,
-                               130.0f,     3.4f * 5.0f, 0,      0};
+                               140.0f,     3.4f * 5.0f, 0,      0};
   const GraphConfig ST_cfg = {
       length / 2, (int)(width * 0.44), offset, 0, 0, 5.0f, 120.0f, 5, 6};
   GraphConfig VT_cfg = ST_cfg;
@@ -747,7 +747,7 @@ void ReleaseWrapper(int length, int width, int offset) {
   length = gPlayMode == RADAR ? 400 : gPlayMode;
 #endif
 #ifdef MEOBJ_DEMO_TEST
-  gPlayMode = iId_data[0][0] ? MEOBJ : gPlayMode;
+  gPlayMode = MEOBJ;
 #endif
 #ifdef AGSM_DEMO_TEST
   gPlayMode = AGSM;

@@ -42,6 +42,7 @@ typedef struct {
   float fLen[12];
   float fWid[12];
   float fLongSpd[12];
+  float fHeading[12];
 } MeObjInfo;
 
 void drawLaneMkr(const LaneMkr* path, const int color);
@@ -74,7 +75,7 @@ void showRadarGraph(const GraphConfig* config,
                     const float zeroOffsetX,
                     const RadarObjInfo* radarObjsInfo);
 
-void drawBox(Point* center, float len, float wid);
+void drawBox(Point* center, float len, float wid, float yaw);
 void drawMeObj(const MeObjInfo* meInfo);
 
 void showMeObjGraph(const GraphConfig* config,

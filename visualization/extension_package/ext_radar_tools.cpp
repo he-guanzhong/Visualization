@@ -168,8 +168,7 @@ void showRadarGraph(const GraphConfig* config,
   return;
 }
 
-void drawBox(Point* center, float len, float wid) {
-  float yaw = 0;
+void drawBox(Point* center, float len, float wid, float yaw) {
   // display: left-hand system. control: right-hand system
   // vertice order: upper-right -> lower-right-> lower-left -> upper-left
   const float halfLenCos = len / 2.0f * cosf(yaw),
@@ -216,7 +215,7 @@ void drawMeObj(const MeObjInfo* meInfo) {
     } else {
       setfillcolor(RED);
     }
-    drawBox(&obj_posn, meInfo->fLen[j], meInfo->fWid[j]);
+    drawBox(&obj_posn, meInfo->fLen[j], meInfo->fWid[j], meInfo->fHeading[j]);
 
     const int off_disp = 20;
     if (meInfo->fLatDis[j] > 0) {

@@ -278,6 +278,7 @@ typedef struct {
   UInt16 Reserved_u16;
   UInt32 ALCDangerObjFrntId;
   UInt32 ALCDangerObjRearId;
+  Float AlcDangerObjTtc;
   Float Reserved_f32;
   StPoint_Array_10 speedPoints;
 } DpSpdPoints;
@@ -295,6 +296,7 @@ typedef struct {
   Boolean AlcLatCtrlEnbl;
   Boolean AlcLgtCtrlEnbl;
   UInt8 AlcFindGapSts;
+  Float AlcDangerObjTtc;
   UInt8 SpdPlanEnblSts;
   UInt8 SpdPlanTextInfo;
   UInt16 SpdPlanRollCnt;

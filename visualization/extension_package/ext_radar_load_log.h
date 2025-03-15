@@ -56,27 +56,27 @@ void AgsmDataParsing(float** values,
 #define DATA_NUM 20480
 #endif
 
-#define OBJ_NUM 20
+#define RADAR_OBS 20
 
-extern int iFL_ObjectId_data[OBJ_NUM][DATA_NUM];
-extern float fFL_ExistProb_data[OBJ_NUM][DATA_NUM];
-extern float fFL_DistX_data[OBJ_NUM][DATA_NUM];
-extern float fFL_DistY_data[OBJ_NUM][DATA_NUM];
+extern int iFL_ObjectId_data[RADAR_OBS][DATA_NUM];
+extern float fFL_ExistProb_data[RADAR_OBS][DATA_NUM];
+extern float fFL_DistX_data[RADAR_OBS][DATA_NUM];
+extern float fFL_DistY_data[RADAR_OBS][DATA_NUM];
 
-extern int iFR_ObjectId_data[OBJ_NUM][DATA_NUM];
-extern float fFR_ExistProb_data[OBJ_NUM][DATA_NUM];
-extern float fFR_DistX_data[OBJ_NUM][DATA_NUM];
-extern float fFR_DistY_data[OBJ_NUM][DATA_NUM];
+extern int iFR_ObjectId_data[RADAR_OBS][DATA_NUM];
+extern float fFR_ExistProb_data[RADAR_OBS][DATA_NUM];
+extern float fFR_DistX_data[RADAR_OBS][DATA_NUM];
+extern float fFR_DistY_data[RADAR_OBS][DATA_NUM];
 
-extern int iRL_ObjectId_data[OBJ_NUM][DATA_NUM];
-extern float fRL_ExistProb_data[OBJ_NUM][DATA_NUM];
-extern float fRL_DistX_data[OBJ_NUM][DATA_NUM];
-extern float fRL_DistY_data[OBJ_NUM][DATA_NUM];
+extern int iRL_ObjectId_data[RADAR_OBS][DATA_NUM];
+extern float fRL_ExistProb_data[RADAR_OBS][DATA_NUM];
+extern float fRL_DistX_data[RADAR_OBS][DATA_NUM];
+extern float fRL_DistY_data[RADAR_OBS][DATA_NUM];
 
-extern int iRR_ObjectId_data[OBJ_NUM][DATA_NUM];
-extern float fRR_ExistProb_data[OBJ_NUM][DATA_NUM];
-extern float fRR_DistX_data[OBJ_NUM][DATA_NUM];
-extern float fRR_DistY_data[OBJ_NUM][DATA_NUM];
+extern int iRR_ObjectId_data[RADAR_OBS][DATA_NUM];
+extern float fRR_ExistProb_data[RADAR_OBS][DATA_NUM];
+extern float fRR_DistX_data[RADAR_OBS][DATA_NUM];
+extern float fRR_DistY_data[RADAR_OBS][DATA_NUM];
 
 void RadarDataParsing(float** values,
                       const int numColumns,
@@ -91,15 +91,16 @@ void RadarDataParsing(float** values,
 #define DATA_NUM 20480
 #endif
 
-#define OBJ_NUM 12
+#define ME_OBS 12
 
-extern int iId_data[OBJ_NUM][DATA_NUM];
-extern int iClass_data[OBJ_NUM][DATA_NUM];
-extern float fLongDis_data[OBJ_NUM][DATA_NUM];
-extern float fLatDis_data[OBJ_NUM][DATA_NUM];
-extern float fLen_data[OBJ_NUM][DATA_NUM];
-extern float fWid_data[OBJ_NUM][DATA_NUM];
-extern float fLongSpd_data[OBJ_NUM][DATA_NUM];
+extern int iId_data[ME_OBS][DATA_NUM];
+extern int iClass_data[ME_OBS][DATA_NUM];
+extern float fLongDis_data[ME_OBS][DATA_NUM];
+extern float fLatDis_data[ME_OBS][DATA_NUM];
+extern float fLen_data[ME_OBS][DATA_NUM];
+extern float fWid_data[ME_OBS][DATA_NUM];
+extern float fLongSpd_data[ME_OBS][DATA_NUM];
+extern float fHeading_data[ME_OBS][DATA_NUM];
 
 void MeObjDataParsing(float** values,
                       const int numColumns,
