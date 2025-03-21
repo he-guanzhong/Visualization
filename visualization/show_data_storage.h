@@ -1,8 +1,10 @@
 #ifndef SHOW_DATA_STORAGE_H_
 #define SHOW_DATA_STORAGE_H_
 
-// csv row nums (total steps) exceeding DATA_NUM will result in errors
+/* csv row nums (total steps) exceeding DATA_NUM will result in errors */
+#ifndef DATA_NUM
 #define DATA_NUM 24480
+#endif
 
 #ifndef OBJ_NUM
 #define OBJ_NUM 14

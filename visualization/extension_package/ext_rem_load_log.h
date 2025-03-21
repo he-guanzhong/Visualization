@@ -5,7 +5,7 @@
 
 /* Note: max frame numbers */
 #ifndef DATA_NUM
-#define DATA_NUM 20480
+#define DATA_NUM 24480
 #endif
 
 #define POINT_NUM 24

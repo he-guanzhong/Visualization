@@ -407,12 +407,12 @@ void DisplayLog(const int length, const int width, const int offset) {
           showAGSMGraph(&BEV_cfg, 0, &g_ssmObjType, &sAgsmLinesInfo,
                         &sMotionInfo);
         } else if (gPlayMode == RADAR) {
-          const GraphConfig BEV_cfg = {length, width,       offset, 0, 0,
-                                       170.0f, 3.4f * 5.0f, 0,      0};
-          showRadarGraph(&BEV_cfg, 70.0f, sRadarObjsInfo);
+          const GraphConfig BEV_cfg = {length, width,        offset, 0, 0,
+                                       160.0f, 3.4f * 10.0f, 0,      0};
+          showRadarGraph(&BEV_cfg, 60.0f, sRadarObjsInfo);
         } else if (gPlayMode == MEOBJ) {
           const GraphConfig BEV_cfg = {length, width,        offset, 0, 0,
-                                       120.0f, 3.4f * 10.0f, 0,      0};
+                                       100.0f, 3.4f * 10.0f, 0,      0};
           showMeObjGraph(&BEV_cfg, 0.0f, &sMeObjsInfo);
         } else if (gPlayMode == LOOPBACK) {
           const int chartWidth = 200, charOffset = 50;
@@ -744,7 +744,6 @@ void ReleaseWrapper(int length, int width, int offset) {
 #endif
 #ifdef RADAR_DEMO_TEST
   gPlayMode = fFL_DistX_data[0][0] ? RADAR : gPlayMode;
-  length = gPlayMode == RADAR ? 400 : gPlayMode;
 #endif
 #ifdef MEOBJ_DEMO_TEST
   gPlayMode = MEOBJ;

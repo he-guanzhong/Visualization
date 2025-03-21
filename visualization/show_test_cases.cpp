@@ -240,8 +240,10 @@ void LoadDummyPathData(float* alc_coeffs,
     rightright[3] = 1.1E-05f; */
   /* 1.036868453	-0.03775819	0.000235738	-2.47E-05 */
 
-  *alcPathVcc = {alc_coeffs[0], alc_coeffs[1], alc_coeffs[2], alc_coeffs[3],
-                 alc_coeffs[4], alc_coeffs[5], alc_coeffs[7]};
+  *alcPathVcc = {
+      alc_coeffs[0], 0, alc_coeffs[1], 0, alc_coeffs[2], 0, alc_coeffs[3], 0,
+      alc_coeffs[4], 0, alc_coeffs[5], 0, alc_coeffs[7], 0,
+  };
   agsmEnvModel->EgoPath.C0 = ego_coeffs->C0[0];
   agsmEnvModel->EgoPath.C1 = ego_coeffs->C1[0];
   agsmEnvModel->EgoPath.C2 = ego_coeffs->C2[0];

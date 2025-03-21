@@ -60,28 +60,28 @@ void ReadAgsmInputData(const int t,
 #ifdef RADAR_DEMO_TEST
 
 void ReadRadarInputData(const int t, RadarObjInfo* radarObjsInfo) {
-  for (int j = 0; j < OBJ_NUM; j++) {
+  for (int j = 0; j < RADAR_OBS; j++) {
     radarObjsInfo[0].iObjectId[j] = iFL_ObjectId_data[j][t];
     radarObjsInfo[0].fExistProb[j] = fFL_ExistProb_data[j][t];
     radarObjsInfo[0].fDistX[j] = fFL_DistX_data[j][t];
     radarObjsInfo[0].fDistY[j] = fFL_DistY_data[j][t];
   }
 
-  for (int j = 0; j < OBJ_NUM; j++) {
+  for (int j = 0; j < RADAR_OBS; j++) {
     radarObjsInfo[1].iObjectId[j] = iFR_ObjectId_data[j][t];
     radarObjsInfo[1].fExistProb[j] = fFR_ExistProb_data[j][t];
     radarObjsInfo[1].fDistX[j] = fFR_DistX_data[j][t];
     radarObjsInfo[1].fDistY[j] = fFR_DistY_data[j][t];
   }
 
-  for (int j = 0; j < OBJ_NUM; j++) {
+  for (int j = 0; j < RADAR_OBS; j++) {
     radarObjsInfo[2].iObjectId[j] = iRL_ObjectId_data[j][t];
     radarObjsInfo[2].fExistProb[j] = fRL_ExistProb_data[j][t];
     radarObjsInfo[2].fDistX[j] = fRL_DistX_data[j][t];
     radarObjsInfo[2].fDistY[j] = fRL_DistY_data[j][t];
   }
 
-  for (int j = 0; j < OBJ_NUM; j++) {
+  for (int j = 0; j < RADAR_OBS; j++) {
     radarObjsInfo[3].iObjectId[j] = iRR_ObjectId_data[j][t];
     radarObjsInfo[3].fExistProb[j] = fRR_ExistProb_data[j][t];
     radarObjsInfo[3].fDistX[j] = fRR_DistX_data[j][t];

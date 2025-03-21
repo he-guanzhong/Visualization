@@ -85,13 +85,13 @@ typedef struct {
 
 #define Rte_TypeDef_AlcPathVcc
 typedef struct {
-  Float ConCoeff;
-  Float FirstCoeff;
-  Float SecondCoeff;
-  Float ThirdCoeff;
-  Float FourthCoeff;
-  Float FifthCoeff;
-  Float ViewRng;
+  Float C0[2];
+  Float C1[2];
+  Float C2[2];
+  Float C3[2];
+  Float C4[2];
+  Float C5[2];
+  Float Len[2];
 } AlcPathVcc;
 
 #define Rte_TypeDef_AgsmEnvModelPath

@@ -3,7 +3,7 @@
 - [中文](#中文)
 - [Français](#français)
 
-<img src="dist/example1_img.png" height="400">   <img src="dist/example2_img.png" height="400">   <img src="dist/example3_img.png" height="400">  
+<img src="build/example1_img.png" height="400">   <img src="build/example2_img.png" height="400">   <img src="build/example3_img.png" height="400">  
 
 ## English
 ### Discription
@@ -16,9 +16,9 @@ In standard mode, the following display information is currently supported by de
 4. Ego motion status (set/actual speed, ACC mode)
 5. TSR info (speed limit sign, special sign, ego display/alert status)
 ### Usage Instructions
-- Download all files from the ` /build/ ` directory (` spdplan.exe `、 ` libgcc_s_seh-1.dll ` and ` libstdc++-6.dll ` are compulsory)
-- Open the executable file ` spdplan.exe `. In the pop-up window, select the **.csv** formatted log you want to play
-- For your convenience, a example log, ` example1_std.csv ` , is provided for self-testing purposes
+- Download all files from the ` /dist/ ` directory (` SpdPlan.exe `、 ` libgcc_s_seh-1.dll ` and ` libstdc++-6.dll ` are compulsory)
+- Open the executable file ` SpdPlan.exe `. In the pop-up window, select the **.csv** formatted log you want to play
+- For your convenience, a example log, ` example1_SpdPlan.csv ` , is provided for self-testing purposes
 - Optionally, to play ` example2_agsm.csv ` or ` example3_radar.csv `, it is essential to activate the corresponding macro switches (AGSM or RADAR) in CMakeLists.txt and recompile the project
 ### Compilation Requirements
 * Platform: Windows (Linux not supported due to incompatiblity of EasyX)
@@ -40,9 +40,9 @@ In standard mode, the following display information is currently supported by de
 4. 自车运动状态 （设置/当前 速度, 自适应巡航模式）
 5. 交通标志识别信息 （限速标识、特殊标识、自车显示、报警状态）
 ### 使用方式
-- 下载 ` /build/ ` 路径下的所有文件（必须包括` spdplan.exe `、 ` libgcc_s_seh-1.dll ` 和 ` libstdc++-6.dll `）
-- 双击打开可执行文件 ` spdplan.exe `。在弹框中，选择要播放 **.csv** 格式的日志
-- 默认提供 ` example1_std.csv ` 一个样例供自测
+- 下载 ` /dist/ ` 路径下的所有文件（必须包括` SpdPlan.exe `、 ` libgcc_s_seh-1.dll ` 和 ` libstdc++-6.dll `）
+- 双击打开可执行文件 ` SpdPlan.exe `。在弹框中，选择要播放 **.csv** 格式的日志
+- 默认提供 ` example1_SpdPlan.csv ` 一个样例供自测
 - 可选地，如需播放 ` example2_agsm.csv ` 或 ` example3_radar.csv `，需在 CMakeLists.txt 中激活相应的宏开关(AGSM / RADAR)，以切换显示模式，并重新编译
 ### 编译要求
 * 平台: Windows (Linux不兼容EasyX)
@@ -64,9 +64,9 @@ En mode standard, les informations d’affichage suivantes sont actuellement pri
 4. État du mouvement de l’ego (vitesse réglée/réelle, mode ACC)
 5. Infos TSR (panneau de limitation de vitesse, panneau spécial, affichage de l’ego/état d’alerte)
 ### Instructions d'utilisation
-- Télécharger tous les fichiers du Répertoire ` /build/ ` ( ` spdplan.exe `, ` libgcc_s_seh-1.dll ` et ` libstdc++-6.dll ` sont requis)
-- Ouvrez le fichier exécutable ` spdplan.exe `. Dans la fenêtre contextuelle, sélectionnez le Journal au format **.csv** que vous souhaitez lire
-- Pour votre commodité, un exemple de log ` example1_std.csv ` est fournis à des fins d’auto-test
+- Télécharger tous les fichiers du Répertoire ` /dist/ ` ( ` SpdPlan.exe `, ` libgcc_s_seh-1.dll ` et ` libstdc++-6.dll ` sont requis)
+- Ouvrez le fichier exécutable ` SpdPlan.exe `. Dans la fenêtre contextuelle, sélectionnez le Journal au format **.csv** que vous souhaitez lire
+- Pour votre commodité, un exemple de log ` example1_SpdPlan.csv ` est fournis à des fins d’auto-test
 - Facultativement, pour lire ` example2_agsm.csv ` ou ` example3_radar.csv `, il est indispensable d'activer les macros correspondantes (AGSM ou RADAR) dans CMakeLists.txt et de recompiler le projet
 ### Exigences de compilation
 * Plate-forme : Windows (Linux non pris en charge en raison de l’incompatibilité d’EasyX)

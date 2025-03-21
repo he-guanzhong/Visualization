@@ -22,10 +22,10 @@ add_executable(SpdPlan ${coreFiles})
 # add_library(SpdPlan STATIC ${coreFiles})
 
 # 切换速度规划回灌/融合/雷达/地图显示模式
-# target_compile_definitions(SpdPlan PRIVATE SPDPLAN_LOCAL_TEST)
+#target_compile_definitions(SpdPlan PRIVATE SPDPLAN_LOCAL_TEST)
 # target_compile_definitions(SpdPlan PRIVATE AGSM_DEMO_TEST)
 # target_compile_definitions(SpdPlan PRIVATE RADAR_DEMO_TEST)
-# target_compile_definitions(SpdPlan PRIVATE MEOBJ_DEMO_TEST)
+#target_compile_definitions(SpdPlan PRIVATE MEOBJ_DEMO_TEST)
 
 # target_compile_definitions(SpdPlan PRIVATE REM_DEMO_TEST)
 

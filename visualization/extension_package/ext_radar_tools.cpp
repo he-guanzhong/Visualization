@@ -94,8 +94,8 @@ void showAGSMGraph(const GraphConfig* config,
   Point ego = {0.0f, 0};
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
-  strCompletion(str_ego, 10, motionInfo->egoSpd);
-  drawCar(&ego, str_ego, 1, 0, 10);
+  strCompletion(str_ego, 14, motionInfo->egoSpd);
+  drawCar(&ego, str_ego, 1, 0, 14);
 
   // ego spd info and lane change status
   drawMotionInfo(motionInfo);
@@ -162,7 +162,7 @@ void showRadarGraph(const GraphConfig* config,
   Point ego = {0.0f, 0.0f};
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
-  drawCar(&ego, str_ego, 1, 0.0f, 10);
+  drawCar(&ego, str_ego, 1, 0.0f, 0);
 
   drawBEVRuler(zeroOffsetX);
   return;
@@ -196,7 +196,7 @@ void drawBox(Point* center, float len, float wid, float yaw) {
 }
 
 void drawMeObj(const MeObjInfo* meInfo) {
-  for (int j = 0; j < 12; j++) {
+  for (int j = 0; j < 12; ++j) {
     if (meInfo->iId[j] == 0 || meInfo->fLongDis[j] < 0) {
       continue;
     }
@@ -218,17 +218,19 @@ void drawMeObj(const MeObjInfo* meInfo) {
     drawBox(&obj_posn, meInfo->fLen[j], meInfo->fWid[j], meInfo->fHeading[j]);
 
     const int off_disp = 20;
-    if (meInfo->fLatDis[j] > 0) {
+    if (meInfo->fLatDis[j] > 3.0f) {
       outtextxy(obj_posn.x - off_disp - textwidth(obj_id),
-                obj_posn.y - textheight(obj_id) / 2, obj_id);
-      outtextxy(obj_posn.x - off_disp - textwidth(obj_spd),
-                obj_posn.y + textheight(obj_id) / 2, obj_spd);
-
-    } else {
-      outtextxy(obj_posn.x + off_disp, obj_posn.y - textheight(obj_id) / 2,
-                obj_id);
-      outtextxy(obj_posn.x + off_disp, obj_posn.y + textheight(obj_spd) / 2,
+                obj_posn.y - textheight(obj_id), obj_id);
+      outtextxy(obj_posn.x - off_disp - textwidth(obj_spd), obj_posn.y,
                 obj_spd);
+    } else if (meInfo->fLatDis[j] < -3.0f) {
+      outtextxy(obj_posn.x + off_disp, obj_posn.y - textheight(obj_id), obj_id);
+      outtextxy(obj_posn.x + off_disp, obj_posn.y, obj_spd);
+    } else {
+      outtextxy(obj_posn.x - textwidth(obj_id) / 2, obj_posn.y + off_disp,
+                obj_id);
+      outtextxy(obj_posn.x - textwidth(obj_spd) / 2,
+                obj_posn.y + off_disp + textheight(obj_spd), obj_spd);
     }
   }
   return;
@@ -246,7 +248,7 @@ void showMeObjGraph(const GraphConfig* config,
   Point ego = {0.0f, 0.0f};
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
-  drawCar(&ego, str_ego, 1, 0.0f, 10);
+  drawCar(&ego, str_ego, 1, 0.0f, 0);
 
   drawBEVRuler(zeroOffsetX);
   return;

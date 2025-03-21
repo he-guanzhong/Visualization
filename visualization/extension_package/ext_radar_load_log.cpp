@@ -36,9 +36,6 @@ void AgsmDataParsing(float** values,
                      int* valuesCount,
                      int* totalFrame) {
   int Ts = 0, EGO_V = 0;
-  int IVS_Present[10] = {0}, IVS_Class[10] = {0}, IVS_LaDis[10] = {0},
-      IVS_LgDis[10] = {0}, IVS_V[10] = {0}, IVS_LaV[10] = {0}, IVS_A[10] = {0},
-      IVS_Yaw[10] = {0};
   int CFT_PATH[10] = {0};
   int LH_C_0[8] = {0}, LH_C_1[8] = {0}, LA_C_0[8] = {0}, LA_C_1[8] = {0};
   int IVS_ID[10] = {0}, IVS_Present[10] = {0}, IVS_Class[10] = {0},

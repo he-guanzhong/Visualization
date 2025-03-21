@@ -477,14 +477,91 @@ void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
   return;
 }
 
+void predictionObstacle(Point obs_pred_path[11],
+                        float obs_pred_path_yaw[11],
+                        const SsmObsType* obs,
+                        const int index,
+                        const EgoPathVcc* egoPath,
+                        const float* LH0,
+                        const float* LH1,
+                        const float cur_spd,
+                        const float* ssmObjSpdY) {
+  const float t_interval = 0.5f;
+  const float objSpdLatConf = 1.0f;
+  float obs_speed_y_cor = 0;
+  float objPosnLgt[11], roadPosnLat[11];
+  const bool leftRearObsRampOn =
+      (index == 4 || index == 5) && (5 == gScenarioFlg || 15 == gScenarioFlg);
+  const bool rightRearObsRampOn =
+      (index == 8 || index == 9) && (5 == gScenarioFlg || 15 == gScenarioFlg);
+
+  if (index == 0 || index == 2 || index == 3 || index == 6 || index == 7 ||
+      index == 10 || index == 11) {
+    // obs_speed_y_cor = obs->speed_y * objSpdLatConf; // original spd
+    obs_speed_y_cor = ssmObjSpdY[index];  // filtered spd
+  }
+
+  const float const_acc_time = (index == 0 ? 2.5f : 0.0f);
+  for (int j = 0; j <= 10; ++j) {
+    if (0 == j) {
+      obs_pred_path[j].x = obs->pos_x;
+      obs_pred_path[j].y = obs->pos_y;
+      obs_pred_path_yaw[j] = obs->pos_yaw;
+      objPosnLgt[j] = obs->pos_x;
+      roadPosnLat[j] =
+          leftRearObsRampOn
+              ? getCubicPolynomial(objPosnLgt[j], LH0, 0)
+              : (rightRearObsRampOn
+                     ? getCubicPolynomial(objPosnLgt[j], LH1, 0)
+                     : getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath, 0));
+      continue;
+    }
+
+    const float t = t_interval * j;
+    if (t <= const_acc_time) {
+      obs_pred_path[j].x =
+          obs->pos_x + obs->speed_x * t + 0.5f * obs->acc_x * t * t;
+    } else {
+      obs_pred_path[j].x = obs->pos_x +
+                           (obs->speed_x + obs->acc_x * const_acc_time) * t -
+                           0.5f * obs->acc_x * const_acc_time * const_acc_time;
+    }
+    obs_pred_path[j].x = fmaxf(obs_pred_path[j - 1].x, obs_pred_path[j].x);
+
+    float predHeadingAg = obs->pos_yaw;
+    float predLatOffset = obs_speed_y_cor * t_interval;
+    objPosnLgt[j] = obs_pred_path[j].x;
+    float roadCurveOffset = 0.0f;
+    if (cur_spd > 10.0f / 3.6f && obs->speed_x > 1.0f &&
+        objPosnLgt[j] < 150.0f) {
+      if (leftRearObsRampOn) {
+        roadPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH0, 0);
+      } else if (rightRearObsRampOn) {
+        roadPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH1, 0);
+      } else {
+        roadPosnLat[j] = getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath, 0);
+      }
+      roadCurveOffset = roadPosnLat[j] - roadPosnLat[j - 1];
+
+      if ((roadCurveOffset > predLatOffset && predLatOffset >= 0) ||
+          (roadCurveOffset < predLatOffset && predLatOffset <= 0) ||
+          fabsf(roadCurveOffset) > fabsf(predLatOffset)) {
+        predLatOffset = roadCurveOffset;
+        predHeadingAg = getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath, 1);
+      }
+    }
+    obs_pred_path[j].y = obs_pred_path[j - 1].y + predLatOffset;
+    obs_pred_path_yaw[j] = predHeadingAg;
+  }
+  return;
+}
+
 void drawObstacles(const SsmObjType* ssmObjs,
                    const EgoPathVcc* egoPath,
                    const float* LH0,
                    const float* LH1,
                    const float cur_spd,
                    const float* ssmObjSpdY) {
-  const float objSpdLatConf = 1.0f;
-  float obs_speed_y_cor = 0;
   for (int i = 0; i < ssmObjs->obj_num; i++) {
     if (!ssmObjs->obj_lists[i].valid_flag) {
       continue;
@@ -498,55 +575,13 @@ void drawObstacles(const SsmObjType* ssmObjs,
     drawCar(&obs_cur, str_obs_cur, obs->type, obs->pos_yaw, i);
 
     // obs latspd not stable, use ego centre line offset
-    Point obs_pred, obs_pred_path[11];
-    float obs_pred_yaw, obs_pred_path_yaw[11];
-    float objPosnLgt[11], objPosnLat[11];
+    Point obs_pred_path[11];
+    float obs_pred_path_yaw[11];
+    predictionObstacle(obs_pred_path, obs_pred_path_yaw, obs, i, egoPath, LH0,
+                       LH1, cur_spd, ssmObjSpdY);
 
-    if (i == 0 || i == 2 || i == 3 || i == 6 || i == 7 || i == 10 || i == 11) {
-      // obs_speed_y_cor = obs->speed_y * objSpdLatConf; // original spd
-      obs_speed_y_cor = ssmObjSpdY[i];  // filtered spd
-    } else {
-      obs_speed_y_cor = 0;
-    }
-    const float t_interval = 0.5f;
-    for (int j = 0; j <= 10; j++) {
-      obs_pred_path[j].x = obs->pos_x + obs->speed_x * j * t_interval;
-      float predHeadingAg = obs->pos_yaw;
-      float predLatOffset = obs_speed_y_cor * j * t_interval;
-      objPosnLgt[j] = obs_pred_path[j].x;
-      if (cur_spd > 10.0f / 3.6f && obs->speed_x > 1.0f &&
-          objPosnLgt[j] < 150.0f) {
-        if ((i == 4 || i == 5) && 5 == gScenarioFlg) {
-          objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH0, 0);
-        } else if ((i == 8 || i == 9) && 5 == gScenarioFlg) {
-          objPosnLat[j] = getCubicPolynomial(objPosnLgt[j], LH1, 0);
-        } else {
-          objPosnLat[j] =
-              getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath, 0);
-        }
-        const float roadCurveOffset = objPosnLat[j] - objPosnLat[0];
-        if ((roadCurveOffset > predLatOffset && predLatOffset >= 0) ||
-            (roadCurveOffset < predLatOffset && predLatOffset <= 0) ||
-            fabsf(roadCurveOffset) > fabsf(predLatOffset)) {
-          predLatOffset = roadCurveOffset;
-          predHeadingAg =
-              getPiecewiseCubicPolynomial(objPosnLgt[j], egoPath, 1);
-        }
-      }
-      obs_pred_path[j].y = obs->pos_y + predLatOffset;
-      obs_pred_path_yaw[j] = predHeadingAg;
-    }
-
-    obs_pred = obs_pred_path[10];
-    obs_pred_yaw = obs_pred_path_yaw[10];
-    // cipv, considier 0->1s const acc, 1->5s const spd
-    if (obs->lane_index == 3 && obs->pos_x > 0) {
-      const float const_acc_time = 2.5f;
-      obs_pred.x = obs->pos_x +
-                   (obs->speed_x + obs->acc_x * const_acc_time) * 5.0f -
-                   0.5f * obs->acc_x * const_acc_time * const_acc_time;
-      obs_pred.x = fmaxf(obs->pos_x, obs_pred.x);
-    }
+    Point obs_pred = obs_pred_path[10];
+    float obs_pred_yaw = obs_pred_path_yaw[10];
 
     if (g_showPredictSwt && fabsf(obs_pred.x - obs->pos_x) > 5.0f) {
       char str_obs_pred[2][8] = {};
@@ -588,6 +623,7 @@ void drawBEVRuler(const float zeroOffsetX) {
     line(ruler_y[i].x, ruler_y[i].y, ruler_y[i].x, ruler_y[i].y + 10);
     outtextxy(ruler_y[i].x - textwidth(str) / 2, ruler_y[i].y + 10, str);
   }
+  return;
 }
 
 void drawBasicGraph(const int len,

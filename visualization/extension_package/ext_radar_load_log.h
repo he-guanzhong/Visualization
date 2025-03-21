@@ -7,7 +7,7 @@
 #ifdef AGSM_DEMO_TEST
 
 #ifndef DATA_NUM
-#define DATA_NUM 20480
+#define DATA_NUM 24480
 #endif
 
 extern float VehSpd_data[DATA_NUM];
@@ -53,7 +53,7 @@ void AgsmDataParsing(float** values,
 */
 
 #ifndef DATA_NUM
-#define DATA_NUM 20480
+#define DATA_NUM 24480
 #endif
 
 #define RADAR_OBS 20
@@ -88,7 +88,7 @@ void RadarDataParsing(float** values,
 #ifdef MEOBJ_DEMO_TEST
 
 #ifndef DATA_NUM
-#define DATA_NUM 20480
+#define DATA_NUM 24480
 #endif
 
 #define ME_OBS 12

@@ -121,6 +121,16 @@ void drawBasicGraph(const int len,
                     const int gridNumsX,
                     const int gridNumsY);
 
+void predictionObstacle(Point obs_pred_path[11],
+                        float obs_pred_path_yaw[11],
+                        const SsmObsType* obs,
+                        const int index,
+                        const EgoPathVcc* egoPath,
+                        const float* LH0,
+                        const float* LH1,
+                        const float cur_spd,
+                        const float* ssmObjSpdY);
+
 void drawObstacles(const SsmObjType* ssmObjs,
                    const EgoPathVcc* egoPath,
                    const float* LH0,
