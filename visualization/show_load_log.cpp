@@ -188,7 +188,7 @@ void SpdPlanDataParsing(float** values,
   int ALC_SIDE = 0, ALC_STS = 0, ALC_LBT = 0, ALC_RBT = 0, NOA_STS = 0,
       ALC_RMP = 0, ALC_RMP_D = 0, ALC_EXT_D = 0;
   int ALC_GAP = 0, ALC_TARS = 0, ALC_TARV = 0, ALC_ST[6] = {0};
-  int ALC_C[8] = {0};
+  int ALC_C[8] = {0}, ALC2_C[8] = {0};
   int P_T[7] = {0}, P_S[7] = {0}, P_V[7] = {0}, P_A[7] = {0};
 
   // Obstacles, In-path VehicleS (IVS)
@@ -197,7 +197,7 @@ void SpdPlanDataParsing(float** values,
   int IVS_ID[14] = {0}, IVS_Present[14] = {0}, IVS_Class[14] = {0},
       IVS_LaDis[14] = {0}, IVS_LgDis[14] = {0}, IVS_V[14] = {0},
       IVS_LaV[14] = {0}, IVS_A[14] = {0}, IVS_Yaw[14] = {0}, IVS_CUT[14] = {0},
-      IVS_LaVF[14] = {0};
+      IVS_LaVF[14] = {0}, IVS_WID[14] = {0};
 
   // TSR signs
   int TSR_Spd = 0, TSR_Warn = 0, TSR_TSI[2] = {0};
@@ -286,20 +286,36 @@ void SpdPlanDataParsing(float** values,
       TRUC_CL = i;
 
     // alc path c0-c5
-    else if (strncmp(columns[i], "VfPASP_ALC_path_C5[]", 18) == 0)
-      ALC_C[5] = i;
-    else if (strncmp(columns[i], "VfPASP_ALC_path_C4[]", 18) == 0)
-      ALC_C[4] = i;
-    else if (strncmp(columns[i], "VfPASP_ALC_path_C3[]", 18) == 0)
-      ALC_C[3] = i;
-    else if (strncmp(columns[i], "VfPASP_ALC_path_C2[]", 18) == 0)
-      ALC_C[2] = i;
-    else if (strncmp(columns[i], "VfPASP_ALC_path_C1[]", 18) == 0)
-      ALC_C[1] = i;
     else if (strncmp(columns[i], "VfPASP_ALC_path_C0[]", 18) == 0)
       ALC_C[0] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path_C1[]", 18) == 0)
+      ALC_C[1] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path_C2[]", 18) == 0)
+      ALC_C[2] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path_C3[]", 18) == 0)
+      ALC_C[3] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path_C4[]", 18) == 0)
+      ALC_C[4] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path_C5[]", 18) == 0)
+      ALC_C[5] = i;
     else if (strncmp(columns[i], "VfPASP_ALC_path_ViewRng[]", 23) == 0)
       ALC_C[7] = i;
+
+    // second part of alc path c0-c5
+    else if (strncmp(columns[i], "VfPASP_ALC_path2_C0[]", 19) == 0)
+      ALC2_C[0] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path2_C1[]", 19) == 0)
+      ALC2_C[1] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path2_C2[]", 19) == 0)
+      ALC2_C[2] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path2_C3[]", 19) == 0)
+      ALC2_C[3] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path2_C4[]", 19) == 0)
+      ALC2_C[4] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path2_C5[]", 19) == 0)
+      ALC2_C[5] = i;
+    else if (strncmp(columns[i], "VfPASP_ALC_path2_ViewRng[]", 24) == 0)
+      ALC2_C[7] = i;
 
     // ego path [9]: c0, c1, c2, c31, c32, c33, len1, len2, len3
     else if (strncmp(columns[i], "VfPASP_ego_path_C0[]", 18) == 0 ||
@@ -475,6 +491,8 @@ void SpdPlanDataParsing(float** values,
       IVS_CUT[2] = i;
     else if (strncmp(columns[i], "VfPASP_NIVL_LaV_f_mps[]", 21) == 0)
       IVS_LaVF[2] = i;
+    else if (strncmp(columns[i], "VfPASP_NIVLWidth_m[]", 18) == 0)
+      IVS_WID[2] = i;
 
     // obstacle, 6 = NIVR
     else if (strncmp(columns[i], "VeINP_NIVRID[]", 12) == 0 ||
@@ -507,6 +525,8 @@ void SpdPlanDataParsing(float** values,
       IVS_CUT[6] = i;
     else if (strncmp(columns[i], "VfPASP_NIVR_LaV_f_mps[]", 21) == 0)
       IVS_LaVF[6] = i;
+    else if (strncmp(columns[i], "VfPASP_NIVRWidth_m[]", 18) == 0)
+      IVS_WID[6] = i;
 
     // obstacle, 3 = NIIVL
     else if (strncmp(columns[i], "VeINP_NIIVLID[]", 13) == 0 ||
@@ -539,6 +559,8 @@ void SpdPlanDataParsing(float** values,
       IVS_CUT[3] = i;
     else if (strncmp(columns[i], "VfPASP_NIIVL_LaV_f_mps[]", 22) == 0)
       IVS_LaVF[3] = i;
+    else if (strncmp(columns[i], "VfPASP_NIIVLWidth_m[]", 19) == 0)
+      IVS_WID[3] = i;
 
     // obstacle, 7 = NIIVR
     else if (strncmp(columns[i], "VeINP_NIIVRID[]", 13) == 0 ||
@@ -571,6 +593,8 @@ void SpdPlanDataParsing(float** values,
       IVS_CUT[7] = i;
     else if (strncmp(columns[i], "VfPASP_NIIVR_LaV_f_mps[]", 22) == 0)
       IVS_LaVF[7] = i;
+    else if (strncmp(columns[i], "VfPASP_NIIVRWidth_m[]", 19) == 0)
+      IVS_WID[7] = i;
 
     // obstacle, 4 = RIVL
     else if (strncmp(columns[i], "VeINP_RIVLID[]", 12) == 0 ||
@@ -942,6 +966,14 @@ void SpdPlanDataParsing(float** values,
       for (int k = 0; k < 8; k++) {
         alc_path_data[k][t] = values[ALC_C[k]][t];
       }
+      alc_path_data[6][t] = ALC_C[6] ? values[ALC_C[6]][t] : 0;
+    }
+    // second part of alc path
+    if (ALC2_C[7]) {
+      for (int k = 0; k < 8; k++) {
+        alc_path2_data[k][t] = values[ALC2_C[k]][t];
+      }
+      alc_path2_data[6][t] = ALC2_C[6] ? values[ALC2_C[6]][t] : 0;
     }
     // ego_path[9]: c0,c1,c2,c31,c32,c33,len1,len2,len3
     if (EGO_PATH[6]) {
@@ -993,6 +1025,7 @@ void SpdPlanDataParsing(float** values,
       objs_id_data[k][t] = IVS_ID[k] ? values[IVS_ID[k]][t] : 0;
       objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
       objs_speed_y_f_data[k][t] = IVS_LaVF[k] ? values[IVS_LaVF[k]][t] * -1 : 0;
+      objs_width_data[k][t] = IVS_WID[k] ? values[IVS_WID[k]][t] : 0;
 
       if (k <= 1) {
         objs_lane_index_data[k][t] = 3;

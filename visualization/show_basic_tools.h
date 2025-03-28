@@ -62,6 +62,7 @@ typedef struct {
   float accCurvSpdLmt;
   int enblSts;
   float egoPredSpd;
+  float egoPredPos;
   float innerSpdLmt;
   int specCaseFlg;
   int scenarioFlg;
@@ -74,13 +75,12 @@ typedef struct {
 
 typedef struct {
   float alc_coeffs[8];
+  float alc2_coeffs[8];
   EgoPathVcc ego_coeffs;
   float left_coeffs[8];
   float leftleft_coeffs[8];
   float right_coeffs[8];
   float rightright_coeffs[8];
-  float ego_dp_org[8];
-  float tar_dp_org[8];
 } LinesInfo;
 
 void coordinateTrans1(Point* point);
@@ -94,6 +94,8 @@ float getPiecewiseCubicPolynomial(const float x,
 void drawCar(Point* car,
              const char str[2][8],
              int carType,
+             const float len,
+             const float wid,
              const float yaw,
              const int index);
 
@@ -104,14 +106,22 @@ void drawMotionInfo(const MotionInfo* motionInfo);
 void drawQuinticPolyTraj(const float* coeffs,
                          const int color,
                          const float startX,
-                         const float lengthX,
-                         const float lengthS,
-                         Point* predictPosn);
+                         const float lengthX);
+
+void getEgoPredictPose(const float* path1,
+                       const float* path2,
+                       const float lengthS,
+                       Point* egoPredPosn,
+                       float* egoPredYaw);
 
 void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
                                 const int color,
-                                const float startX,
-                                Point* predictPosn);
+                                const float startX);
+
+void drawPiecewisQuinticPolyTraj(const float* coeffs1,
+                                 const float* coeffs2,
+                                 const int color1,
+                                 const int color2);
 
 void drawBasicGraph(const int len,
                     const int wid,

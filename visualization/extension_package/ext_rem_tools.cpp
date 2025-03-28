@@ -126,7 +126,7 @@ void showRemGraph(const GraphConfig* config,
   strcpy(str_ego[0], "ego");
   strCompletion(str_ego, 10, motionInfo->egoSpd);
   setfillcolor(WHITE);
-  drawCar(&ego, str_ego, 1, 0, 10);
+  drawCar(&ego, str_ego, 1, 5.0f, 1.8f, 0.0f, 10);
   /* road line type:
   0-unknown, 1-solid, 2-dash, 3-Double Lane(Near Dashed,FarSolid)
   9- DECELERATION_Dashed */
@@ -143,18 +143,15 @@ void showRemGraph(const GraphConfig* config,
                                      ? GREEN
                                      : RGB(0, 87, 55);
   drawQuinticPolyTraj(linesInfo->left_coeffs, leftBoundaryColor,
-                      linesInfo->left_coeffs[6], linesInfo->left_coeffs[7],
-                      linesInfo->left_coeffs[7], &lineEnd);
-  drawQuinticPolyTraj(
-      linesInfo->leftleft_coeffs, DARKGRAY, linesInfo->leftleft_coeffs[6],
-      linesInfo->leftleft_coeffs[7], linesInfo->leftleft_coeffs[7], &lineEnd);
+                      linesInfo->left_coeffs[6], linesInfo->left_coeffs[7]);
+  drawQuinticPolyTraj(linesInfo->leftleft_coeffs, DARKGRAY,
+                      linesInfo->leftleft_coeffs[6],
+                      linesInfo->leftleft_coeffs[7]);
   drawQuinticPolyTraj(linesInfo->right_coeffs, rightBoundaryColor,
-                      linesInfo->right_coeffs[6], linesInfo->right_coeffs[7],
-                      linesInfo->right_coeffs[7], &lineEnd);
+                      linesInfo->right_coeffs[6], linesInfo->right_coeffs[7]);
   drawQuinticPolyTraj(linesInfo->rightright_coeffs, DARKGRAY,
                       linesInfo->rightright_coeffs[6],
-                      linesInfo->rightright_coeffs[7],
-                      linesInfo->rightright_coeffs[7], &lineEnd);
+                      linesInfo->rightright_coeffs[7]);
 
   // navigation path, ego c7 as end point
   const float naviRange = linesInfo->alc_coeffs[7];
@@ -183,14 +180,12 @@ void showRemGraph(const GraphConfig* config,
   if (remInfo->ego_dp_off[0]) {
     setlinestyle(PS_SOLID, 3);
     drawQuinticPolyTraj(remInfo->ego_dp_off, egoOffColor,
-                        remInfo->ego_dp_off[8], remInfo->ego_dp_off[9],
-                        remInfo->ego_dp_off[9], &lineEnd);
+                        remInfo->ego_dp_off[8], remInfo->ego_dp_off[9]);
   }
   if (remInfo->tar_dp_off[0]) {
     setlinestyle(PS_SOLID, 3);
     drawQuinticPolyTraj(remInfo->tar_dp_off, tarOffColor,
-                        remInfo->tar_dp_off[8], remInfo->tar_dp_off[9],
-                        remInfo->tar_dp_off[9], &lineEnd);
+                        remInfo->tar_dp_off[8], remInfo->tar_dp_off[9]);
   }
 
   // REM dp lines text info

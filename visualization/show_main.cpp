@@ -44,13 +44,12 @@ static int sSpdPlanEnblSts;
  */
 static LinesInfo sLinesInfo = {
     .alc_coeffs = {0.072, -0.0018, 1.98e-6f, 1.07e-7f, 0, 0, 0, 120},
+    .alc2_coeffs = {0, 0, 0, 0, 0, 0, 0, 0},
     .ego_coeffs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 3.4, 1},
     .left_coeffs = {3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100},
     .leftleft_coeffs = {3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100},
     .right_coeffs = {-3.4f / 2.0f, 0, 0, 0, 0, 0, -30, 100},
-    .rightright_coeffs = {-3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100},
-    .ego_dp_org = {0, 0, 0, 0, 0, 0, 0, 0},
-    .tar_dp_org = {0, 0, 0, 0, 0, 0, 0, 0}};
+    .rightright_coeffs = {-3.4f * 1.5f, 0, 0, 0, 0, 0, -30, 100}};
 static TsrInfo sTsrInfo;
 static RadarObjInfo sRadarObjsInfo[4];
 static MeObjInfo sMeObjsInfo;
@@ -94,7 +93,9 @@ void ReadOutputData(const int t) {
   for (int k = 0; k < 6; k++) {
     gAlcStCoeff[k] = alcStCoeff_data[k][t];
   }
-
+  for (int i = 0; i < 14; ++i) {
+    g_ssmObjSpdY[i] = objs_speed_y_f_data[i][t];
+  }
   return;
 }
 
@@ -164,6 +165,7 @@ void ReadInputData(const int t) {
     g_ssmObjType.obj_lists[i].pos_yaw = objs_pos_yaw_data[i][t];
     g_ssmObjType.obj_lists[i].cut_in_flag = objs_cut_in_data[i][t];
     g_ssmObjType.obj_lists[i].id = objs_id_data[i][t];
+    g_ssmObjType.obj_lists[i].width = objs_width_data[i][t];
 
     /* obs adapt original or filtered lat spd */
     g_ssmObjType.obj_lists[i].speed_y = objs_speed_y_data[i][t];
@@ -202,18 +204,12 @@ void ReadInputData(const int t) {
   // alc_path and Mobileye lines, quintic polynominal
   for (int i = 0; i < 8; i++) {
     sLinesInfo.alc_coeffs[i] = alc_path_data[i][t];
+    sLinesInfo.alc2_coeffs[i] = alc_path2_data[i][t];
     sLinesInfo.left_coeffs[i] = l_path_data[i][t];
     sLinesInfo.right_coeffs[i] = r_path_data[i][t];
     sLinesInfo.leftleft_coeffs[i] = ll_path_data[i][t];
     sLinesInfo.rightright_coeffs[i] = rr_path_data[i][t];
   }
-  // dp lines, discard
-  /*   for (int i = 0; i < 4; i++) {
-      sLinesInfo.ego_dp_org[i] = ego_dp_data[i][t];
-      sLinesInfo.tar_dp_org[i] = tar_dp_data[i][t];
-    }
-    sLinesInfo.ego_dp_org[6] = sLinesInfo.tar_dp_org[6] = -5;
-    sLinesInfo.ego_dp_org[7] = sLinesInfo.tar_dp_org[7] = 40; */
 
   // TSR info
   sTsrInfo.tsr_spd = tsr_spd_data[t];
@@ -237,6 +233,7 @@ void ReadInputData(const int t) {
 void ConvertMotionInfo() {
   sMotionInfo.enblSts = sSpdPlanEnblSts;
   sMotionInfo.egoPredSpd = fmaxf(v_points[4].y, v_points[5].y);
+  sMotionInfo.egoPredPos = fmaxf(s_points[4].y, s_points[5].y);
   sMotionInfo.innerSpdLmt = gInnerSpdLmt_kph;
   sMotionInfo.specCaseFlg = gSpecialCaseFlg;
   sMotionInfo.scenarioFlg = gScenarioFlg;
@@ -412,7 +409,7 @@ void DisplayLog(const int length, const int width, const int offset) {
           showRadarGraph(&BEV_cfg, 60.0f, sRadarObjsInfo);
         } else if (gPlayMode == MEOBJ) {
           const GraphConfig BEV_cfg = {length, width,        offset, 0, 0,
-                                       100.0f, 3.4f * 10.0f, 0,      0};
+                                       120.0f, 3.4f * 10.0f, 0,      0};
           showMeObjGraph(&BEV_cfg, 0.0f, &sMeObjsInfo);
         } else if (gPlayMode == LOOPBACK) {
           const int chartWidth = 200, charOffset = 50;
@@ -530,10 +527,10 @@ void CalcOneStep() {
   SsmObjType ssmObjs;
   AlcPathVcc alcPathVcc;
   AgsmEnvModel agsmEnvModel;
-  LoadDummyPathData(sLinesInfo.alc_coeffs, &sLinesInfo.ego_coeffs,
-                    sLinesInfo.left_coeffs, sLinesInfo.leftleft_coeffs,
-                    sLinesInfo.right_coeffs, sLinesInfo.rightright_coeffs,
-                    &alcPathVcc, &agsmEnvModel);
+  LoadDummyPathData(sLinesInfo.alc_coeffs, sLinesInfo.alc2_coeffs,
+                    &sLinesInfo.ego_coeffs, sLinesInfo.left_coeffs,
+                    sLinesInfo.leftleft_coeffs, sLinesInfo.right_coeffs,
+                    sLinesInfo.rightright_coeffs, &alcPathVcc, &agsmEnvModel);
   memset(&ssmObjs, 0, sizeof(ssmObjs));
   if (gPlayMode == ONESTEP) {
     LoadDummyMotionData(&sMotionInfo.egoSpd, &sMotionInfo.egoAcc,
@@ -546,7 +543,7 @@ void CalcOneStep() {
   }
   ExecuteSpdPlan(&alcPathVcc, &agsmEnvModel, &ssmObjs);
 
-  sLinesInfo.alc_coeffs[7] = fmaxf(s_points[4].y, s_points[5].y);
+  // sLinesInfo.alc_coeffs[7] = fmaxf(s_points[4].y, s_points[5].y);
 
   return;
 }
@@ -579,10 +576,10 @@ void LoopbackCalculation() {
 void GenerateLocalData() {
   AlcPathVcc alcPathVcc;
   AgsmEnvModel agsmEnvModel;
-  LoadDummyPathData(sLinesInfo.alc_coeffs, &sLinesInfo.ego_coeffs,
-                    sLinesInfo.left_coeffs, sLinesInfo.leftleft_coeffs,
-                    sLinesInfo.right_coeffs, sLinesInfo.rightright_coeffs,
-                    &alcPathVcc, &agsmEnvModel);
+  LoadDummyPathData(sLinesInfo.alc_coeffs, sLinesInfo.alc2_coeffs,
+                    &sLinesInfo.ego_coeffs, sLinesInfo.left_coeffs,
+                    sLinesInfo.leftleft_coeffs, sLinesInfo.right_coeffs,
+                    sLinesInfo.rightright_coeffs, &alcPathVcc, &agsmEnvModel);
   LoadDummyMotionData(&sMotionInfo.egoSpd, &sMotionInfo.egoAcc,
                       &sMotionInfo.spdLmt, &sMotionInfo.accMode,
                       &sMotionInfo.tauGap, &sMotionInfo.alcBehav);
@@ -659,6 +656,7 @@ void GenerateLocalData() {
           } */
     for (int k = 0; k < 8; k++) {
       alc_path_data[k][t] = sLinesInfo.alc_coeffs[k];
+      alc_path2_data[k][t] = sLinesInfo.alc2_coeffs[k];
       l_path_data[k][t] = sLinesInfo.left_coeffs[k];
       r_path_data[k][t] = sLinesInfo.right_coeffs[k];
       ll_path_data[k][t] = sLinesInfo.leftleft_coeffs[k];

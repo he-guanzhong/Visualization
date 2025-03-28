@@ -95,7 +95,7 @@ void showAGSMGraph(const GraphConfig* config,
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
   strCompletion(str_ego, 14, motionInfo->egoSpd);
-  drawCar(&ego, str_ego, 1, 0, 14);
+  drawCar(&ego, str_ego, 1, 5.0f, 1.8f, 0.0f, 14);
 
   // ego spd info and lane change status
   drawMotionInfo(motionInfo);
@@ -152,17 +152,17 @@ void showRadarGraph(const GraphConfig* config,
                     const RadarObjInfo* radarObjsInfo) {
   initBEVGraph(config, zeroOffsetX);
 
-  drawRadarObj(&radarObjsInfo[0], 0, RED);
-  drawRadarObj(&radarObjsInfo[1], 1, BLUE);
-  drawRadarObj(&radarObjsInfo[2], 2, MAGENTA);
-  drawRadarObj(&radarObjsInfo[3], 3, GREEN);
-
   // ego car
   setfillcolor(LIGHTGRAY);
   Point ego = {0.0f, 0.0f};
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
-  drawCar(&ego, str_ego, 1, 0.0f, 0);
+  drawCar(&ego, str_ego, 1, 5.0f, 1.8f, 0.0f, 0);
+
+  drawRadarObj(&radarObjsInfo[0], 0, RED);
+  drawRadarObj(&radarObjsInfo[1], 1, BLUE);
+  drawRadarObj(&radarObjsInfo[2], 2, MAGENTA);
+  drawRadarObj(&radarObjsInfo[3], 3, GREEN);
 
   drawBEVRuler(zeroOffsetX);
   return;
@@ -201,9 +201,11 @@ void drawMeObj(const MeObjInfo* meInfo) {
       continue;
     }
     Point obj_posn = {meInfo->fLongDis[j], meInfo->fLatDis[j]};
-    char obj_id[10] = "ID";
+    char obj_id[10] = "";
+    snprintf(obj_id, sizeof(obj_id), "%d", j + 1);
     const int obj_len = strlen(obj_id);
-    snprintf(obj_id + obj_len, sizeof(obj_id) - obj_len, "%d", j + 1);
+    snprintf(obj_id + obj_len, sizeof(obj_id) - obj_len, "-ID: %d",
+             meInfo->iId[j]);
     char obj_spd[10] = "";
     snprintf(obj_spd, sizeof(obj_id), "%.1f m/s", meInfo->fLongSpd[j]);
 
@@ -241,14 +243,14 @@ void showMeObjGraph(const GraphConfig* config,
                     const MeObjInfo* meObjsInfo) {
   initBEVGraph(config, zeroOffsetX);
 
-  drawMeObj(meObjsInfo);
-
   // ego car
   setfillcolor(LIGHTGRAY);
   Point ego = {0.0f, 0.0f};
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
-  drawCar(&ego, str_ego, 1, 0.0f, 0);
+  drawCar(&ego, str_ego, 1, 5.0f, 1.8f, 0.0f, 0);
+
+  drawMeObj(meObjsInfo);
 
   drawBEVRuler(zeroOffsetX);
   return;

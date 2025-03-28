@@ -2,8 +2,8 @@
 
 #define CURVE_FITTING_TYPE 2
 bool g_showPredictSwt = false;
-bool g_showDpLine = false;
 extern uint8 gScenarioFlg;
+extern float gTempMeasureVal[4];
 
 // float fit_coeffi[6] = {0};
 
@@ -76,6 +76,8 @@ float getPiecewiseCubicPolynomial(const float x,
 void drawCar(Point* car,
              const char str[2][8],
              int carType,
+             const float len,
+             const float wid,
              const float yaw,
              const int index) {
   // ObjType of ME: 0=UNFILLED, 1=CAR, 2=TRUCK, 3=MOTORBIKE, 4=BICYCLE,
@@ -84,7 +86,10 @@ void drawCar(Point* car,
     carType = 0;
   }
   const float carLen = car_len_tbl[carType];
-  const float carWid = car_wid_tbl[carType];
+  float carWid = car_wid_tbl[carType];
+  /* limited trust in width of large truck */
+  carWid = (carType == 2 && wid > 2.0f) ? wid : carWid;
+
   // display: left-hand system. control: right-hand system
   // vertice order: upper-right -> lower-right-> lower-left -> upper-left
   const float halfLenCos = carLen / 2.0f * cosf(yaw),
@@ -107,10 +112,15 @@ void drawCar(Point* car,
 
   fillpolygon(vertices_show, 4);
 
-  if (carType >= 3 && carType <= 9) {  // motorbike/pedestrian outline
+  if (carType >= 4 && carType <= 9) {  // pedestrian/others outline
     rectangle(car->x - car_wid_tbl[1] / 2.0f * s_xScale2,
               car->y - car_len_tbl[1] / 2.0f * s_yScale2,
               car->x + car_wid_tbl[1] / 2.0f * s_xScale2,
+              car->y + car_len_tbl[1] / 2.0f * s_yScale2);
+  } else if (carType == 3) {  // motorbike
+    rectangle(car->x - 1.0f / 2.0f * s_xScale2,
+              car->y - car_len_tbl[1] / 2.0f * s_yScale2,
+              car->x + 1.0f / 2.0f * s_xScale2,
               car->y + car_len_tbl[1] / 2.0f * s_yScale2);
   }
   if (carType == 5) {
@@ -423,24 +433,11 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
 void drawQuinticPolyTraj(const float* coeffs,
                          const int color,
                          const float startX,
-                         const float lengthX,
-                         const float lengthS,
-                         Point* predictPosn) {
+                         const float lengthX) {
   setlinecolor(color);
   Point lastDrawPoint = {0.0f, 0.0f};
-  Point last = {0.0f, 0.0f};
-  float restLen = lengthS;
-  for (float x = startX; x < lengthX && restLen > 0; x += 3.0f) {
-    const float y = coeffs[0] + coeffs[1] * x + coeffs[2] * x * x +
-                    coeffs[3] * x * x * x + coeffs[4] * x * x * x * x +
-                    coeffs[5] * x * x * x * x * x;
-    if (restLen > 0) {
-      if (last.x != 0.0f) {
-        float delta_s = hypotf(x - last.x, y - last.y);
-        restLen -= delta_s;
-      }
-      last.x = x, last.y = y;
-    }
+  for (float x = startX; x < lengthX; x += 3.0f) {
+    const float y = getQuinticPolynomial(x, coeffs, 0);
     Point curDrawPoint = {x, y};
     coordinateTrans2(&curDrawPoint);
     if (lastDrawPoint.x != 0.0f && x < lengthX) {
@@ -448,19 +445,41 @@ void drawQuinticPolyTraj(const float* coeffs,
     }
     lastDrawPoint = curDrawPoint;
   }
-  predictPosn->x = last.x;
-  predictPosn->y = last.y;
+  return;
+}
+
+void getEgoPredictPose(const float* path1,
+                       const float* path2,
+                       const float lengthS,
+                       Point* egoPredPosn,
+                       float* egoPredYaw) {
+  Point last = {0.0f, 0.0f};
+  float restLen = lengthS;
+  const float startX1 = path1[6], len1 = path1[7], len2 = path2[7];
+  for (float x = startX1; restLen > 0; x += 1.0f) {
+    const float y = (x < len1 || len2 < 1.0f)
+                        ? getQuinticPolynomial(x, path1, 0)
+                        : getQuinticPolynomial(x - len1, path2, 0);
+    if (last.x != 0.0f) {
+      float delta_s = hypotf(x - last.x, y - last.y);
+      restLen -= delta_s;
+    }
+    last.x = x, last.y = y;
+  }
+  egoPredPosn->x = last.x;
+  egoPredPosn->y = last.y;
+  *egoPredYaw = (last.x < len1 || len2 < 1.0f)
+                    ? getQuinticPolynomial(last.x, path1, 1)
+                    : getQuinticPolynomial(last.x - len1, path2, 1);
   return;
 }
 
 void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
                                 const int color,
-                                const float startX,
-                                Point* predictPosn) {
+                                const float startX) {
   setlinecolor(color);
   Point lastDrawPoint = {0.0f, 0.0f};
   Point last = {0.0f, 0.0f};
-
   float totalLen = egoPath->Len[0] + egoPath->Len[1] + egoPath->Len[2];
   for (float x = startX; x < totalLen; x += 3.0f) {
     const float y = getPiecewiseCubicPolynomial(x, egoPath, 0);
@@ -472,8 +491,32 @@ void drawPiecewiseCubicPolyTraj(const EgoPathVcc* egoPath,
     }
     lastDrawPoint = curDrawPoint;
   }
-  predictPosn->x = last.x;
-  predictPosn->y = last.y;
+  return;
+}
+
+void drawPiecewisQuinticPolyTraj(const float* coeffs1,
+                                 const float* coeffs2,
+                                 const int color1,
+                                 const int color2) {
+  setlinecolor(color1);
+  Point lastDrawPoint = {0.0f, 0.0f};
+  Point last = {0.0f, 0.0f};
+  const float startX1 = coeffs1[6], len1 = coeffs1[7], len2 = coeffs2[7];
+  for (float x = startX1; x < len1 + len2; x += 3.0f) {
+    const float y = (x < len1 || len2 < 1.0f)
+                        ? getQuinticPolynomial(x, coeffs1, 0)
+                        : getQuinticPolynomial(x - len1, coeffs2, 0);
+    last.x = x, last.y = y;
+    Point curDrawPoint = {x, y};
+    coordinateTrans2(&curDrawPoint);
+    if (x > len1) {
+      setlinecolor(color2);
+    }
+    if (lastDrawPoint.x != startX1) {
+      line(curDrawPoint.x, curDrawPoint.y, lastDrawPoint.x, lastDrawPoint.y);
+    }
+    lastDrawPoint = curDrawPoint;
+  }
   return;
 }
 
@@ -572,7 +615,8 @@ void drawObstacles(const SsmObjType* ssmObjs,
     strCompletion(str_obs_cur, i, obs->speed_x);
     setlinecolor(BLACK);
     setfillcolor(DARKGRAY);
-    drawCar(&obs_cur, str_obs_cur, obs->type, obs->pos_yaw, i);
+    drawCar(&obs_cur, str_obs_cur, obs->type, obs->length, obs->width,
+            obs->pos_yaw, i);
 
     // obs latspd not stable, use ego centre line offset
     Point obs_pred_path[11];
@@ -588,7 +632,8 @@ void drawObstacles(const SsmObjType* ssmObjs,
       strcpy(str_obs_pred[1], "Pred");
       setfillcolor(LIGHTGRAY);
       strCompletion(str_obs_pred, i, obs->speed_x);
-      drawCar(&obs_pred, str_obs_pred, obs->type, obs_pred_yaw, i);
+      drawCar(&obs_pred, str_obs_pred, obs->type, obs->length, obs->width,
+              obs_pred_yaw, i);
       setlinecolor(LIGHTGRAY);
       setlinestyle(PS_DASH);
 
@@ -835,6 +880,7 @@ void initBEVGraph(const GraphConfig* config, const float zeroOffsetX) {
   outtextxy(s_origin2.x - textwidth(title) / 2,
             config->offset - textheight(title), title);
   settextstyle(20, 0, "Calibri");
+  return;
 }
 
 void showBEVGraph(const GraphConfig* config,
@@ -867,18 +913,15 @@ void showBEVGraph(const GraphConfig* config,
                                      ? GREEN
                                      : RGB(0, 87, 55);
   drawQuinticPolyTraj(linesInfo->left_coeffs, leftBoundaryColor,
-                      linesInfo->left_coeffs[6], linesInfo->left_coeffs[7],
-                      linesInfo->left_coeffs[7], &lineEnd);
-  drawQuinticPolyTraj(
-      linesInfo->leftleft_coeffs, DARKGRAY, linesInfo->leftleft_coeffs[6],
-      linesInfo->leftleft_coeffs[7], linesInfo->leftleft_coeffs[7], &lineEnd);
+                      linesInfo->left_coeffs[6], linesInfo->left_coeffs[7]);
+  drawQuinticPolyTraj(linesInfo->leftleft_coeffs, DARKGRAY,
+                      linesInfo->leftleft_coeffs[6],
+                      linesInfo->leftleft_coeffs[7]);
   drawQuinticPolyTraj(linesInfo->right_coeffs, rightBoundaryColor,
-                      linesInfo->right_coeffs[6], linesInfo->right_coeffs[7],
-                      linesInfo->right_coeffs[7], &lineEnd);
+                      linesInfo->right_coeffs[6], linesInfo->right_coeffs[7]);
   drawQuinticPolyTraj(linesInfo->rightright_coeffs, DARKGRAY,
                       linesInfo->rightright_coeffs[6],
-                      linesInfo->rightright_coeffs[7],
-                      linesInfo->rightright_coeffs[7], &lineEnd);
+                      linesInfo->rightright_coeffs[7]);
 
   // obstacles
   drawObstacles(ssmObjs, &linesInfo->ego_coeffs, linesInfo->left_coeffs,
@@ -886,31 +929,24 @@ void showBEVGraph(const GraphConfig* config,
 
   // navigation path, ego c7 as end point
   const float naviRange = linesInfo->alc_coeffs[7];
-  Point predictPosn = {0.0f, 0.0f};
 
-  if (g_showDpLine) {
-    if (linesInfo->ego_dp_org[0]) {
-      setlinestyle(PS_SOLID, 3);
-      drawQuinticPolyTraj(linesInfo->ego_dp_org, BLUE, linesInfo->ego_dp_org[6],
-                          linesInfo->ego_dp_org[7], linesInfo->ego_dp_org[7],
-                          &lineEnd);
-    }
-    if (linesInfo->tar_dp_org[0]) {
-      setlinestyle(PS_SOLID, 3);
-      drawQuinticPolyTraj(linesInfo->tar_dp_org, BROWN,
-                          linesInfo->tar_dp_org[6], linesInfo->tar_dp_org[7],
-                          linesInfo->tar_dp_org[7], &lineEnd);
-    }
-  }
   // ego lane path, c0 ~ c3
   setlinestyle(PS_DASHDOT, 1);
-  drawPiecewiseCubicPolyTraj(&linesInfo->ego_coeffs, MAGENTA, 0.0f,
-                             &predictPosn);
-  drawQuinticPolyTraj(linesInfo->alc_coeffs, LIGHTRED, naviRange,
-                      fmaxf(50.0f, naviRange), fmaxf(50.0f, naviRange),
-                      &predictPosn);
-  drawQuinticPolyTraj(linesInfo->alc_coeffs, RED, 0.0f, naviRange, 120.0f,
-                      &predictPosn);
+  drawPiecewiseCubicPolyTraj(&linesInfo->ego_coeffs, MAGENTA, 0.0f);
+
+  // alc path,
+  /*   drawQuinticPolyTraj(linesInfo->alc2_coeffs, LIGHTRED,
+                        linesInfo->alc_coeffs[7],
+                        linesInfo->alc_coeffs[7] + linesInfo->alc2_coeffs[7]);
+    drawQuinticPolyTraj(linesInfo->alc_coeffs, RED, linesInfo->alc_coeffs[6],
+                        linesInfo->alc_coeffs[7]); */
+  drawPiecewisQuinticPolyTraj(linesInfo->alc_coeffs, linesInfo->alc2_coeffs,
+                              RED, LIGHTRED);
+
+  Point egoPredPosn = {0.0f, 0.0f};
+  float egoPredYaw = 0.0f;
+  getEgoPredictPose(linesInfo->alc_coeffs, linesInfo->alc2_coeffs,
+                    motionInfo->egoPredPos, &egoPredPosn, &egoPredYaw);
 
   // ego car
   const int ego_index = ssmObjs->obj_num;
@@ -927,22 +963,20 @@ void showBEVGraph(const GraphConfig* config,
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
   strCompletion(str_ego, ego_index, motionInfo->egoSpd);
-  drawCar(&ego, str_ego, 1, 0, ego_index);
+  drawCar(&ego, str_ego, 1, car_len_tbl[1], car_wid_tbl[1], 0, ego_index);
 
-  if (g_showPredictSwt && predictPosn.x > 2.0f) {
-    // setfillstyle(BS_HATCHED, HS_DIAGCROSS);
-    Point ego_pred = {predictPosn.x, predictPosn.y};
-    float ego_pred_yaw =
-        getQuinticPolynomial(predictPosn.x, linesInfo->alc_coeffs, 1);
+  if (g_showPredictSwt && egoPredPosn.x > 4.0f) {
     char str_ego_pred[2][8] = {};
     strcpy(str_ego_pred[0], "ego_pred");
     strCompletion(str_ego_pred, ego_index, motionInfo->egoPredSpd);
-    drawCar(&ego_pred, str_ego_pred, 1, ego_pred_yaw, ego_index);
+    drawCar(&egoPredPosn, str_ego_pred, 1, car_len_tbl[1], car_wid_tbl[1],
+            egoPredYaw, ego_index);
     // setfillstyle(BS_SOLID);
   }
   // ego spd info and lane change status
   drawMotionInfo(motionInfo);
   drawBEVRuler(zeroOffsetX);
+  return;
 }
 
 void showLineChart(GraphConfig* chartConfig,

@@ -223,6 +223,7 @@ void LoadDummyMotionData(float* egoSpd,
 }
 
 void LoadDummyPathData(float* alc_coeffs,
+                       float* alc2_coeffs,
                        EgoPathVcc* ego_coeffs,
                        float* left,
                        float* leftleft,
@@ -241,8 +242,10 @@ void LoadDummyPathData(float* alc_coeffs,
   /* 1.036868453	-0.03775819	0.000235738	-2.47E-05 */
 
   *alcPathVcc = {
-      alc_coeffs[0], 0, alc_coeffs[1], 0, alc_coeffs[2], 0, alc_coeffs[3], 0,
-      alc_coeffs[4], 0, alc_coeffs[5], 0, alc_coeffs[7], 0,
+      alc_coeffs[0], alc2_coeffs[0], alc_coeffs[1], alc2_coeffs[1],
+      alc_coeffs[2], alc2_coeffs[2], alc_coeffs[3], alc2_coeffs[3],
+      alc_coeffs[4], alc2_coeffs[4], alc_coeffs[5], alc2_coeffs[5],
+      alc_coeffs[7], alc2_coeffs[7],
   };
   agsmEnvModel->EgoPath.C0 = ego_coeffs->C0[0];
   agsmEnvModel->EgoPath.C1 = ego_coeffs->C1[0];

@@ -5,6 +5,7 @@ float egoSpd_data[DATA_NUM];
 float egoAcc_data[DATA_NUM];
 float spdLmt_data[DATA_NUM];
 float alc_path_data[8][DATA_NUM];
+float alc_path2_data[8][DATA_NUM];
 float ego_path_data[9][DATA_NUM];
 int alcBehav_data[8][DATA_NUM];
 int accMode_data[DATA_NUM];
@@ -41,6 +42,7 @@ float objs_pos_yaw_data[OBJ_NUM][DATA_NUM];
 int objs_cut_in_data[OBJ_NUM][DATA_NUM];
 int objs_id_data[OBJ_NUM][DATA_NUM];
 float objs_speed_y_f_data[OBJ_NUM][DATA_NUM];
+float objs_width_data[OBJ_NUM][DATA_NUM];
 
 int tsr_spd_data[DATA_NUM];
 bool tsr_spd_warn_data[DATA_NUM];

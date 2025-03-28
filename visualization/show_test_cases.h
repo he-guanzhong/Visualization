@@ -18,6 +18,7 @@ void LoadDummyMotionData(float* egoSpd,
                          AlcBehavior* alcBehav);
 
 void LoadDummyPathData(float* alc_coeffs,
+                       float* alc2_coeffs,
                        EgoPathVcc* ego_coeffs,
                        float* left,
                        float* leftleft,
