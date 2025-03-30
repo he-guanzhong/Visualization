@@ -16,10 +16,12 @@ In standard mode, the following display information is currently supported by de
 4. Ego motion status (set/actual speed, ACC mode)
 5. TSR info (speed limit sign, special sign, ego display/alert status)
 ### Usage Instructions
-- Download all files from the ` /build/ ` directory (` spdplan.exe `、 ` libgcc_s_seh-1.dll ` and ` libstdc++-6.dll ` are compulsory)
-- Open the executable file ` spdplan.exe `. In the pop-up window, select the **.csv** formatted log you want to play
-- For your convenience, a example log, ` example1_SpdPlan.csv ` , is provided for self-testing purposes
-- Optionally, to play ` example2_agsm.csv ` or ` example3_radar.csv `, it is essential to activate the corresponding macro switches (AGSM or RADAR) in CMakeLists.txt and recompile the project
+- Multi-mode data visualization is supported. Precompiled executable files **.exe** are provided in the ` /dist/ ` directory, no need to recompile from source code
+- Four default modes are included: 1. Speed Planning ` SpdPlan.exe `; 2. AGSM Centerline ` Agsm.exe `; 3. Radar Points ` Radar.exe `; 4. ME Raw Objects ` MeObj.exe `
+- Download all files from the ` /dist/ ` directory (` libgcc_s_seh-1.dll ` and ` libstdc++-6.dll ` are compulsory)
+- Double-click on the executable file to open it. In the pop-up window, select the **.csv** log you want to play. For example, open ` SpdPlan.exe ` and select ` example1_SpdPlan.csv ` to play the data 
+- Optionally, to adjust the display effect in each mode, it is recommended to download the entire project source code and activate the corresponding macro switches (AGSM / RADAR / MEOBJ) in CMakeLists.txt to switch the display mode, and then recompile the executable file
+- Additionally, the **.csv** logs compatible with each mode must be exported by ASAMMDF software. For instance, in the "Data Export" page of ASAMMDF, load ` SpdPlan_signals.lab `, so that the **.csv** exported by **.mf4** files can be normally played by ` SpdPlan.exe `
 ### Compilation Requirements
 * Platform: Windows (Linux not supported due to incompatiblity of EasyX)
 * Language: C++
@@ -40,10 +42,12 @@ In standard mode, the following display information is currently supported by de
 4. 自车运动状态 （设置/当前 速度, 自适应巡航模式）
 5. 交通标志识别信息 （限速标识、特殊标识、自车显示、报警状态）
 ### 使用方式
-- 下载 ` /build/ ` 路径下的所有文件（必须包括` spdplan.exe `、 ` libgcc_s_seh-1.dll ` 和 ` libstdc++-6.dll `）
-- 双击打开可执行文件 ` spdplan.exe `。在弹框中，选择要播放 **.csv** 格式的日志
-- 默认提供 ` example1_SpdPlan.csv ` 一个样例供自测
-- 可选地，如需播放 ` example2_agsm.csv ` 或 ` example3_radar.csv `，需在 CMakeLists.txt 中激活相应的宏开关(AGSM / RADAR)，以切换显示模式，并重新编译
+- 本工具支持多类型数据显示，已提供编译完成的可执行文件 **.exe** ，无需源码重新编译，见` /dist/ `
+- 默认提供四种模式的程序：1. 速度规划` SpdPlan.exe `；2. AGSM中心线` Agsm.exe `；3. 雷达点` Radar.exe `；4. ME原始目标` MeObj.exe `
+- 下载 ` /dist/ ` 路径下的所有文件（必须包括` libgcc_s_seh-1.dll ` 和 ` libstdc++-6.dll `）
+- 双击打开某模式的可执行文件。弹框中选择相应 **.csv** 格式的日志以播放。以速度规划为例，打开` SpdPlan.exe `，并选择` example1_SpdPlan.csv `，即可播放数据
+- 可选地，如需调整各模式下的显示效果，须完整下载本工程所有源码，并在 CMakeLists.txt 中激活相应的宏开关(AGSM / RADAR / MEOBJ)，以切换显示模式，并重新编译可执行文件
+- 特别地，各模式适配的 **.csv** 日志，须由ASAMMDF软件加载对应模式的 **.lab** 配置文件导出。例如，在ASAMMDF的“数据导出”一页中，加载 ` SpdPlan_signals.lab ` ，如此 **.mf4** 文件导出的 **.csv** 才可被` SpdPlan.exe `正常播放。
 ### 编译要求
 * 平台: Windows (Linux不兼容EasyX)
 * 语言: C++
@@ -64,10 +68,13 @@ En mode standard, les informations d’affichage suivantes sont actuellement pri
 4. État du mouvement de l’ego (vitesse réglée/réelle, mode ACC)
 5. Infos TSR (panneau de limitation de vitesse, panneau spécial, affichage de l’ego/état d’alerte)
 ### Instructions d'utilisation
-- Télécharger tous les fichiers du Répertoire ` /build/ ` ( ` spdplan.exe `, ` libgcc_s_seh-1.dll ` et ` libstdc++-6.dll ` sont requis)
+- La visualisation de données multi-types est prise en charge. Les fichiers exécutables **.exe** sont fournis dans le répertoire ` /dist/ `, pas besoin de recompiler à partir du code source
+- Les quatre modes par défaut sont inclus : 1. Planification de vitesse ` SpdPlan.exe `; 2. AGSM Centreline ` Agsm.exe `; 3. Points Radar ` Radar.exe `; 4. Objets ME Raw ` MeObj.exe `
+- Télécharger tous les fichiers du Répertoire ` /dist/ ` (` libgcc_s_seh-1.dll ` et ` libstdc++-6.dll ` sont requis)
+- Double-cliquez sur le fichier exécutable pour l'ouvrir. Dans la fenêtre contextuelle, sélectionnez le journal au format **.csv** que vous souhaitez lire. Par exemple, ouvrez ` SpdPlan.exe ` et sélectionnez ` example1_SpdPlan.csv ` pour lire les données
 - Ouvrez le fichier exécutable ` spdplan.exe `. Dans la fenêtre contextuelle, sélectionnez le Journal au format **.csv** que vous souhaitez lire
-- Pour votre commodité, un exemple de log ` example1_SpdPlan.csv ` est fournis à des fins d’auto-test
-- Facultativement, pour lire ` example2_agsm.csv ` ou ` example3_radar.csv `, il est indispensable d'activer les macros correspondantes (AGSM ou RADAR) dans CMakeLists.txt et de recompiler le projet
+- Facultativement, pour ajuster l'effet d'affichage dans chaque mode, il est recommandé de télécharger le code source complet et d'activer les macros correspondantes (AGSM / RADAR / MEOBJ) dans CMakeLists.txt pour changer le mode d'affichage, puis de recompiler le fichier exécutable
+- En plus, les journaux **.csv** compatibles avec chaque mode doivent être exportés par le logiciel ASAMMDF. Par exemple, dans la page "Exportation de données" de ASAMMDF, chargez ` SpdPlan_signals.lab `, de sorte que les **.csv** exportés par **.mf4** soient correctement lus par ` SpdPlan.exe `
 ### Exigences de compilation
 * Plate-forme : Windows (Linux non pris en charge en raison de l’incompatibilité d’EasyX)
 * Langage : C++
