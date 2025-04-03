@@ -10,7 +10,7 @@
 // character nums of first row (variable names) shall not exceed MAX_LINE_SIZE
 // colomns nums (variable count) shall not exceed MAX_COLUMNS
 // row nums (total steps) which exceed MAX_VALUES_PER_COLUMN will be ignored
-#define MAX_LINE_SIZE 22000  // 8192
+#define MAX_LINE_SIZE 22000
 #define MAX_COLUMNS 330
 #define MAX_VALUES_PER_COLUMN DATA_NUM
 

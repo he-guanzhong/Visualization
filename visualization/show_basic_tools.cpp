@@ -87,8 +87,8 @@ void drawCar(Point* car,
   }
   const float carLen = car_len_tbl[carType];
   float carWid = car_wid_tbl[carType];
-  /* limited trust in width of large truck */
-  carWid = (carType == 2 && wid > 2.0f) ? wid : carWid;
+  /* limited trust in width of large truck, max legal width 2.6m */
+  carWid = (carType == 2 && wid > 2.0f) ? fmin(wid, 2.6f) : carWid;
 
   // display: left-hand system. control: right-hand system
   // vertice order: upper-right -> lower-right-> lower-left -> upper-left
@@ -534,14 +534,17 @@ void predictionObstacle(Point obs_pred_path[11],
   float obs_speed_y_cor = 0;
   float objPosnLgt[11], roadPosnLat[11];
   const bool leftRearObsRampOn =
-      (index == 4 || index == 5) && (5 == gScenarioFlg || 15 == gScenarioFlg);
+      (index == 4 || index == 5 || index == 10 || index == 12) &&
+      (5 == gScenarioFlg || 15 == gScenarioFlg);
   const bool rightRearObsRampOn =
-      (index == 8 || index == 9) && (5 == gScenarioFlg || 15 == gScenarioFlg);
-
-  if (index == 0 || index == 2 || index == 3 || index == 6 || index == 7 ||
-      index == 10 || index == 11) {
-    // obs_speed_y_cor = obs->speed_y * objSpdLatConf; // original spd
-    obs_speed_y_cor = ssmObjSpdY[index];  // filtered spd
+      (index == 8 || index == 9 || index == 11 || index == 13) &&
+      (5 == gScenarioFlg || 15 == gScenarioFlg);
+  const bool frontObsFlg = index == 0 || index == 2 || index == 3 ||
+                           index == 6 || index == 7 || index == 10 ||
+                           index == 11;
+  /* LatSpd: filtered for front obs, untrustworthy for rear obs */
+  if (frontObsFlg) {
+    obs_speed_y_cor = ssmObjSpdY[index];
   }
 
   const float const_acc_time = (index == 0 ? 2.5f : 0.0f);
