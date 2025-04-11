@@ -83,6 +83,13 @@ typedef struct {
   float rightright_coeffs[8];
 } LinesInfo;
 
+typedef struct {
+  float reserved1;
+  float reserved2;
+  float reserved3;
+  float reserved4;
+} ReservedInfo;
+
 void coordinateTrans1(Point* point);
 void coordinateTrans2(Point* point);
 
@@ -168,13 +175,15 @@ void showXYGraph(const GraphConfig* config,
 /// @param tsrInfo        environmental TSR info and ego TSR status
 /// @param motionInfo     ego vehicle motion status
 /// @param ssmObjSpdY     filtered obs lat spd
+/// @param reservedInfo   backup info display, could be customized
 void showBEVGraph(const GraphConfig* config,
                   const float zeroOffsetX,
                   const SsmObjType* ssmObjs,
                   const LinesInfo* linesInfo,
                   const TsrInfo* tsrInfo,
                   const MotionInfo* motionInfo,
-                  const float* ssmObjSpdY);
+                  const float* ssmObjSpdY,
+                  const ReservedInfo* reservedInfo);
 
 void showLineChart(GraphConfig* chartConfig,
                    float zeroOffsetY,
@@ -206,5 +215,7 @@ bool buttonOneStep(ExMessage* msg,
                    const char* text);
 int functionButton(ExMessage msg);
 void keyboardTest();
+
+void drawReservedInfo(const ReservedInfo* reservedInfo);
 
 #endif  // SHOW_BASIC_TOOLS_H_

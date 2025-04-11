@@ -64,4 +64,7 @@ int merge_id_data[DATA_NUM];
 
 float original_data[DATA_NUM];
 float loopback_data[DATA_NUM];
+
 float tempMeasureVal_data[4][DATA_NUM];
+
+float reserved_data[4][DATA_NUM];

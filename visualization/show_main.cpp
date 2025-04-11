@@ -55,6 +55,7 @@ static RadarObjInfo sRadarObjsInfo[4];
 static MeObjInfo sMeObjsInfo;
 static AgsmLinesInfo sAgsmLinesInfo;
 static RemInfo sRemInfo;
+static ReservedInfo sReservedInfo;
 
 // temporary storage of log data
 PLAYMODE gPlayMode;
@@ -227,6 +228,12 @@ void ReadInputData(const int t) {
   sRemEhMerge.NearestMergedist = merge_dis_data[t];
   sRemEhMerge.NearestMergeptDirForEgo = merge_dir_data[t];
   sRemEhMerge.Merge_DP_ID = merge_id_data[t];
+
+  // Reserved info
+  sReservedInfo.reserved1 = reserved_data[0][t];
+  sReservedInfo.reserved2 = reserved_data[1][t];
+  sReservedInfo.reserved3 = reserved_data[2][t];
+  sReservedInfo.reserved4 = reserved_data[3][t];
   return;
 }
 
@@ -327,7 +334,7 @@ void ShowSpdPlanInterface(const int length, const int width, const int offset) {
                       6,        RED,      true,         gAlcStCoeff};
 
   showBEVGraph(&BEV_cfg, 30.0f, &g_ssmObjType, &sLinesInfo, &sTsrInfo,
-               &sMotionInfo, g_ssmObjSpdY);
+               &sMotionInfo, g_ssmObjSpdY, &sReservedInfo);
 
   showXYGraph(&ST_cfg, 0.0f, &ST_info);
   showXYGraph(&VT_cfg, 0.0f, &VT_info);

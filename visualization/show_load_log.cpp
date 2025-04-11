@@ -211,6 +211,9 @@ void SpdPlanDataParsing(float** values,
   // REM info, DP lines
   int EGO_DP[4] = {0}, TAR_DP[4] = {0}, MRG_DIS = 0, MRG_DIR = 0, MRG_ID = 0;
 
+  // Reserved info
+  int RESERVED[4] = {0};
+
   // assign col name from measurements
   for (int i = 0; i < numColumns; i++) {
     if (strcmp(columns[i], "t[s]") == 0 ||
@@ -913,7 +916,18 @@ void SpdPlanDataParsing(float** values,
       TAR_DP[2] = i;
     else if (strncmp(columns[i], "VfREM_EHTarDP_C3_L4C[]", 20) == 0)
       TAR_DP[3] = i;
+
+    /* TODO: reserved signals could be customized */
+    else if (strcmp(columns[i], "please input your 1st signal names here") == 0)
+      RESERVED[0] = i;
+    else if (strcmp(columns[i], "please input your 2nd signal names here") == 0)
+      RESERVED[1] = i;
+    else if (strcmp(columns[i], "please input your 3rd signal names here") == 0)
+      RESERVED[2] = i;
+    else if (strcmp(columns[i], "please input your 4th signal names here") == 0)
+      RESERVED[3] = i;
   }
+
   // log total time. ATTENTION: NaN strings occupy last 8 rows of csv
   *totalFrame = valuesCount[Ts] - 8 > 0 ? valuesCount[Ts] - 8 : 0;
 
@@ -1023,7 +1037,7 @@ void SpdPlanDataParsing(float** values,
       objs_pos_yaw_data[k][t] = values[IVS_Yaw[k]][t] * -1;
       objs_cut_in_data[k][t] = IVS_CUT[k] ? values[IVS_CUT[k]][t] : 0;
       objs_id_data[k][t] = IVS_ID[k] ? values[IVS_ID[k]][t] : 0;
-      objs_speed_y_data[k][t] = IVS_LaV[k] ? values[IVS_LaV[k]][t] * -1 : 0;
+      objs_speed_y_data[k][t] = values[IVS_LaV[k]][t] * -1;
       objs_speed_y_f_data[k][t] = IVS_LaVF[k] ? values[IVS_LaVF[k]][t] * -1 : 0;
       objs_width_data[k][t] = IVS_WID[k] ? values[IVS_WID[k]][t] : 0;
 
@@ -1082,12 +1096,11 @@ void SpdPlanDataParsing(float** values,
       merge_dir_data[t] = values[MRG_DIR][t];
       merge_id_data[t] = values[MRG_ID][t];
     }
-    /*     for (int k = 0; k < 4; k++) {
-          if (EGO_DP[k] == 0)
-            continue;
-          ego_dp_data[k][t] = values[EGO_DP[k]][t];
-          tar_dp_data[k][t] = values[TAR_DP[k]][t];
-        } */
+    // Reserved info
+    reserved_data[0][t] = RESERVED[0] ? values[RESERVED[0]][t] : 0;
+    reserved_data[1][t] = RESERVED[1] ? values[RESERVED[1]][t] : 0;
+    reserved_data[2][t] = RESERVED[2] ? values[RESERVED[2]][t] : 0;
+    reserved_data[3][t] = RESERVED[3] ? values[RESERVED[3]][t] : 0;
   }
 
   return;

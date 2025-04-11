@@ -5,8 +5,6 @@ bool g_showPredictSwt = false;
 extern uint8 gScenarioFlg;
 extern float gTempMeasureVal[4];
 
-// float fit_coeffi[6] = {0};
-
 // Draw graph origins
 static Point s_origin1 = {0.0f, 0.0f};
 static float s_xScale1 = 0, s_yScale1 = 0;
@@ -14,14 +12,14 @@ static Point s_origin2 = {0.0f, 0.0f};
 static float s_xScale2 = 0, s_yScale2 = 0;
 static int s_infoAreaBoundary;
 
-const static float car_len_tbl[10] = {2.6f, 5.4f, 10.4f, 2.5f, 2.5f,
-                                      1.0f, 2.0f, 2.0f,  2.0f, 2.5f};
-const static float car_wid_tbl[10] = {1.4f, 1.9f, 2.0f, 0.6f, 0.6f,
-                                      1.0f, 2.0f, 2.0f, 2.0f, 0.6f};
-const static int tsr_spd_tbl1[14] = {10, 20, 30,  40,  50,  60,  70,
-                                     80, 90, 100, 110, 120, 130, 140};
-const static int tsr_spd_tbl2[15] = {5,  15, 25,  35,  45,  55,  65, 75,
-                                     85, 95, 105, 115, 125, 135, 145};
+const static float kObsLengthTbl[10] = {2.6f, 5.4f, 10.4f, 2.5f, 2.5f,
+                                        1.0f, 2.0f, 2.0f,  2.0f, 2.5f};
+const static float kObsWidthTbl[10] = {1.4f, 1.9f, 2.0f, 0.6f, 0.6f,
+                                       1.0f, 2.0f, 2.0f, 2.0f, 0.6f};
+const static int kTsrSpdTbl1[14] = {10, 20, 30,  40,  50,  60,  70,
+                                    80, 90, 100, 110, 120, 130, 140};
+const static int kTsrSpdTbl2[15] = {5,  15, 25,  35,  45,  55,  65, 75,
+                                    85, 95, 105, 115, 125, 135, 145};
 
 void coordinateTrans1(Point* point) {
   point->x = s_origin1.x + point->x * s_xScale1;
@@ -85,8 +83,8 @@ void drawCar(Point* car,
   if (carType >= 10) {
     carType = 0;
   }
-  const float carLen = car_len_tbl[carType];
-  float carWid = car_wid_tbl[carType];
+  const float carLen = kObsLengthTbl[carType];
+  float carWid = kObsWidthTbl[carType];
   /* limited trust in width of large truck, max legal width 2.6m */
   carWid = (carType == 2 && wid > 2.0f) ? fmin(wid, 2.6f) : carWid;
 
@@ -113,15 +111,15 @@ void drawCar(Point* car,
   fillpolygon(vertices_show, 4);
 
   if (carType >= 4 && carType <= 9) {  // pedestrian/others outline
-    rectangle(car->x - car_wid_tbl[1] / 2.0f * s_xScale2,
-              car->y - car_len_tbl[1] / 2.0f * s_yScale2,
-              car->x + car_wid_tbl[1] / 2.0f * s_xScale2,
-              car->y + car_len_tbl[1] / 2.0f * s_yScale2);
+    rectangle(car->x - kObsWidthTbl[1] / 2.0f * s_xScale2,
+              car->y - kObsLengthTbl[1] / 2.0f * s_yScale2,
+              car->x + kObsWidthTbl[1] / 2.0f * s_xScale2,
+              car->y + kObsLengthTbl[1] / 2.0f * s_yScale2);
   } else if (carType == 3) {  // motorbike
     rectangle(car->x - 1.0f / 2.0f * s_xScale2,
-              car->y - car_len_tbl[1] / 2.0f * s_yScale2,
+              car->y - kObsLengthTbl[1] / 2.0f * s_yScale2,
               car->x + 1.0f / 2.0f * s_xScale2,
-              car->y + car_len_tbl[1] / 2.0f * s_yScale2);
+              car->y + kObsLengthTbl[1] / 2.0f * s_yScale2);
   }
   if (carType == 5) {
     solidcircle(car->x, car->y, 5);
@@ -168,20 +166,22 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
     itoa(tsr_spd, spd_val, 10);
   }
   strcat(tsr_disp, spd_val);
-  char tsi_disp[10] = "";
+  char tsi_disp[10] = "TSI ";
   if (tsrInfo->tsr_tsi[0] == 5) {
     strcpy(tsi_disp, "stop");
   } else if (tsrInfo->tsr_tsi[0] == 6) {
     strcpy(tsi_disp, "yield");
   } else if (tsrInfo->tsr_tsi[1] == 5) {
-    strcpy(tsi_disp, "no entry");
+    strcpy(tsi_disp, "noEnt");
   }
   if (tsr_spd_warn) {
     settextcolor(RED);
   }
   outtextxy(s_infoAreaBoundary, s_origin2.y, tsr_disp);
   settextcolor(BLACK);
-  outtextxy(s_infoAreaBoundary, s_origin2.y + textheight(tsr_disp), tsi_disp);
+  if (tsrInfo->tsr_tsi[0] || tsrInfo->tsr_tsi[1]) {
+    outtextxy(s_infoAreaBoundary, s_origin2.y + textheight(tsr_disp), tsi_disp);
+  }
 
   // TSR original input
   for (int i = 0; i < 3; i++) {
@@ -211,21 +211,21 @@ void drawTsrSign(const TsrInfo* tsrInfo) {
     // TSR Speed limit: 10~140, 5~145, cancel sign
     char tsr_sign[4] = "";
     if (tsrInfo->tsr_signs[i].type <= 13) {
-      itoa(tsr_spd_tbl1[tsrInfo->tsr_signs[i].type], tsr_sign, 10);
+      itoa(kTsrSpdTbl1[tsrInfo->tsr_signs[i].type], tsr_sign, 10);
       outtextxy(tsr_pos.x - textwidth(tsr_sign) / 2,
                 tsr_pos.y - textheight(tsr_sign) / 2, tsr_sign);
       setlinecolor(RED);
       circle(tsr_pos.x, tsr_pos.y, textheight(tsr_sign) * 0.75f);
     } else if (tsrInfo->tsr_signs[i].type >= 28 &&
                tsrInfo->tsr_signs[i].type <= 41) {
-      itoa(tsr_spd_tbl1[tsrInfo->tsr_signs[i].type - 28], tsr_sign, 10);
+      itoa(kTsrSpdTbl1[tsrInfo->tsr_signs[i].type - 28], tsr_sign, 10);
       outtextxy(tsr_pos.x - textwidth(tsr_sign) / 2,
                 tsr_pos.y - textheight(tsr_sign) / 2, tsr_sign);
       setlinecolor(LIGHTRED);
       circle(tsr_pos.x, tsr_pos.y, textheight(tsr_sign) * 0.75f);
     } else if (tsrInfo->tsr_signs[i].type >= 100 &&
                tsrInfo->tsr_signs[i].type <= 114) {
-      itoa(tsr_spd_tbl2[tsrInfo->tsr_signs[i].type - 100], tsr_sign, 10);
+      itoa(kTsrSpdTbl2[tsrInfo->tsr_signs[i].type - 100], tsr_sign, 10);
       outtextxy(tsr_pos.x - textwidth(tsr_sign) / 2,
                 tsr_pos.y - textheight(tsr_sign) / 2, tsr_sign);
       setlinecolor(RED);
@@ -350,13 +350,13 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     default:
       break;
   }
-  outtextxy(s_infoAreaBoundary, s_origin2.y - 7 * textheight(spd_title),
+  outtextxy(s_infoAreaBoundary, s_origin2.y - 8 * textheight(spd_title),
             inner_set_title);
-  outtextxy(s_infoAreaBoundary, s_origin2.y - 6 * textheight(spd_title),
+  outtextxy(s_infoAreaBoundary, s_origin2.y - 7 * textheight(spd_title),
             spec_case_title);
-  outtextxy(s_infoAreaBoundary, s_origin2.y - 5 * textheight(spd_title),
+  outtextxy(s_infoAreaBoundary, s_origin2.y - 6 * textheight(spd_title),
             scenario_title);
-  outtextxy(s_infoAreaBoundary, s_origin2.y + 3 * textheight(spd_title),
+  outtextxy(s_infoAreaBoundary, s_origin2.y - 5 * textheight(spd_title),
             maxDecel_title);
 
   // ACC mode: 3-stand still, 4-stand active, 5-active, 6-override
@@ -401,8 +401,9 @@ void drawMotionInfo(const MotionInfo* motionInfo) {
     strcpy(alc_sts, "PopMsg");
   if (motionInfo->alcBehav.AutoLaneChgSide == 1 ||
       motionInfo->alcBehav.AutoLaneChgSide == 2) {
-    outtextxy(s_infoAreaBoundary, s_origin2.y - 200, alc_side);
-    outtextxy(s_infoAreaBoundary, s_origin2.y - 200 + textheight(alc_side),
+    outtextxy(s_infoAreaBoundary, s_origin2.y - 10 * textheight(alc_side),
+              alc_side);
+    outtextxy(s_infoAreaBoundary, s_origin2.y - 9 * textheight(alc_side),
               alc_sts);
   }
 
@@ -892,10 +893,11 @@ void showBEVGraph(const GraphConfig* config,
                   const LinesInfo* linesInfo,
                   const TsrInfo* tsrInfo,
                   const MotionInfo* motionInfo,
-                  const float* ssmObjSpdY) {
+                  const float* ssmObjSpdY,
+                  const ReservedInfo* reservedInfo) {
   initBEVGraph(config, zeroOffsetX);
   // Note: Origin slightly further left, for aesthetic purpose
-  s_origin2.x *= 0.95f;
+  s_origin2.x *= 0.9f;
 
   // tsr info
   drawTsrSign(tsrInfo);
@@ -966,19 +968,22 @@ void showBEVGraph(const GraphConfig* config,
   char str_ego[2][8] = {};
   strcpy(str_ego[0], "ego");
   strCompletion(str_ego, ego_index, motionInfo->egoSpd);
-  drawCar(&ego, str_ego, 1, car_len_tbl[1], car_wid_tbl[1], 0, ego_index);
+  drawCar(&ego, str_ego, 1, kObsLengthTbl[1], kObsWidthTbl[1], 0, ego_index);
 
   if (g_showPredictSwt && egoPredPosn.x > 4.0f) {
     char str_ego_pred[2][8] = {};
     strcpy(str_ego_pred[0], "ego_pred");
     strCompletion(str_ego_pred, ego_index, motionInfo->egoPredSpd);
-    drawCar(&egoPredPosn, str_ego_pred, 1, car_len_tbl[1], car_wid_tbl[1],
+    drawCar(&egoPredPosn, str_ego_pred, 1, kObsLengthTbl[1], kObsWidthTbl[1],
             egoPredYaw, ego_index);
     // setfillstyle(BS_SOLID);
   }
   // ego spd info and lane change status
   drawMotionInfo(motionInfo);
   drawBEVRuler(zeroOffsetX);
+
+  /* To meet temporary signal display requirements, could be customized */
+  drawReservedInfo(reservedInfo);
   return;
 }
 
@@ -1123,4 +1128,33 @@ void keyboardTest() {
         break;
     }
   }
+}
+
+/// @brief display reserved or backup signals to screen, could be customized
+/// @param reservedInfo
+void drawReservedInfo(const ReservedInfo* reservedInfo) {
+  // TODO: name and type of signals could be customized
+  // set switch to TRUE to show reserved signals
+  bool displayReserveInfoSwitch = false;
+  if (!displayReserveInfoSwitch) {
+    return;
+  }
+  // str length should not exeed 11
+  char reseved1_title[12] = "R1: ";
+  char reseved2_title[12] = "R2: ";
+  char reseved3_title[12] = "R3: ";
+  char reseved4_title[12] = "R4: ";
+
+  snprintf(reseved1_title + strlen(reseved1_title),
+           sizeof(reseved1_title) - strlen(reseved1_title), "%.2f",
+           reservedInfo->reserved1);
+  outtextxy(s_infoAreaBoundary, s_origin2.y + 2 * textheight(reseved1_title),
+            reseved1_title);
+  outtextxy(s_infoAreaBoundary, s_origin2.y + 3 * textheight(reseved2_title),
+            reseved2_title);
+  outtextxy(s_infoAreaBoundary, s_origin2.y + 4 * textheight(reseved3_title),
+            reseved3_title);
+  outtextxy(s_infoAreaBoundary, s_origin2.y + 5 * textheight(reseved4_title),
+            reseved4_title);
+  return;
 }

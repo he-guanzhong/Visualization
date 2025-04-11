@@ -74,6 +74,9 @@ extern int merge_id_data[DATA_NUM];
 
 extern float original_data[DATA_NUM];
 extern float loopback_data[DATA_NUM];
+
 extern float tempMeasureVal_data[4][DATA_NUM];
+
+extern float reserved_data[4][DATA_NUM];
 
 #endif  // SHOW_DATA_STORAGE_H_
