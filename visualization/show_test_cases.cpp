@@ -212,7 +212,7 @@ void LoadDummyMotionData(float* egoSpd,
                          int* accMode,
                          int* tauGap,
                          AlcBehavior* alcBehav) {
-  *egoSpd = 30.0f, *egoAcc = 0.0f, *spdLmt = 100.0f;
+  *egoSpd = 30.0f, *egoAcc = 0.0f, *spdLmt = 135.0f;
   *accMode = 5;
   *tauGap = 1;
   alcBehav->AutoLaneChgSide = 0;
